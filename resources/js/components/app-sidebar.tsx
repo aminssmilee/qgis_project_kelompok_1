@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
@@ -28,6 +29,11 @@ import {
     FileChartColumnIcon,
     FileIcon,
     CommandIcon,
+    MapIcon,
+    LayersIcon,
+    CalendarCheckIcon,
+    SettingsIcon,
+    PackageIcon,
 } from "lucide-react";
 
 const data = {
@@ -38,29 +44,48 @@ const data = {
     },
     navMain: [
         {
-            title: "Dashboard",
-            url: "#",
-            icon: <LayoutDashboardIcon />,
+            title: "Peta Billboard",
+            url: "/dashboard/map",
+            icon: <MapIcon />,
         },
         {
-            title: "Lifecycle",
-            url: "#",
-            icon: <ListIcon />,
+            title: "Katalog Billboard",
+            url: "/dashboard/billboards",
+            icon: <PackageIcon />,
+            items: [
+                { title: "Daftar Titik", url: "/dashboard/billboards" },
+                { title: "Kategori & Ukuran", url: "/dashboard/categories" },
+                { title: "Legalitas/Izin", url: "/dashboard/permits" },
+            ],
         },
         {
-            title: "Analytics",
-            url: "#",
-            icon: <ChartBarIcon />,
+            title: "Penyewaan",
+            url: "/dashboard/rentals",
+            icon: <CalendarCheckIcon />,
+            items: [
+                { title: "Kontrak Aktif", url: "/dashboard/rentals/active" },
+                { title: "Jadwal Pemasangan", url: "/dashboard/rentals/schedule" },
+                { title: "Riwayat Sewa", url: "/dashboard/rentals/history" },
+            ],
         },
         {
-            title: "Projects",
-            url: "#",
-            icon: <FolderIcon />,
-        },
-        {
-            title: "Team",
-            url: "#",
+            title: "Klien",
+            url: "/dashboard/clients",
             icon: <UsersIcon />,
+        },
+        {
+            title: "Laporan",
+            url: "/dashboard/reports",
+            icon: <FileTextIcon />,
+            items: [
+                { title: "Pendapatan", url: "/dashboard/reports/revenue" },
+                { title: "Log Maintenance", url: "/dashboard/reports/maintenance" },
+            ],
+        },
+        {
+            title: "Manajemen User",
+            url: "/dashboard/users",
+            icon: <SettingsIcon />,
         },
     ],
     navClouds: [
@@ -154,22 +179,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
+                            size="lg"
                             asChild
-                            className="data-[slot=sidebar-menu-button]:p-1.5!"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
-                            <a href="#">
-                                <CommandIcon className="size-5!" />
-                                <span className="text-base font-semibold">
-                                    Acme Inc.
-                                </span>
-                            </a>
+                            <Link to="/dashboard">
+                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground overflow-hidden">
+                                    <img src="/assets/images/logobil.jpeg" alt="Logo" className="size-full object-cover" />
+                                </div>
+                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <span className="truncate font-semibold uppercase tracking-wider">
+                                        Billboard
+                                    </span>
+                                    <span className="truncate text-xs text-muted-foreground">
+                                        Interactive Management
+                                    </span>
+                                </div>
+                            </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
                 <NavMain items={data.navMain} />
-                <NavDocuments items={data.documents} />
+                {/* <NavDocuments items={data.documents} /> */}
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
@@ -178,3 +211,4 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Sidebar>
     );
 }
+export default AppSidebar;
