@@ -1,12 +1,12 @@
-import '../css/app.css';
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Dashboard from './Pages/dashboard';
-import Login from './Pages/login';
+import "../css/app.css";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./Pages/dashboard";
+import Login from "./Pages/login";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-const container = document.getElementById('app');
+const container = document.getElementById("app");
 
 if (container) {
     const root = createRoot(container);
@@ -22,6 +22,6 @@ if (container) {
                     </Routes>
                 </BrowserRouter>
             </TooltipProvider>
-        </React.StrictMode>
+        </React.StrictMode>,
     );
 }
