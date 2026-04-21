@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class DashboardController extends Controller
+{
+    public function getData()
+    {
+        return response()->json([
+            [
+                "id" => 1,
+                "header" => "Cover page",
+                "type" => "Cover page",
+                "status" => "In Process",
+                "target" => "18",
+                "limit" => "5",
+                "reviewer" => "Eddie Lake"
+            ],
+            [
+                "id" => 2,
+                "header" => "Table of contents",
+                "type" => "Table of contents",
+                "status" => "Done",
+                "target" => "29",
+                "limit" => "24",
+                "reviewer" => "Eddie Lake"
+            ]
+        ]);
+    }
+}
