@@ -20,13 +20,15 @@ export function LoginForm({
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+        {},
+    );
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         const newErrors: { email?: string; password?: string } = {};
-        
+
         if (!email) {
             newErrors.email = "Email wajib diisi";
         } else if (!/\S+@\S+\.\S+/.test(email)) {
@@ -70,10 +72,16 @@ export function LoginForm({
                         placeholder="m@gmail.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className={cn("bg-background", errors.email && "border-destructive focus-visible:ring-destructive")}
+                        className={cn(
+                            "bg-background",
+                            errors.email &&
+                                "border-destructive focus-visible:ring-destructive",
+                        )}
                     />
                     {errors.email && (
-                        <p className="text-xs font-medium text-destructive">{errors.email}</p>
+                        <p className="text-xs font-medium text-destructive">
+                            {errors.email}
+                        </p>
                     )}
                 </Field>
                 <Field>
@@ -92,7 +100,11 @@ export function LoginForm({
                             type={showPassword ? "text" : "password"}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className={cn("bg-background pr-10", errors.password && "border-destructive focus-visible:ring-destructive")}
+                            className={cn(
+                                "bg-background pr-10",
+                                errors.password &&
+                                    "border-destructive focus-visible:ring-destructive",
+                            )}
                         />
                         <button
                             type="button"
@@ -107,7 +119,9 @@ export function LoginForm({
                         </button>
                     </div>
                     {errors.password && (
-                        <p className="text-xs font-medium text-destructive">{errors.password}</p>
+                        <p className="text-xs font-medium text-destructive">
+                            {errors.password}
+                        </p>
                     )}
                 </Field>
                 <Field>
