@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 
-final class DashboardController extends Controller
+final class DashboardController
 {
     /**
      * Mengambil data dashboard untuk ditampilkan di tabel UI.
