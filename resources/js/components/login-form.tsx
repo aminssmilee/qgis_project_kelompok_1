@@ -9,17 +9,41 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 export function LoginForm({
     className,
     ...props
 }: React.ComponentProps<"form">) {
     const navigate = useNavigate();
+    const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Di sini nanti bisa tambahkan logika API login
-        // Untuk sekarang langsung redirect ke dashboard
+        
+        const newErrors: { email?: string; password?: string } = {};
+        
+        if (!email) {
+            newErrors.email = "Email wajib diisi";
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = "Format email tidak valid";
+        }
+
+        if (!password) {
+            newErrors.password = "Password wajib diisi";
+        }
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        // Jika validasi lolos
+        setErrors({});
         navigate("/dashboard");
     };
 
@@ -43,10 +67,14 @@ export function LoginForm({
                     <Input
                         id="email"
                         type="email"
-                        placeholder="m@example.com"
-                        required
-                        className="bg-background"
+                        placeholder="m@gmail.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className={cn("bg-background", errors.email && "border-destructive focus-visible:ring-destructive")}
                     />
+                    {errors.email && (
+                        <p className="text-xs font-medium text-destructive">{errors.email}</p>
+                    )}
                 </Field>
                 <Field>
                     <div className="flex items-center">
@@ -55,23 +83,40 @@ export function LoginForm({
                             href="#"
                             className="ml-auto text-sm underline-offset-4 hover:underline"
                         >
-                            Forgot your password?
+                            {/* Forgot your password? */}
                         </a>
                     </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        required
-                        className="bg-background"
-                    />
+                    <div className="relative">
+                        <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className={cn("bg-background pr-10", errors.password && "border-destructive focus-visible:ring-destructive")}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                            {showPassword ? (
+                                <EyeOff className="size-4" />
+                            ) : (
+                                <Eye className="size-4" />
+                            )}
+                        </button>
+                    </div>
+                    {errors.password && (
+                        <p className="text-xs font-medium text-destructive">{errors.password}</p>
+                    )}
                 </Field>
                 <Field>
                     <Button type="submit" className="w-full">
                         Login
                     </Button>
                 </Field>
-                <FieldSeparator>Or continue with</FieldSeparator>
-                <Field>
+                <FieldSeparator>only admin</FieldSeparator>
+                {/* <Field>
                     <Button variant="outline" type="button" className="w-full">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -90,7 +135,7 @@ export function LoginForm({
                             Sign up
                         </a>
                     </FieldDescription>
-                </Field>
+                </Field> */}
             </FieldGroup>
         </form>
     );
