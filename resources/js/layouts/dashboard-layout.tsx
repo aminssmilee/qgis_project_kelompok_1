@@ -1,6 +1,10 @@
 import React from "react";
 import AppSidebar from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import {
+    SidebarInset,
+    SidebarProvider,
+    SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 
 interface DashboardLayoutProps {
@@ -8,7 +12,10 @@ interface DashboardLayoutProps {
     title: string;
 }
 
-export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
+export default function DashboardLayout({
+    children,
+    title,
+}: DashboardLayoutProps) {
     return (
         <SidebarProvider
             style={

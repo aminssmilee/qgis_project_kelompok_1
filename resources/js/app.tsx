@@ -27,9 +27,18 @@ if (container) {
                             path="/dashboard/billboards"
                             element={<BillboardsPage />}
                         />
-                        <Route path="/dashboard/rentals" element={<RentalsPage />} />
-                        <Route path="/dashboard/clients" element={<ClientsPage />} />
-                        <Route path="/dashboard/users" element={<UsersPage />} />
+                        <Route
+                            path="/dashboard/rentals"
+                            element={<RentalsPage />}
+                        />
+                        <Route
+                            path="/dashboard/clients"
+                            element={<ClientsPage />}
+                        />
+                        <Route
+                            path="/dashboard/users"
+                            element={<UsersPage />}
+                        />
                         {/* Redirect sembarang rute ke login jika tidak ditemukan */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>

@@ -64,7 +64,10 @@ const data = {
             icon: <CalendarCheckIcon />,
             items: [
                 { title: "Kontrak Aktif", url: "/dashboard/rentals/active" },
-                { title: "Jadwal Pemasangan", url: "/dashboard/rentals/schedule" },
+                {
+                    title: "Jadwal Pemasangan",
+                    url: "/dashboard/rentals/schedule",
+                },
                 { title: "Riwayat Sewa", url: "/dashboard/rentals/history" },
             ],
         },
@@ -79,7 +82,10 @@ const data = {
             icon: <FileTextIcon />,
             items: [
                 { title: "Pendapatan", url: "/dashboard/reports/revenue" },
-                { title: "Log Maintenance", url: "/dashboard/reports/maintenance" },
+                {
+                    title: "Log Maintenance",
+                    url: "/dashboard/reports/maintenance",
+                },
             ],
         },
         {
@@ -185,7 +191,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         >
                             <Link to="/dashboard">
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground overflow-hidden">
-                                    <img src="/assets/images/logobil.jpeg" alt="Logo" className="size-full object-cover" />
+                                    <img
+                                        src="/assets/images/logobil.jpeg"
+                                        alt="Logo"
+                                        className="size-full object-cover"
+                                    />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold uppercase tracking-wider">
