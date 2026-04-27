@@ -12,7 +12,7 @@
     "src": "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2"
   },
   "resources/css/app.css": {
-    "file": "assets/app-C9Yq-TSh.css",
+    "file": "assets/app-C7eFNm-C.css",
     "name": "app",
     "names": [
       "app.css"
@@ -26,12 +26,12 @@
     ]
   },
   "resources/js/app.tsx": {
-    "file": "assets/app-DiVzjNhj.js",
+    "file": "assets/app-BwsN54CD.js",
     "name": "app",
     "src": "resources/js/app.tsx",
     "isEntry": true,
     "css": [
-      "assets/app-C9Yq-TSh.css"
+      "assets/app-C7eFNm-C.css"
     ],
     "assets": [
       "assets/geist-cyrillic-wght-normal-CHSlOQsW.woff2",
