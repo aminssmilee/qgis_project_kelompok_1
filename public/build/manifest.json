@@ -1,0 +1,42 @@
+{
+  "node_modules/@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2": {
+    "file": "assets/geist-cyrillic-wght-normal-CHSlOQsW.woff2",
+    "src": "node_modules/@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2": {
+    "file": "assets/geist-latin-ext-wght-normal-DMtmJ5ZE.woff2",
+    "src": "node_modules/@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2"
+  },
+  "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2": {
+    "file": "assets/geist-latin-wght-normal-Dm3htQBi.woff2",
+    "src": "node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-C9Yq-TSh.css",
+    "name": "app",
+    "names": [
+      "app.css"
+    ],
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "assets": [
+      "assets/geist-cyrillic-wght-normal-CHSlOQsW.woff2",
+      "assets/geist-latin-ext-wght-normal-DMtmJ5ZE.woff2",
+      "assets/geist-latin-wght-normal-Dm3htQBi.woff2"
+    ]
+  },
+  "resources/js/app.tsx": {
+    "file": "assets/app-DiVzjNhj.js",
+    "name": "app",
+    "src": "resources/js/app.tsx",
+    "isEntry": true,
+    "css": [
+      "assets/app-C9Yq-TSh.css"
+    ],
+    "assets": [
+      "assets/geist-cyrillic-wght-normal-CHSlOQsW.woff2",
+      "assets/geist-latin-ext-wght-normal-DMtmJ5ZE.woff2",
+      "assets/geist-latin-wght-normal-Dm3htQBi.woff2"
+    ]
+  }
+}
