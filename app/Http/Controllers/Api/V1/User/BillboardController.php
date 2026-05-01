@@ -19,7 +19,7 @@ final class BillboardController
     {
         $billboards = Billboard::query()
             ->where('is_active', true)
-            ->when($request->query('city'), function ($query, $city) {
+            ->when($request->query('city'), function (\Illuminate\Database\Eloquent\Builder $query, string $city) {
                 $query->where('city', $city);
             })
             ->latest()
