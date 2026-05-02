@@ -12,7 +12,10 @@ test('to array', function (): void {
             'id',
             'name',
             'email',
-            'email_verified_at',
+            'phone',
+            'avatar_url',
+            'is_verified',
+            'is_active',
             'created_at',
             'updated_at',
         ]);

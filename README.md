@@ -1,97 +1,199 @@
-- Blade (this project) version: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
-- Inertia & React version: **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
+# 🗺️ QGIS Billboard Rental System
 
+A modern Web Application for managing and booking billboards with Geographic Information System (GIS) integration. Built with a robust Laravel backend and a reactive React SPA frontend, featuring a modern UI design, interactive maps, and a real-time booking system.
 
-<p align="center">
-    <a href="https://youtu.be/VhzP0XWGTC4" target="_blank">
-        <img src="/art/banner.png" alt="Overview Laravel Starter Kit" style="width:70%;">
-    </a>
-</p>
+---
 
-<p>
-    <a href="https://github.com/nunomaduro/laravel-starter-kit/actions"><img src="https://github.com/nunomaduro/laravel-starter-kit/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/dt/nunomaduro/laravel-starter-kit" alt="Total Downloads"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/v/nunomaduro/laravel-starter-kit" alt="Latest Stable Version"></a>
-    <a href="https://packagist.org/packages/nunomaduro/laravel-starter-kit"><img src="https://img.shields.io/packagist/l/nunomaduro/laravel-starter-kit" alt="License"></a>
-</p>
+## 🚀 Features
 
-**Laravel Starter Kit** is an ultra-strict, type-safe [Laravel](https://laravel.com) skeleton engineered for developers who refuse to compromise on code quality. This opinionated starter kit enforces rigorous development standards through meticulous tooling configuration and architectural decisions that prioritize type safety, immutability, and fail-fast principles.
+### Core Functionality
+- **User Authentication**: Secure authentication with role-based access control (User & Admin).
+- **Interactive Map Browsing**: Beautiful billboard listings integrated with a Web Map (GIS) for easy location-based search.
+- **Advanced Filtering**: Filter billboards by category, size, price, and availability.
+- **Booking System**: Date selection, creative (design) upload, and dynamic price calculation.
+- **Payment Integration**: Automated payment processing and confirmation.
+- **User Profile**: Profile management, booking history, and active rental status.
 
-## Why This Starter Kit?
+### Admin Features
+- **Dashboard Analytics**: Overview of active bookings, revenue, and occupancy rates.
+- **Master Data Management**: Full CRUD operations for Billboards, Categories, Sizes, and Pricing.
+- **Booking Management**: Review, approve, or reject billboard creatives and manage payments.
+- **Map Picker**: Accurately set billboard coordinates (Latitude/Longitude) via an interactive admin map.
+- **Activity Logs**: Track system changes and administrative actions.
 
-Modern PHP has evolved into a mature, type-safe language, yet many Laravel projects still operate with loose conventions and optional typing. This starter kit changes that paradigm by enforcing:
+### Technical Features
+- **Ultra-Strict Backend**: Built on a strict, type-safe Laravel 12 architecture enforcing 100% type coverage.
+- **React SPA**: Lightning-fast page transitions using React & Inertia.js.
+- **Automated Testing**: 100% code coverage requirement enforced via Pest v4.
+- **Modern UI**: Styled with Tailwind CSS v4 using a sleek, premium design system.
+- **Error Handling**: Comprehensive error handling and API resource standardization.
 
-- **100% Type Coverage**: Every method, property, and parameter is explicitly typed
-- **Zero Tolerance for Code Smells**: Rector and PHPStan at maximum strictness catch issues before they become bugs
-- **Immutable-First Architecture**: Data structures favor immutability to prevent unexpected mutations
-- **Fail-Fast Philosophy**: Errors are caught at compile-time, not runtime
-- **Automated Code Quality**: Pre-configured tools ensure consistent, pristine code across your entire team
-- **Bun-Powered**: Leveraging Bun for blazing-fast dependency management...
-- **Just Better Laravel Defaults**: Thanks to **[Essentials](https://github.com/nunomaduro/essentials)** / strict models, auto eager loading, immutable dates, and more...
+---
 
-This isn't just another Laravel boilerplate—it's a statement that PHP applications can and should be built with the same rigor as strongly-typed languages like Rust or TypeScript.
+## 🎨 Design System
 
-## Getting Started
+### Color Palette
+- **Primary Blue**: `#2563EB` (Modern blue for CTAs)
+- **Dark Mode / Accents**: Smooth gradients and deep dark backgrounds for premium feel.
+- **Success Green**: `#10B981` (Success states)
+- **Error Red**: `#EF4444` (Error states)
 
-> **Requires [PHP 8.4+](https://php.net/releases/)**, and [Bun](https://bun.sh).
+### Typography
+- **Font Family**: Inter / Poppins (Google Fonts)
+- **Consistent Spacing**: 8px base unit system (Tailwind standards)
 
-Create your type-safe Laravel application using [Composer](https://getcomposer.org):
+---
 
-```bash
-composer create-project nunomaduro/laravel-starter-kit --prefer-dist example-app
+## 📱 Pages & Screens
+
+### Authentication:
+- Login Screen
+- Sign Up Screen
+
+### Main Application (User):
+- Home / Map Explorer Screen
+- Billboard Details Screen
+- Booking & Checkout Screen
+- User Dashboard & Booking History
+
+### Admin Panel (Admin Users Only):
+- **Overview Dashboard**: Statistics and charts.
+- **Billboard Management**: Add, edit, and position billboards on the map.
+- **Booking Approvals**: Review pending rental requests.
+- **Settings**: Manage categories, sizes, and pricing tiers.
+
+---
+
+## 🛠 Technology Stack
+
+### Backend
+- **Framework**: Laravel 12 (PHP 8.4+)
+- **Database**: SQLite / MySQL
+- **Authentication**: Laravel Sanctum
+- **Code Quality**: PHPStan (Level 9), Rector, Pint
+
+### Frontend
+- **Framework**: React 19 (via Inertia.js)
+- **Styling**: Tailwind CSS v4
+- **Language**: TypeScript
+
+### Testing & Tooling
+- **Testing**: Pest PHP v4 (Unit, Feature, & Browser tests)
+- **Package Manager**: Composer & Bun / NPM
+
+---
+
+## 🏗 Project Structure
+
+```text
+qgis_project_kelompok_1/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/   # API & Web Controllers (Admin/User grouped)
+│   │   ├── Requests/      # Form Requests for Validation
+│   │   └── Resources/     # Eloquent API Resources
+│   └── Models/            # Strictly typed Eloquent Models
+├── database/
+│   ├── factories/         # Model Factories for testing
+│   ├── migrations/        # Database Schema
+│   └── seeders/           # Database Seeders
+├── resources/
+│   ├── js/                # React SPA Frontend
+│   │   ├── Components/    # Reusable UI components
+│   │   ├── Pages/         # Full page views
+│   │   └── app.tsx        # React entry point
+│   └── css/               # Tailwind CSS v4 configuration
+├── routes/                # API and Web routing definitions
+└── tests/                 # Pest 4 test suites (Unit/Feature)
 ```
 
-### Initial Setup
+---
 
-Navigate to your project and complete the setup:
+## 🔧 Setup Instructions
 
-```bash
-cd example-app
+### Prerequisites
+- PHP 8.4+
+- Composer
+- Node.js & NPM (or Bun)
+- SQLite / MySQL
 
-# Setup project
-composer setup
+### Installation
 
-# Start the development server
-composer dev
-```
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd qgis_project_kelompok_1
+   ```
 
-### Optional: Browser Testing Setup
+2. **Install PHP Dependencies**
+   ```bash
+   composer install
+   ```
 
-If you plan to use Pest's browser testing capabilities:
+3. **Install Frontend Dependencies**
+   ```bash
+   npm install
+   ```
 
-```bash
-bun add playwright
-bunx playwright install
-```
+4. **Environment Setup**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-### Verify Installation
+5. **Database Setup**
+   ```bash
+   # Make sure database configuration in .env is correct, then run:
+   php artisan migrate --seed
+   ```
 
-Run the test suite to ensure everything is configured correctly:
+6. **Run the Development Server**
+   ```bash
+   # This will start the Laravel server and Vite concurrently
+   composer dev
+   ```
 
+### Running Tests
+To ensure the code meets the 100% strict coverage requirement:
 ```bash
 composer test
 ```
 
-You should see 100% test coverage and all quality checks passing.
+---
 
-## Available Tooling
+## 👑 Creating an Admin User
 
-### Development
-- `composer dev` - Starts Laravel server, queue worker, log monitoring, and Vite dev server concurrently
+By default, users registered via the app are assigned a standard `user` role. To grant admin access:
 
-### Code Quality
-- `composer lint` - Runs Rector (refactoring), Pint (PHP formatting), and Prettier (JS/TS formatting)
-- `composer test:lint` - Dry-run mode for CI/CD pipelines
+1. Register a new account via the frontend.
+2. Open your database client (e.g., Tinker or DB viewer).
+3. Update the user's role to Admin (or create one using the seeder).
+   ```bash
+   php artisan tinker
+   > App\Models\User::first()->update(['is_active' => true]); # (Sesuaikan dengan logic role admin di DB Anda)
+   ```
 
-### Testing
-- `composer test:type-coverage` - Ensures 100% type coverage with Pest
-- `composer test:types` - Runs PHPStan at level 9 (maximum strictness)
-- `composer test:unit` - Runs Pest tests with 100% code coverage requirement
-- `composer test` - Runs the complete test suite (type coverage, unit tests, linting, static analysis)
+---
 
-### Maintenance
-- `composer update:requirements` - Updates all PHP and NPM dependencies to latest versions
+## 📊 Performance Optimizations
+- **Eager Loading**: Strictly enforced eager loading to prevent N+1 query problems.
+- **Caching**: Configured caching for static billboard data.
+- **Asset Bundling**: Optimized production builds using Vite.
+- **Code Linting**: Automated code formatting via Pint and Prettier.
 
-## License
+---
 
-**Laravel Starter Kit** was created by **[Nuno Maduro](https://x.com/enunomaduro)** under the **[MIT license](https://opensource.org/licenses/MIT)**.
+## 🎯 Future Enhancements
+- [ ] Push Notifications for booking status updates.
+- [ ] Advanced map drawing tools (Polygons for viewing exact billboard viewing angles).
+- [ ] Social Login integration.
+- [ ] Dark Mode Support across the entire application.
+- [ ] Export reports (PDF/Excel) for admin revenue tracking.
+
+---
+
+## 📄 License
+This project is created for portfolio and academic purposes.
+
+**Developer**: Kelompok 1
+Showcasing modern Laravel development, strict type safety, GIS integration, and clean SPA architecture.

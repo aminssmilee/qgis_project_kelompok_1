@@ -38,7 +38,7 @@ final class Billboard extends Model
         return $this->belongsTo(BillboardCategory::class, 'category_id');
     }
 
-    protected function casts(): array
+    public function casts(): array
     {
         return [
             'latitude' => 'decimal:7',
