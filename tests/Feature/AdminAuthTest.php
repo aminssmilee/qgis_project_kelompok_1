@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -58,6 +60,6 @@ test('admin can logout', function () {
         ->assertJson([
             'message' => 'Logout success',
         ]);
-    
+
     $this->assertCount(0, $admin->tokens);
 });

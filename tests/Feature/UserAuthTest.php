@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,7 +24,7 @@ test('user can register', function () {
             ],
             'access_token',
         ]);
-    
+
     $this->assertDatabaseHas('users', [
         'email' => 'john@test.com',
         'role' => 'user',

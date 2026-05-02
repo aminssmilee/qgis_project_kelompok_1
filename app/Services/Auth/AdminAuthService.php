@@ -13,7 +13,7 @@ final class AdminAuthService
     /**
      * Handle admin login logic.
      *
-     * @param array<string, string> $credentials
+     * @param  array<string, string>  $credentials
      * @return array{user: User, token: string}
      *
      * @throws ValidationException

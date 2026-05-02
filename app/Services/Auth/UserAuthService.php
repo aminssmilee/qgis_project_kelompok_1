@@ -13,7 +13,7 @@ final class UserAuthService
     /**
      * Handle user registration.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      * @return array{user: User, token: string}
      */
     public function register(array $data): array
@@ -39,7 +39,7 @@ final class UserAuthService
     /**
      * Handle user login.
      *
-     * @param array<string, string> $credentials
+     * @param  array<string, string>  $credentials
      * @return array{user: User, token: string}
      *
      * @throws ValidationException

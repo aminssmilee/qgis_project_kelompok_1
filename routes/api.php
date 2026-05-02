@@ -30,10 +30,10 @@ Route::prefix('v1')->group(function (): void {
     });
     // Admin API (Web Dashboard)
     Route::prefix('admin')->group(function (): void {
-        Route::post('/login', [\App\Http\Controllers\Api\V1\Admin\AuthController::class, 'login']);
+        Route::post('/login', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'login']);
 
         Route::middleware(['auth:sanctum', 'role:admin'])->group(function (): void {
-            Route::post('/logout', [\App\Http\Controllers\Api\V1\Admin\AuthController::class, 'logout']);
+            Route::post('/logout', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'logout']);
         });
     });
 });
