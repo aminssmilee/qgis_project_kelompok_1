@@ -10,6 +10,7 @@ import RentalsPage from "./Pages/dashboard/rentals";
 import ClientsPage from "./Pages/dashboard/clients";
 import UsersPage from "./Pages/dashboard/users";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ProtectedRoute, PublicRoute } from "./components/auth-middleware";
 
 const container = document.getElementById("app");
 
@@ -20,26 +21,34 @@ if (container) {
             <TooltipProvider>
                 <BrowserRouter>
                     <Routes>
-                        <Route path="/" element={<Login />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/dashboard/map" element={<MapPage />} />
-                        <Route
-                            path="/dashboard/billboards"
-                            element={<BillboardsPage />}
-                        />
-                        <Route
-                            path="/dashboard/rentals"
-                            element={<RentalsPage />}
-                        />
-                        <Route
-                            path="/dashboard/clients"
-                            element={<ClientsPage />}
-                        />
-                        <Route
-                            path="/dashboard/users"
-                            element={<UsersPage />}
-                        />
-                        {/* Redirect sembarang rute ke login jika tidak ditemukan */}
+                        {/* Rute Publik: Hanya bisa diakses jika BELUM login */}
+                        <Route element={<PublicRoute />}>
+                            <Route path="/" element={<Login />} />
+                        </Route>
+
+                        {/* Rute Terproteksi: Hanya bisa diakses jika SUDAH login */}
+                        <Route element={<ProtectedRoute />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/dashboard/map" element={<MapPage />} />
+                            <Route
+                                path="/dashboard/billboards"
+                                element={<BillboardsPage />}
+                            />
+                            <Route
+                                path="/dashboard/rentals"
+                                element={<RentalsPage />}
+                            />
+                            <Route
+                                path="/dashboard/clients"
+                                element={<ClientsPage />}
+                            />
+                            <Route
+                                path="/dashboard/users"
+                                element={<UsersPage />}
+                            />
+                        </Route>
+
+                        {/* Redirect sembarang rute ke rute awal */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </BrowserRouter>

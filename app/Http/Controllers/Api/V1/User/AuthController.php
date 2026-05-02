@@ -7,51 +7,63 @@ namespace App\Http\Controllers\Api\V1\User;
 use App\Http\Requests\Api\V1\User\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\User\Auth\RegisterRequest;
 use App\Http\Resources\Api\V1\UserResource;
-use App\Models\User;
+use App\Services\Auth\UserAuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
 
 final class AuthController
 {
+    public function __construct(
+        private readonly UserAuthService $userAuthService
+    ) {}
+
+    /**
+     * Handle user registration.
+     */
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::query()->create([
-            'name' => $request->validated('name'),
-            'email' => $request->validated('email'),
-            'phone' => $request->validated('phone'),
-            'password' => Hash::make($request->validated('password')),
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $result = $this->userAuthService->register($request->validated());
 
         return response()->json([
             'message' => 'User registered successfully',
-            'data' => [
-                'user' => new UserResource($user),
-                'access_token' => $token,
-            ],
+            'data' => new UserResource($result['user']),
+            'access_token' => $result['token'],
+            'token_type' => 'Bearer',
         ], 201);
     }
 
+    /**
+     * Handle user login.
+     */
     public function login(LoginRequest $request): JsonResponse
     {
-        $user = User::query()->where('email', $request->validated('email'))->first();
-
-        if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Kredensial yang diberikan tidak cocok dengan data kami.'],
-            ]);
-        }
-
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $result = $this->userAuthService->login($request->validated());
 
         return response()->json([
             'message' => 'Login successful',
-            'data' => [
-                'user' => new UserResource($user),
-                'access_token' => $token,
-            ],
+            'data' => new UserResource($result['user']),
+            'access_token' => $result['token'],
+            'token_type' => 'Bearer',
+        ]);
+    }
+
+    /**
+     * Get authenticated user profile.
+     */
+    public function me(Request $request): UserResource
+    {
+        return new UserResource($request->user());
+    }
+
+    /**
+     * Handle user logout.
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json([
+            'message' => 'Logged out successfully',
         ]);
     }
 }

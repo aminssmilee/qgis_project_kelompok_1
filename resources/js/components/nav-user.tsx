@@ -14,6 +14,8 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar";
+import { useNavigate } from "react-router-dom";
+import api from "@/lib/api";
 import {
     EllipsisVerticalIcon,
     CircleUserRoundIcon,
@@ -32,6 +34,18 @@ export function NavUser({
     };
 }) {
     const { isMobile } = useSidebar();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        try {
+            await api.post("/admin/logout");
+        } catch (error) {
+            console.error("Logout failed:", error);
+        } finally {
+            localStorage.removeItem("admin_token");
+            navigate("/login");
+        }
+    };
 
     return (
         <SidebarMenu>
@@ -105,7 +119,7 @@ export function NavUser({
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive-foreground">
                             <LogOutIcon />
                             Log out
                         </DropdownMenuItem>
