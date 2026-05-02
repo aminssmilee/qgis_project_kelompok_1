@@ -109,55 +109,65 @@ qgis_project_kelompok_1/
 
 ---
 
-## 🔧 Setup Instructions
+## 🔧 Getting Started
 
-### Prerequisites
-- PHP 8.4+
-- Composer
-- Node.js & NPM (or Bun)
-- SQLite / MySQL
+> **Requires [PHP 8.4+](https://php.net/releases/)**, [Bun](https://bun.sh), and a code coverage driver like **xdebug**.
 
-### Installation
+Create your type-safe Laravel application using [Composer](https://getcomposer.org) (or clone this repository):
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd qgis_project_kelompok_1
-   ```
+```bash
+git clone https://github.com/aminssmilee/qgis_project_kelompok_1.git
+cd qgis_project_kelompok_1
+```
 
-2. **Install PHP Dependencies**
-   ```bash
-   composer install
-   ```
+### Initial Setup
 
-3. **Install Frontend Dependencies**
-   ```bash
-   npm install
-   ```
+Navigate to your project and complete the setup:
 
-4. **Environment Setup**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
+```bash
+# Setup project
+composer setup
 
-5. **Database Setup**
-   ```bash
-   # Make sure database configuration in .env is correct, then run:
-   php artisan migrate --seed
-   ```
+# Start the development server
+composer dev
+```
 
-6. **Run the Development Server**
-   ```bash
-   # This will start the Laravel server and Vite concurrently
-   composer dev
-   ```
+### Optional: Browser Testing Setup
 
-### Running Tests
-To ensure the code meets the 100% strict coverage requirement:
+If you plan to use Pest's browser testing capabilities:
+
+```bash
+bun add playwright
+bunx playwright install
+```
+
+### Verify Installation
+
+Run the test suite to ensure everything is configured correctly:
+
 ```bash
 composer test
 ```
+
+You should see 100% test coverage and all quality checks passing.
+
+## 🛠 Available Tooling
+
+### Development
+- `composer dev` - Starts Laravel server, queue worker, log monitoring, and Vite+ dev server concurrently
+
+### Code Quality
+- `composer lint` - Runs Rector (refactoring), Pint (PHP formatting), and Oxfmt (JS/TS formatting)
+- `composer test:lint` - Dry-run mode for CI/CD pipelines
+
+### Testing
+- `composer test:type-coverage` - Ensures 100% type coverage with Pest
+- `composer test:types` - Runs PHPStan at level 9 (maximum strictness)
+- `composer test:unit` - Runs Pest tests with 100% code coverage requirement
+- `composer test` - Runs the complete test suite (type coverage, unit tests, linting, static analysis)
+
+### Maintenance
+- `composer update:requirements` - Updates all PHP and Bun dependencies to latest versions
 
 ---
 
