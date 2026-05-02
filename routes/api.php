@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/dashboard-data', [DashboardController::class, 'getData']);
 
 // API V1 Routes
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->group(function (): void {
     // End User API (Mobile App)
-    Route::prefix('user')->group(function () {
+    Route::prefix('user')->group(function (): void {
         // Public Auth Routes
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
@@ -22,7 +22,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/billboards/{id}', [BillboardController::class, 'show']);
 
         // Protected User Routes (Require Token)
-        Route::middleware('auth:sanctum')->group(function () {
+        Route::middleware('auth:sanctum')->group(function (): void {
             // Profil, Booking, dll akan ditambahkan di sini
         });
     });

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\User;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class BookingController
 {
@@ -20,7 +19,7 @@ final class BookingController
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(): JsonResponse
     {
         return response()->json([]);
     }
@@ -28,7 +27,7 @@ final class BookingController
     /**
      * Display the specified resource.
      */
-    public function show(string $id): JsonResponse
+    public function show(): JsonResponse
     {
         return response()->json([]);
     }
@@ -36,7 +35,7 @@ final class BookingController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(): JsonResponse
     {
         return response()->json([]);
     }
@@ -44,7 +43,7 @@ final class BookingController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id): JsonResponse
+    public function destroy(): JsonResponse
     {
         return response()->json([]);
     }

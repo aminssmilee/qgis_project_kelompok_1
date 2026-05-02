@@ -16,7 +16,7 @@ final class AuthController
 {
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
+        $user = User::query()->create([
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
             'phone' => $request->validated('phone'),
@@ -36,7 +36,7 @@ final class AuthController
 
     public function login(LoginRequest $request): JsonResponse
     {
-        $user = User::where('email', $request->validated('email'))->first();
+        $user = User::query()->where('email', $request->validated('email'))->first();
 
         if (! $user || ! Hash::check($request->validated('password'), $user->password)) {
             throw ValidationException::withMessages([

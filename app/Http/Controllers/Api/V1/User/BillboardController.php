@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\User;
 
+use Illuminate\Database\Eloquent\Builder;
 use App\Http\Resources\Api\V1\BillboardResource;
 use App\Models\Billboard;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +19,7 @@ final class BillboardController
     {
         $billboards = Billboard::query()
             ->where('is_active', true)
-            ->when($request->query('city'), function (\Illuminate\Database\Eloquent\Builder $query, string $city) {
+            ->when($request->query('city'), function (Builder $query, string $city): void {
                 $query->where('city', $city);
             })
             ->latest()
@@ -35,7 +36,7 @@ final class BillboardController
      */
     public function show(string $id): JsonResponse
     {
-        $billboard = Billboard::where('id', $id)
+        $billboard = Billboard::query()->where('id', $id)
             ->where('is_active', true)
             ->firstOrFail();
 
