@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-test('user can register', function () {
+test('user can register', function (): void {
     $response = $this->postJson('/api/v1/user/register', [
         'name' => 'John Doe',
         'email' => 'john@test.com',
@@ -31,7 +31,7 @@ test('user can register', function () {
     ]);
 });
 
-test('user can login', function () {
+test('user can login', function (): void {
     $user = User::factory()->create([
         'email' => 'jane@test.com',
         'password' => Hash::make('password'),
@@ -50,7 +50,7 @@ test('user can login', function () {
         ]);
 });
 
-test('admin cannot login as regular user', function () {
+test('admin cannot login as regular user', function (): void {
     $admin = User::factory()->create([
         'email' => 'admin_user@test.com',
         'password' => Hash::make('password'),
@@ -65,7 +65,7 @@ test('admin cannot login as regular user', function () {
     $response->assertStatus(422);
 });
 
-test('user can get profile', function () {
+test('user can get profile', function (): void {
     $user = User::factory()->create(['role' => 'user']);
     $token = $user->createToken('test')->plainTextToken;
 
@@ -76,7 +76,7 @@ test('user can get profile', function () {
         ->assertJsonPath('data.email', $user->email);
 });
 
-test('user can logout', function () {
+test('user can logout', function (): void {
     $user = User::factory()->create(['role' => 'user']);
     $token = $user->createToken('test')->plainTextToken;
 

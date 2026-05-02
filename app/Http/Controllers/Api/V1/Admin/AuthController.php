@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
-use App\Http\Requests\Api\V1\Admin\Auth\LoginAdminRequest;
 use App\Http\Resources\Api\V1\AdminResource;
+use App\Http\Requests\Api\V1\Admin\Auth\LoginAdminRequest;
 use App\Services\Auth\AdminAuthService;
 use Illuminate\Http\JsonResponse;
 
-final class AuthController
+final readonly class AuthController
 {
     public function __construct(
-        private readonly AdminAuthService $adminAuthService
+        private AdminAuthService $adminAuthService
     ) {}
 
     /**

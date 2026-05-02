@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 final class AdminUserSeeder extends Seeder
 {
@@ -13,11 +15,11 @@ final class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        \App\Models\User::query()->updateOrCreate(
+        User::query()->updateOrCreate(
             ['email' => 'admin@qgis.com'],
             [
                 'name' => 'Super Admin',
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'password' => Hash::make('password'),
                 'role' => 'admin',
                 'phone' => '08123456789',
                 'is_active' => true,

@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-test('admin can login with correct credentials', function () {
+test('admin can login with correct credentials', function (): void {
     $admin = User::factory()->create([
         'email' => 'admin@test.com',
         'password' => Hash::make('password'),
@@ -30,7 +30,7 @@ test('admin can login with correct credentials', function () {
         ]);
 });
 
-test('regular user cannot login as admin', function () {
+test('regular user cannot login as admin', function (): void {
     $user = User::factory()->create([
         'email' => 'user@test.com',
         'password' => Hash::make('password'),
@@ -46,7 +46,7 @@ test('regular user cannot login as admin', function () {
         ->assertJsonValidationErrors(['email']);
 });
 
-test('admin can logout', function () {
+test('admin can logout', function (): void {
     $admin = User::factory()->create([
         'role' => 'admin',
     ]);
