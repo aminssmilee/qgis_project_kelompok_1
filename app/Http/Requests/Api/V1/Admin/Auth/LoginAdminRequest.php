@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests\Api\V1\Admin\Auth;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class LoginAdminRequest extends FormRequest
+final class LoginAdminRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
