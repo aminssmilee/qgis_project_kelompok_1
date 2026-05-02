@@ -65,7 +65,11 @@ export function LoginForm({
             if (error.response?.status === 422) {
                 setErrors(error.response.data.errors);
             } else {
-                setErrors({ email: error.response?.data?.message || "Terjadi kesalahan saat login" });
+                setErrors({
+                    email:
+                        error.response?.data?.message ||
+                        "Terjadi kesalahan saat login",
+                });
             }
         }
     };

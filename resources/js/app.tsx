@@ -29,7 +29,10 @@ if (container) {
                         {/* Rute Terproteksi: Hanya bisa diakses jika SUDAH login */}
                         <Route element={<ProtectedRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/dashboard/map" element={<MapPage />} />
+                            <Route
+                                path="/dashboard/map"
+                                element={<MapPage />}
+                            />
                             <Route
                                 path="/dashboard/billboards"
                                 element={<BillboardsPage />}
