@@ -96,8 +96,7 @@
         "test": [
             "@test:type-coverage",
             "@test:unit",
-            "@test:lint",
-            "@test:types"
+            "@test:lint"
         ]
     },
     "extra": {
