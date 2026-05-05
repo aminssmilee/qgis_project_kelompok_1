@@ -758,7 +758,8 @@ export default function MapPage() {
                             </form>
                         </CardContent>
                     </Card>
-                </div>
+                    </div>
+                </>
             )}
         </DashboardLayout>
     );
