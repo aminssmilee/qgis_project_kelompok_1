@@ -182,11 +182,11 @@ export default function MapPage() {
             // Tambah event listener untuk klik map saat mode pick location
             if (mapClickMode) {
                 map.on("click", (e) => {
-                    setFormData({
-                        ...formData,
+                    setFormData((prev) => ({
+                        ...prev,
                         lat: e.latlng.lat.toString(),
                         lng: e.latlng.lng.toString(),
-                    });
+                    }));
                     // Tambah marker sementara di lokasi yang dipilih
                     L.marker([e.latlng.lat, e.latlng.lng], {
                         icon: L.icon({
@@ -234,7 +234,7 @@ export default function MapPage() {
         } catch (error) {
             console.error("Error initializing map:", error);
         }
-    }, [billboards, mapClickMode, formData]);
+    }, [billboards, mapClickMode]);
 
     // Initialize modal map for location picking
     useEffect(() => {
@@ -267,11 +267,11 @@ export default function MapPage() {
 
                 // Click handler to select location
                 modalMap.on("click", (e) => {
-                    setFormData({
-                        ...formData,
+                    setFormData((prev) => ({
+                        ...prev,
                         lat: e.latlng.lat.toString(),
                         lng: e.latlng.lng.toString(),
-                    });
+                    }));
 
                     // Add temporary marker at clicked location
                     const marker = L.marker([e.latlng.lat, e.latlng.lng], {
@@ -303,7 +303,7 @@ export default function MapPage() {
         } catch (error) {
             console.error("Error initializing modal map:", error);
         }
-    }, [mapClickMode, showModal, formData]);
+    }, [mapClickMode, showModal]);
 
     const validateForm = (): boolean => {
         const newErrors: Errors = {};
