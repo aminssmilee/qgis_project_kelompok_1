@@ -12,7 +12,6 @@ interface Billboard {
     name: string;
     lat: number;
     lng: number;
-    traffic: string;
     price: string;
     size: string;
     address: string;
@@ -22,11 +21,25 @@ interface FormData {
     name: string;
     lat: string;
     lng: string;
-    traffic: string;
     price: string;
     size: string;
     address: string;
 }
+
+// Paket ukuran dan harga
+interface SizePackage {
+    size: string;
+    price: string;
+}
+
+const BILLBOARD_PACKAGES: SizePackage[] = [
+    { size: "2x4", price: "10 Juta/6 bulan" },
+    { size: "3x4", price: "35 Juta/6 bulan" },
+    { size: "4x8", price: "75 Juta/6 bulan" },
+    { size: "5x10", price: "225 Juta/6 bulan" },
+    { size: "8x16", price: "250 Juta/6 bulan" },
+    { size: "10x20", price: "500 Juta/6 bulan" },
+];
 
 interface Errors {
     [key: string]: string;
@@ -54,9 +67,8 @@ const initialBillboards: Billboard[] = [
         name: "Billboard Pusat Kota Lamongan",
         lat: -6.8944,
         lng: 112.2147,
-        traffic: "Tinggi",
-        price: "Rp 30 Juta/bulan",
-        size: "8m x 3m",
+        price: "75 Juta/6 bulan",
+        size: "4x8",
         address: "Jalan Ahmad Yani, Lamongan",
     },
     {
@@ -64,10 +76,18 @@ const initialBillboards: Billboard[] = [
         name: "Billboard Jalan Raya Surabaya",
         lat: -6.8900,
         lng: 112.2200,
-        traffic: "Sedang",
-        price: "Rp 25 Juta/bulan",
-        size: "6m x 3m",
+        price: "35 Juta/6 bulan",
+        size: "3x4",
         address: "Jalan Raya Surabaya, Lamongan",
+    },
+    {
+        id: 3,
+        name: "Billboard Palang Utama",
+        lat: -6.9393,
+        lng: 112.2171,
+        price: "250 Juta/6 bulan",
+        size: "8x16",
+        address: "Jalan Raya Palang Utara, Lamongan",
     },
 ];
 
@@ -86,11 +106,18 @@ export default function MapPage() {
         name: "",
         lat: "",
         lng: "",
-        traffic: "Sedang",
         price: "",
         size: "",
         address: "",
     });
+
+    const [dummyMapMode, setDummyMapMode] = useState(false);
+    const [dummyMarker, setDummyMarker] = useState<{
+        x: number;
+        y: number;
+        lat: number;
+        lng: number;
+    } | null>(null);
 
     // Load billboards from localStorage on mount
     useEffect(() => {
@@ -110,11 +137,9 @@ export default function MapPage() {
         }
     }, []);
 
-    // Get icon based on traffic level
-    const getMarkerIcon = (traffic: string): L.Icon => {
-        let color = "#10b981"; // green - sedang
-        if (traffic === "Tinggi") color = "#f97316"; // orange
-        if (traffic === "Sangat Tinggi") color = "#ef4444"; // red
+    // Get icon for markers
+    const getMarkerIcon = (): L.Icon => {
+        const color = "#3b82f6"; // blue
 
         const svgString = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="${color}"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`;
 
@@ -178,7 +203,7 @@ export default function MapPage() {
             if (billboards.length > 0) {
                 billboards.forEach((billboard) => {
                     const marker = L.marker([billboard.lat, billboard.lng], {
-                        icon: getMarkerIcon(billboard.traffic),
+                        icon: getMarkerIcon(),
                     }).addTo(map);
 
                     // Popup content
@@ -188,7 +213,6 @@ export default function MapPage() {
                             <p class="text-xs text-gray-600 mt-1">${billboard.address}</p>
                             <div class="mt-2 text-xs space-y-1">
                                 <p><strong>Ukuran:</strong> ${billboard.size}</p>
-                                <p><strong>Traffic:</strong> ${billboard.traffic}</p>
                                 <p class="font-semibold text-blue-600">${billboard.price}</p>
                             </div>
                         </div>
@@ -217,7 +241,6 @@ export default function MapPage() {
         if (!formData.name.trim()) newErrors.name = "Nama billboard wajib diisi";
         if (!formData.address.trim()) newErrors.address = "Alamat wajib diisi";
         if (!formData.size.trim()) newErrors.size = "Ukuran wajib diisi";
-        if (!formData.price.trim()) newErrors.price = "Harga wajib diisi";
         if (!formData.lat) newErrors.lat = "Pilih lokasi di map terlebih dahulu";
         if (!formData.lng) newErrors.lng = "Pilih lokasi di map terlebih dahulu";
 
@@ -240,7 +263,6 @@ export default function MapPage() {
             name: formData.name,
             lat: parseFloat(formData.lat),
             lng: parseFloat(formData.lng),
-            traffic: formData.traffic,
             price: formData.price,
             size: formData.size,
             address: formData.address,
@@ -259,7 +281,6 @@ export default function MapPage() {
                 name: "",
                 lat: "",
                 lng: "",
-                traffic: "Sedang",
                 price: "",
                 size: "",
                 address: "",
@@ -371,27 +392,6 @@ export default function MapPage() {
 
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold">
-                                                Tingkat Traffic
-                                            </p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                        selectedBillboard.traffic ===
-                                                        "Sangat Tinggi"
-                                                            ? "bg-red-100 text-red-800"
-                                                            : selectedBillboard.traffic ===
-                                                              "Tinggi"
-                                                            ? "bg-orange-100 text-orange-800"
-                                                            : "bg-green-100 text-green-800"
-                                                    }`}
-                                                >
-                                                    {selectedBillboard.traffic}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold">
                                                 Koordinat
                                             </p>
                                             <p className="text-xs font-mono text-gray-600">
@@ -470,15 +470,9 @@ export default function MapPage() {
                                                     </p>
                                                 </div>
                                                 <span
-                                                    className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2 ${
-                                                        bb.traffic === "Sangat Tinggi"
-                                                            ? "bg-red-100 text-red-700"
-                                                            : bb.traffic === "Tinggi"
-                                                            ? "bg-orange-100 text-orange-700"
-                                                            : "bg-green-100 text-green-700"
-                                                    }`}
+                                                    className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2 bg-blue-100 text-blue-700`}
                                                 >
-                                                    {bb.traffic}
+                                                    {bb.size}
                                                 </span>
                                             </div>
                                         </button>
@@ -531,12 +525,60 @@ export default function MapPage() {
                                             Lokasi: {parseFloat(formData.lat).toFixed(4)}, {parseFloat(formData.lng).toFixed(4)}
                                         </p>
                                     )}
-                                    <button
-                                        onClick={() => setMapClickMode(false)}
-                                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold mt-2 underline"
-                                    >
-                                        Selesai memilih lokasi
-                                    </button>
+
+                                    <div className="mt-2 flex gap-3 items-center">
+                                        <button
+                                            onClick={() => setMapClickMode(false)}
+                                            className="text-xs text-blue-600 hover:text-blue-800 font-semibold underline"
+                                        >
+                                            Selesai memilih lokasi
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => { setDummyMapMode((v) => !v); setDummyMarker(null); }}
+                                            className="text-xs text-gray-700 hover:text-gray-900 font-semibold underline"
+                                        >
+                                            Gunakan Dummy Map
+                                        </button>
+                                    </div>
+
+                                    {dummyMapMode && (
+                                        <div
+                                            className="mt-3 border rounded h-48 bg-gray-100 relative overflow-hidden cursor-crosshair"
+                                            onClick={(e) => {
+                                                const el = e.currentTarget as HTMLDivElement;
+                                                const rect = el.getBoundingClientRect();
+                                                const clientX = (e as unknown as MouseEvent).clientX;
+                                                const clientY = (e as unknown as MouseEvent).clientY;
+                                                const x = clientX - rect.left;
+                                                const y = clientY - rect.top;
+
+                                                const latTop = -6.85;
+                                                const latBottom = -6.95;
+                                                const lngLeft = 112.18;
+                                                const lngRight = 112.25;
+
+                                                const lat = latTop + (y / rect.height) * (latBottom - latTop);
+                                                const lng = lngLeft + (x / rect.width) * (lngRight - lngLeft);
+
+                                                setFormData({ ...formData, lat: lat.toString(), lng: lng.toString() });
+                                                setDummyMarker({ x, y, lat, lng });
+                                            }}
+                                        >
+                                            {dummyMarker && (
+                                                <span
+                                                    className="absolute text-2xl"
+                                                    style={{ left: dummyMarker.x - 12, top: dummyMarker.y - 24 }}
+                                                >
+                                                    📍
+                                                </span>
+                                            )}
+                                            <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500 pointer-events-none">
+                                                Klik area ini untuk memilih lokasi (dummy)
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -628,23 +670,30 @@ export default function MapPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                                             Ukuran *
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             required
                                             value={formData.size}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
+                                                const selectedPkg = BILLBOARD_PACKAGES.find((pkg) => pkg.size === e.target.value);
                                                 setFormData({
                                                     ...formData,
                                                     size: e.target.value,
-                                                })
-                                            }
+                                                    price: selectedPkg?.price || "",
+                                                });
+                                            }}
                                             className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
                                                 errors.size
                                                     ? "border-red-500 focus:ring-red-500"
                                                     : "border-gray-300 focus:ring-blue-500"
                                             }`}
-                                            placeholder="8m x 3m"
-                                        />
+                                        >
+                                            <option value="">Pilih ukuran...</option>
+                                            {BILLBOARD_PACKAGES.map((pkg) => (
+                                                <option key={pkg.size} value={pkg.size}>
+                                                    {pkg.size} - {pkg.price}
+                                                </option>
+                                            ))}
+                                        </select>
                                         {errors.size && (
                                             <p className="text-xs text-red-600 mt-1">
                                                 {errors.size}
@@ -653,51 +702,12 @@ export default function MapPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Traffic *
+                                            Harga
                                         </label>
-                                        <select
-                                            value={formData.traffic}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    traffic: e.target.value,
-                                                })
-                                            }
-                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option>Sedang</option>
-                                            <option>Tinggi</option>
-                                            <option>Sangat Tinggi</option>
-                                        </select>
+                                        <div className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-600 font-semibold">
+                                            {formData.price || "—"}
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Harga/Bulan *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.price}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                price: e.target.value,
-                                            })
-                                        }
-                                        className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                            errors.price
-                                                ? "border-red-500 focus:ring-red-500"
-                                                : "border-gray-300 focus:ring-blue-500"
-                                        }`}
-                                        placeholder="Rp 30 Juta/bulan"
-                                    />
-                                    {errors.price && (
-                                        <p className="text-xs text-red-600 mt-1">
-                                            {errors.price}
-                                        </p>
-                                    )}
                                 </div>
 
                                 {!mapClickMode && (
@@ -735,7 +745,6 @@ export default function MapPage() {
                                                 name: "",
                                                 lat: "",
                                                 lng: "",
-                                                traffic: "Sedang",
                                                 price: "",
                                                 size: "",
                                                 address: "",
