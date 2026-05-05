@@ -22,32 +22,6 @@ if (container) {
             <TooltipProvider>
                 <BrowserRouter>
                     <Routes>
-<<<<<<< rizki
-                        <Route path="/" element={<Login />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/dashboard/map" element={<MapPage />} />
-                        <Route
-                            path="/dashboard/billboards"
-                            element={<BillboardsPage />}
-                        />
-                        <Route
-                            path="/dashboard/rentals"
-                            element={<RentalsPage />}
-                        />
-                        <Route
-                            path="/dashboard/clients"
-                            element={<ClientsPage />}
-                        />
-                        <Route
-                            path="/dashboard/reports"
-                            element={<ReportsPage />}
-                        />
-                        <Route
-                            path="/dashboard/users"
-                            element={<UsersPage />}
-                        />
-                        {/* Redirect sembarang rute ke login jika tidak ditemukan */}
-=======
                         {/* Rute Publik: Hanya bisa diakses jika BELUM login */}
                         <Route element={<PublicRoute />}>
                             <Route path="/" element={<Login />} />
@@ -56,30 +30,17 @@ if (container) {
                         {/* Rute Terproteksi: Hanya bisa diakses jika SUDAH login */}
                         <Route element={<ProtectedRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
-                            <Route
-                                path="/dashboard/map"
-                                element={<MapPage />}
-                            />
+                            <Route path="/dashboard/map" element={<MapPage />} />
                             <Route
                                 path="/dashboard/billboards"
                                 element={<BillboardsPage />}
                             />
-                            <Route
-                                path="/dashboard/rentals"
-                                element={<RentalsPage />}
-                            />
-                            <Route
-                                path="/dashboard/clients"
-                                element={<ClientsPage />}
-                            />
-                            <Route
-                                path="/dashboard/users"
-                                element={<UsersPage />}
-                            />
+                            <Route path="/dashboard/rentals" element={<RentalsPage />} />
+                            <Route path="/dashboard/clients" element={<ClientsPage />} />
+                            <Route path="/dashboard/users" element={<UsersPage />} />
                         </Route>
 
                         {/* Redirect sembarang rute ke rute awal */}
->>>>>>> main
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                 </BrowserRouter>
