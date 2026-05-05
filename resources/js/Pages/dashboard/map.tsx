@@ -94,6 +94,8 @@ const initialBillboards: Billboard[] = [
 export default function MapPage() {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
+    const mapModalRef = useRef<HTMLDivElement>(null);
+    const mapModalInstanceRef = useRef<L.Map | null>(null);
     const [billboards, setBillboards] = useState<Billboard[]>([]);
     const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -234,6 +236,74 @@ export default function MapPage() {
         }
     }, [billboards, mapClickMode, formData]);
 
+    // Initialize modal map for location picking
+    useEffect(() => {
+        if (!mapClickMode || !showModal || !mapModalRef.current) return;
+
+        try {
+            // Clear existing modal map
+            if (mapModalInstanceRef.current) {
+                mapModalInstanceRef.current.remove();
+                mapModalInstanceRef.current = null;
+            }
+
+            // Small delay to ensure DOM is ready
+            const timeout = setTimeout(() => {
+                if (!mapModalRef.current) return;
+
+                // Initialize modal map
+                const modalMap = L.map(mapModalRef.current, {
+                    center: [-6.8944, 112.2147],
+                    zoom: 12,
+                    zoomControl: true,
+                });
+
+                // Add OpenStreetMap tiles
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19,
+                }).addTo(modalMap);
+
+                // Click handler to select location
+                modalMap.on("click", (e) => {
+                    setFormData({
+                        ...formData,
+                        lat: e.latlng.lat.toString(),
+                        lng: e.latlng.lng.toString(),
+                    });
+
+                    // Add temporary marker at clicked location
+                    const marker = L.marker([e.latlng.lat, e.latlng.lng], {
+                        icon: L.icon({
+                            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#3b82f6"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
+                            )}`,
+                            iconSize: [32, 48],
+                            iconAnchor: [16, 48],
+                            popupAnchor: [0, -48],
+                        }),
+                    }).addTo(modalMap);
+
+                    marker.bindPopup(
+                        `📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`
+                    ).openPopup();
+                });
+
+                mapModalInstanceRef.current = modalMap;
+            }, 100);
+
+            return () => {
+                clearTimeout(timeout);
+                if (mapModalInstanceRef.current) {
+                    mapModalInstanceRef.current.remove();
+                    mapModalInstanceRef.current = null;
+                }
+            };
+        } catch (error) {
+            console.error("Error initializing modal map:", error);
+        }
+    }, [mapClickMode, showModal, formData]);
 
     const validateForm = (): boolean => {
         const newErrors: Errors = {};
@@ -516,36 +586,48 @@ export default function MapPage() {
                             </CardHeader>
                         <CardContent className="pt-6">
                             {mapClickMode && (
-                                <div className="mb-4 p-4 bg-blue-50 border border-blue-300 rounded-lg">
-                                    <p className="text-sm font-semibold text-blue-900 mb-2">
-                                        📍 Klik di map untuk set lokasi
-                                    </p>
-                                    {formData.lat && formData.lng && (
-                                        <p className="text-xs text-blue-700">
-                                            Lokasi: {parseFloat(formData.lat).toFixed(4)}, {parseFloat(formData.lng).toFixed(4)}
+                                <div className="mb-4 space-y-3">
+                                    {/* Map Container */}
+                                    <div
+                                        ref={mapModalRef}
+                                        className="rounded-lg overflow-hidden border-2 border-blue-300 bg-gray-100"
+                                        style={{ height: "400px", width: "100%" }}
+                                    />
+
+                                    {/* Info & Buttons */}
+                                    <div className="p-3 bg-blue-50 border border-blue-300 rounded-lg">
+                                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                                            📍 Klik di map untuk set lokasi
                                         </p>
-                                    )}
+                                        {formData.lat && formData.lng && (
+                                            <p className="text-xs text-blue-700 font-semibold mb-3">
+                                                ✅ Lokasi: {parseFloat(formData.lat).toFixed(4)}, {parseFloat(formData.lng).toFixed(4)}
+                                            </p>
+                                        )}
 
-                                    <div className="mt-2 flex gap-3 items-center">
-                                        <button
-                                            onClick={() => setMapClickMode(false)}
-                                            className="text-xs text-blue-600 hover:text-blue-800 font-semibold underline"
-                                        >
-                                            Selesai memilih lokasi
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setMapClickMode(false)}
+                                                className="text-xs px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded font-semibold transition-all"
+                                            >
+                                                ✓ Selesai memilih
+                                            </button>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => { setDummyMapMode((v) => !v); setDummyMarker(null); }}
-                                            className="text-xs text-gray-700 hover:text-gray-900 font-semibold underline"
-                                        >
-                                            Gunakan Dummy Map
-                                        </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => { setDummyMapMode((v) => !v); setDummyMarker(null); }}
+                                                className="text-xs px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded font-semibold transition-all"
+                                            >
+                                                Gunakan Dummy Map
+                                            </button>
+                                        </div>
                                     </div>
 
+                                    {/* Dummy Map Fallback */}
                                     {dummyMapMode && (
                                         <div
-                                            className="mt-3 border rounded h-48 bg-gray-100 relative overflow-hidden cursor-crosshair"
+                                            className="mt-2 border rounded bg-gray-100 relative overflow-hidden cursor-crosshair"
+                                            style={{ height: "200px" }}
                                             onClick={(e) => {
                                                 const el = e.currentTarget as HTMLDivElement;
                                                 const rect = el.getBoundingClientRect();
