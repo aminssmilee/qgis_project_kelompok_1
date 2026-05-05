@@ -96,6 +96,7 @@ export default function MapPage() {
     const mapInstanceRef = useRef<L.Map | null>(null);
     const mapModalRef = useRef<HTMLDivElement>(null);
     const mapModalInstanceRef = useRef<L.Map | null>(null);
+    const markerRef = useRef<L.Marker | null>(null);
     const [billboards, setBillboards] = useState<Billboard[]>([]);
     const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -246,14 +247,26 @@ export default function MapPage() {
                 mapModalInstanceRef.current.remove();
                 mapModalInstanceRef.current = null;
             }
+            
+            // Clear existing marker ref
+            if (markerRef.current) {
+                markerRef.current.remove();
+                markerRef.current = null;
+            }
 
             // Small delay to ensure DOM is ready
             const timeout = setTimeout(() => {
                 if (!mapModalRef.current) return;
 
-                // Initialize modal map
+                // Determine initial map center
+                const defaultCenter: [number, number] = [-6.8944, 112.2147];
+                const mapCenter: [number, number] = formData.lat && formData.lng 
+                    ? [parseFloat(formData.lat), parseFloat(formData.lng)]
+                    : defaultCenter;
+
+                // Initialize modal map with selected location as center
                 const modalMap = L.map(mapModalRef.current, {
-                    center: [-6.8944, 112.2147],
+                    center: mapCenter,
                     zoom: 12,
                     zoomControl: true,
                 });
@@ -265,19 +278,15 @@ export default function MapPage() {
                     maxZoom: 19,
                 }).addTo(modalMap);
 
-                // Click handler to select location
-                modalMap.on("click", (e) => {
-                    setFormData((prev) => ({
-                        ...prev,
-                        lat: e.latlng.lat.toString(),
-                        lng: e.latlng.lng.toString(),
-                    }));
-
-                    // Add temporary marker at clicked location
-                    const marker = L.marker([e.latlng.lat, e.latlng.lng], {
+                // Restore marker from formData if location already selected
+                if (formData.lat && formData.lng) {
+                    const lat = parseFloat(formData.lat);
+                    const lng = parseFloat(formData.lng);
+                    
+                    const marker = L.marker([lat, lng], {
                         icon: L.icon({
                             iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#3b82f6"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
+                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#10b981"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
                             )}`,
                             iconSize: [32, 48],
                             iconAnchor: [16, 48],
@@ -286,8 +295,47 @@ export default function MapPage() {
                     }).addTo(modalMap);
 
                     marker.bindPopup(
-                        `📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`
+                        `📍 Lokasi Terpilih<br/>Lat: ${lat.toFixed(4)}<br/>Lng: ${lng.toFixed(4)}`
                     ).openPopup();
+
+                    markerRef.current = marker;
+                }
+
+                // Click handler to select location
+                modalMap.on("click", (e) => {
+                    // Remove old marker if exists
+                    if (markerRef.current) {
+                        markerRef.current.remove();
+                        markerRef.current = null;
+                    }
+
+                    // Update form data
+                    setFormData((prev) => ({
+                        ...prev,
+                        lat: e.latlng.lat.toString(),
+                        lng: e.latlng.lng.toString(),
+                    }));
+
+                    // Add new marker at clicked location
+                    const newMarker = L.marker([e.latlng.lat, e.latlng.lng], {
+                        icon: L.icon({
+                            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#10b981"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
+                            )}`,
+                            iconSize: [32, 48],
+                            iconAnchor: [16, 48],
+                            popupAnchor: [0, -48],
+                        }),
+                    }).addTo(modalMap);
+
+                    newMarker.bindPopup(
+                        `📍 Lokasi Terpilih<br/>Lat: ${e.latlng.lat.toFixed(4)}<br/>Lng: ${e.latlng.lng.toFixed(4)}`
+                    ).openPopup();
+
+                    // Pan map to marker
+                    modalMap.panTo(newMarker.getLatLng());
+
+                    markerRef.current = newMarker;
                 });
 
                 mapModalInstanceRef.current = modalMap;
