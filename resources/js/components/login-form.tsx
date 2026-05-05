@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
     Field,
@@ -24,7 +25,7 @@ export function LoginForm({
         {},
     );
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const newErrors: { email?: string; password?: string } = {};
@@ -44,9 +45,33 @@ export function LoginForm({
             return;
         }
 
-        // Jika validasi lolos
-        setErrors({});
-        navigate("/dashboard");
+        try {
+            setErrors({});
+            // Mendapatkan CSRF cookie
+            await api.get("/sanctum/csrf-cookie", { baseURL: "/" });
+
+            const response = await api.post("/admin/login", {
+                email,
+                password,
+            });
+
+            // Simpan token (plainTextToken dari backend)
+            if (response.data.token) {
+                localStorage.setItem("admin_token", response.data.token);
+            }
+
+            navigate("/dashboard");
+        } catch (error: any) {
+            if (error.response?.status === 422) {
+                setErrors(error.response.data.errors);
+            } else {
+                setErrors({
+                    email:
+                        error.response?.data?.message ||
+                        "Terjadi kesalahan saat login",
+                });
+            }
+        }
     };
 
     return (
