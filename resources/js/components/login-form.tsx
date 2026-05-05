@@ -154,6 +154,28 @@ export function LoginForm({
                         Login
                     </Button>
                 </Field>
+                <Field>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                            // Dummy login untuk keperluan development sementara
+                            localStorage.setItem("admin_token", "DUMMY_TOKEN");
+                            // Optional: simpan info user sederhana
+                            localStorage.setItem(
+                                "admin_user",
+                                JSON.stringify({ name: "Admin (dummy)", email: "admin@gmail.com" }),
+                            );
+                            navigate("/dashboard");
+                        }}
+                    >
+                        Dummy Login (dev)
+                    </Button>
+                    <FieldDescription className="text-center text-xs mt-2">
+                        Tombol ini hanya untuk development — login sementara tanpa backend.
+                    </FieldDescription>
+                </Field>
                 <FieldSeparator>only admin</FieldSeparator>
                 {/* <Field>
                     <Button variant="outline" type="button" className="w-full">
