@@ -9,6 +9,7 @@ import BillboardsPage from "./Pages/dashboard/billboards";
 import RentalsPage from "./Pages/dashboard/rentals";
 import ClientsPage from "./Pages/dashboard/clients";
 import UsersPage from "./Pages/dashboard/users";
+import ReportsPage from "./Pages/dashboard/reports";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const container = document.getElementById("app");
@@ -34,6 +35,10 @@ if (container) {
                         <Route
                             path="/dashboard/clients"
                             element={<ClientsPage />}
+                        />
+                        <Route
+                            path="/dashboard/reports"
+                            element={<ReportsPage />}
                         />
                         <Route
                             path="/dashboard/users"
