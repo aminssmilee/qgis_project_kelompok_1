@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 final class Billboard extends Model
 {
@@ -49,5 +51,21 @@ final class Billboard extends Model
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
         ];
+    }
+
+    /**
+     * @return HasMany<BillboardPricing, $this>
+     */
+    public function pricings(): HasMany
+    {
+        return $this->hasMany(BillboardPricing::class);
+    }
+
+    /**
+     * Get the active pricing.
+     */
+    public function activePricing(): HasOne
+    {
+        return $this->hasOne(BillboardPricing::class)->where('is_active', true);
     }
 }
