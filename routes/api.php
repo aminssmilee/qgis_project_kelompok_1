@@ -44,7 +44,6 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/spots/{id}/book', [BookingController::class, 'store']);
             Route::get('/activities', [BookingController::class, 'index']);
             Route::get('/activities/{id}', [BookingController::class, 'show']);
-
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
             Route::patch('/companies/{id}', [CompanyController::class, 'update']);
