@@ -47,6 +47,41 @@
 
 ---
 
+## Dashboard
+
+### Get Dashboard Summary
+- **Endpoint**: `GET /dashboard/summary`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Dashboard summary retrieved successfully",
+    "data": {
+      "active_ads_count": 2,
+      "pending_invoices_count": 1
+    }
+  }
+  ```
+
+---
+
+## Categories
+
+### Get All Categories
+- **Endpoint**: `GET /categories`
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Categories retrieved successfully",
+    "data": [
+      { "id": "...", "name": "Videotron", "icon": "tv" },
+      { "id": "...", "name": "Baliho", "icon": "picture_in_picture" }
+    ]
+  }
+  ```
+
+---
+
 ## Explore
 
 ### Get All Spots (Peta & List)

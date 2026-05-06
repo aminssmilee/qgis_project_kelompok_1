@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
+use App\Http\Controllers\Api\V1\User\CategoryController;
 use App\Http\Controllers\Api\V1\User\CompanyController;
+use App\Http\Controllers\Api\V1\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\Api\V1\User\ProfileController;
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
@@ -23,11 +25,17 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/spots', [BillboardController::class, 'index']);
         Route::get('/spots/{id}', [BillboardController::class, 'show']);
 
+        // Public Category Routes
+        Route::get('/categories', [CategoryController::class, 'index']);
+
         // Protected User Routes (Require Token)
         Route::middleware(['auth:sanctum', 'role:user'])->group(function (): void {
             Route::get('/me', [AuthController::class, 'me']);
             Route::patch('/me', [ProfileController::class, 'update']);
             Route::post('/logout', [AuthController::class, 'logout']);
+
+            // Dashboard Summary
+            Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
 
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
