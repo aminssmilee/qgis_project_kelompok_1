@@ -19,13 +19,14 @@ final class Billboard extends Model
         'name',
         'code',
         'description',
+        'thumbnail_url',
         'address',
         'district',
         'city',
-        'latitude',
-        'longitude',
+        'location',
         'facing_direction',
         'traffic_density',
+        'impressions_per_day',
         'is_illuminated',
         'is_active',
         'is_featured',
@@ -43,8 +44,7 @@ final class Billboard extends Model
     public function casts(): array
     {
         return [
-            'latitude' => 'decimal:7',
-            'longitude' => 'decimal:7',
+
             'is_illuminated' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',

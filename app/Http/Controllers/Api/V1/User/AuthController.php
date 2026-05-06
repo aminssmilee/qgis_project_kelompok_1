@@ -25,10 +25,9 @@ final readonly class AuthController
         $result = $this->userAuthService->register($request->validated());
 
         return response()->json([
-            'message' => 'User registered successfully',
-            'data' => new UserResource($result['user']),
             'access_token' => $result['token'],
-            'token_type' => 'Bearer',
+            'refresh_token' => 'dummy_refresh_token_for_sanctum', // Sanctum doesn't use refresh tokens natively
+            'user' => new UserResource($result['user']),
         ], 201);
     }
 
@@ -40,10 +39,9 @@ final readonly class AuthController
         $result = $this->userAuthService->login($request->validated());
 
         return response()->json([
-            'message' => 'Login successful',
-            'data' => new UserResource($result['user']),
             'access_token' => $result['token'],
-            'token_type' => 'Bearer',
+            'refresh_token' => 'dummy_refresh_token_for_sanctum',
+            'user' => new UserResource($result['user']),
         ]);
     }
 

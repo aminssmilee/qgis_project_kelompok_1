@@ -1,7 +1,7 @@
 import "../css/app.css";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, replace } from "react-router-dom";
 import Dashboard from "./Pages/dashboard";
 import Login from "./Pages/login";
 import MapPage from "./Pages/dashboard/map";
@@ -37,6 +37,7 @@ if (container) {
                             />
                             <Route path="/dashboard/rentals" element={<RentalsPage />} />
                             <Route path="/dashboard/clients" element={<ClientsPage />} />
+                            <Route path="/dashboard/reports" element={<ReportsPage />} />
                             <Route path="/dashboard/users" element={<UsersPage />} />
                         </Route>
 

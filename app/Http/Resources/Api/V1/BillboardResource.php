@@ -26,8 +26,8 @@ final class BillboardResource extends JsonResource
             'district' => $this->district,
             'city' => $this->city,
             'coordinates' => [
-                'latitude' => (float) $this->latitude,
-                'longitude' => (float) $this->longitude,
+                'latitude' => $this->latitude ?? null, // Will be fetched via spatial query like ST_Y(location::geometry)
+                'longitude' => $this->longitude ?? null, // Will be fetched via spatial query like ST_X(location::geometry)
             ],
             'facing_direction' => $this->facing_direction,
             'traffic_density' => $this->traffic_density,
