@@ -18,23 +18,24 @@ final class BillboardResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'category_id' => $this->category_id,
-            'name' => $this->name,
-            'code' => $this->code,
-            'description' => $this->description,
-            'address' => $this->address,
-            'district' => $this->district,
-            'city' => $this->city,
-            'coordinates' => [
-                'latitude' => (float) $this->latitude,
-                'longitude' => (float) $this->longitude,
-            ],
-            'facing_direction' => $this->facing_direction,
-            'traffic_density' => $this->traffic_density,
-            'is_illuminated' => $this->is_illuminated,
-            'is_featured' => $this->is_featured,
-            // 'category' => new BillboardCategoryResource($this->whenLoaded('category')),
-            'created_at' => $this->created_at?->toIso8601String(),
+            'title' => $this->name,
+            'latitude' => (float) ($this->latitude ?? null),
+            'longitude' => (float) ($this->longitude ?? null),
+            'price_per_month' => (int) ($this->activePricing?->price_per_month ?? 0),
+            'is_available' => (bool) $this->is_active,
+            'impressions_per_day' => (int) $this->impressions_per_day,
+            'thumbnail_url' => $this->thumbnail_url,
+            // Full data for detail
+            'code' => $this->when($request->routeIs('*.show'), $this->code),
+            'description' => $this->when($request->routeIs('*.show'), $this->description),
+            'address' => $this->when($request->routeIs('*.show'), $this->address),
+            'district' => $this->when($request->routeIs('*.show'), $this->district),
+            'city' => $this->when($request->routeIs('*.show'), $this->city),
+            'facing_direction' => $this->when($request->routeIs('*.show'), $this->facing_direction),
+            'traffic_density' => $this->when($request->routeIs('*.show'), $this->traffic_density),
+            'is_illuminated' => $this->when($request->routeIs('*.show'), $this->is_illuminated),
+            'is_featured' => $this->when($request->routeIs('*.show'), $this->is_featured),
+            'created_at' => $this->when($request->routeIs('*.show'), $this->created_at?->toIso8601String()),
         ];
     }
 }
