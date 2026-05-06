@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
+use App\Http\Controllers\Api\V1\User\BookingController;
 use App\Http\Controllers\Api\V1\User\CategoryController;
 use App\Http\Controllers\Api\V1\User\CompanyController;
 use App\Http\Controllers\Api\V1\User\DashboardController as UserDashboardController;
@@ -18,8 +19,10 @@ Route::prefix('v1')->group(function (): void {
     // End User API (Mobile App)
     Route::prefix('user')->group(function (): void {
         // Public Auth Routes
-        Route::post('/register', [AuthController::class, 'register']);
-        Route::post('/login', [AuthController::class, 'login']);
+        Route::prefix('auth')->group(function (): void {
+            Route::post('/register', [AuthController::class, 'register']);
+            Route::post('/login', [AuthController::class, 'login']);
+        });
 
         // Public Spot Routes (Explore)
         Route::get('/spots', [BillboardController::class, 'index']);
@@ -36,6 +39,11 @@ Route::prefix('v1')->group(function (): void {
 
             // Dashboard Summary
             Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
+
+            // Booking & Activity Routes
+            Route::post('/spots/{id}/book', [BookingController::class, 'store']);
+            Route::get('/activities', [BookingController::class, 'index']);
+            Route::get('/activities/{id}', [BookingController::class, 'show']);
 
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);

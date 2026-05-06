@@ -158,3 +158,68 @@
     "nib": "..."
   }
   ```
+
+---
+
+## Booking
+
+### Book a Spot
+- **Endpoint**: `POST /spots/{id}/book`
+- **Headers**: `Authorization: Bearer {token}`
+- **Request Body**:
+  ```json
+  {
+    "start_date": "2026-06-01",
+    "end_date": "2026-07-01",
+    "notes": "Promo Lebaran"
+  }
+  ```
+- **Response (201 Created)**:
+  ```json
+  {
+    "message": "Booking created successfully",
+    "data": {
+      "id": "...",
+      "booking_code": "ORD-20260506-XYZ123",
+      "total_price": 15000000,
+      "status": "pending_payment"
+    }
+  }
+  ```
+
+---
+
+## Activity
+
+### Get All Activities (History)
+- **Endpoint**: `GET /activities`
+- **Headers**: `Authorization: Bearer {token}`
+- **Query Params**:
+  - `status` (string): `pending`, `active`, `completed`.
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Activities retrieved successfully",
+    "data": [
+      {
+        "id": "...",
+        "invoice_no": "ORD-20260506-XYZ123",
+        "spot": {
+          "title": "Videotron Basuki Rahmat",
+          "type": "Videotron"
+        },
+        "status": "pending",
+        "total_price": 15000000,
+        "deadline_at": "2026-05-07T23:59:59Z",
+        "start_date": "2026-06-01",
+        "end_date": "2026-07-01"
+      }
+    ]
+  }
+  ```
+
+### Get Activity Detail
+- **Endpoint**: `GET /activities/{id}`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response (200 OK)**: Detailed activity information.
+

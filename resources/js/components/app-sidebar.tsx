@@ -37,11 +37,6 @@ import {
 } from "lucide-react";
 
 const data = {
-    user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg",
-    },
     navMain: [
         {
             title: "Peta Billboard",
@@ -179,6 +174,17 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    // Ambil data user dari localStorage yang disimpan saat login
+    const storedUser = localStorage.getItem("admin_user");
+    const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+    
+    // Gunakan data user jika ada, atau fallback ke nilai default
+    const activeUser = {
+        name: parsedUser?.name || "Admin",
+        email: parsedUser?.email || "admin@example.com",
+        avatar: parsedUser?.avatar || "/assets/images/logobil.jpeg",
+    };
+
     return (
         <Sidebar collapsible="offcanvas" {...props}>
             <SidebarHeader>
@@ -216,9 +222,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={data.user} />
+                <NavUser user={activeUser} />
             </SidebarFooter>
         </Sidebar>
     );
 }
 export default AppSidebar;
+
