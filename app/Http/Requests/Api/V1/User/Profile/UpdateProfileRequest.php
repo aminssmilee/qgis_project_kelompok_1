@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests\Api\V1\User\Auth;
+namespace App\Http\Requests\Api\V1\User\Profile;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class RegisterRequest extends FormRequest
+final class UpdateProfileRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,10 +25,9 @@ final class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:150', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-            'company_name' => ['required', 'string', 'max:255'],
-            'nib' => ['required', 'string', 'max:30'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'avatar_url' => ['nullable', 'string', 'max:500'],
+            'phone' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

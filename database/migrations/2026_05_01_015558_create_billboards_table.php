@@ -22,8 +22,7 @@ return new class extends Migration
             $table->text('address');
             $table->string('district', 100)->nullable()->comment('Kecamatan');
             $table->string('city', 100)->default('Samarinda');
-            $table->decimal('latitude', 10, 7);
-            $table->decimal('longitude', 10, 7);
+            $table->geography('location', subtype: 'point', srid: 4326)->nullable();
             $table->string('facing_direction', 10)->nullable()->comment('N, S, E, W, NE, NW, SE, SW');
             $table->string('traffic_density', 20)->default('medium')->comment('low | medium | high');
             $table->boolean('is_illuminated')->default(false)->comment('Apakah ada penerangan malam');
@@ -32,7 +31,7 @@ return new class extends Migration
             $table->foreignUuid('created_by')->nullable()->constrained('admins');
             $table->timestamps();
 
-            $table->index(['latitude', 'longitude']);
+            $table->spatialIndex('location');
             $table->index('district');
             $table->index('is_active');
         });

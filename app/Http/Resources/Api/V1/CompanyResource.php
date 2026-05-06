@@ -7,7 +7,7 @@ namespace App\Http\Resources\Api\V1;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-final class UserResource extends JsonResource
+final class CompanyResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -19,10 +19,10 @@ final class UserResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'role' => $this->role === 'user' ? 'Customer' : ucfirst($this->role),
-            'email' => $this->email,
-            'avatar_url' => $this->avatar_url,
-            'company_id' => $this->company_id,
+            'address' => $this->address,
+            'npwp' => $this->npwp,
+            'nib' => $this->nib,
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }
