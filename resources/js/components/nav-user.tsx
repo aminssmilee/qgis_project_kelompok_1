@@ -43,6 +43,7 @@ export function NavUser({
             console.error("Logout failed:", error);
         } finally {
             localStorage.removeItem("admin_token");
+            localStorage.removeItem("admin_user");
             navigate("/login");
         }
     };
