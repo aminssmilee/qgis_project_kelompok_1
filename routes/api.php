@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
+use App\Http\Controllers\Api\V1\User\BookingController;
 use App\Http\Controllers\Api\V1\User\CategoryController;
 use App\Http\Controllers\Api\V1\User\CompanyController;
 use App\Http\Controllers\Api\V1\User\DashboardController as UserDashboardController;
@@ -36,6 +37,9 @@ Route::prefix('v1')->group(function (): void {
 
             // Dashboard Summary
             Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
+
+            // Booking Routes
+            Route::post('/spots/{id}/book', [BookingController::class, 'store']);
 
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
