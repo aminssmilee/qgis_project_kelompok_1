@@ -617,10 +617,10 @@ export default function MapPage() {
                         onClick={() => setShowModal(false)}
                     />
                     <div
-                        className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
+                        className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none overflow-y-auto"
                     >
-                        <Card className="w-full max-w-md shadow-2xl pointer-events-auto">
-                            <CardHeader className="flex flex-row items-center justify-between border-b">
+                        <Card className="w-full max-w-md shadow-2xl pointer-events-auto my-auto flex flex-col max-h-[90vh]">
+                            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <Plus className="h-5 w-5" />
                                     Tambah Billboard Baru
@@ -632,14 +632,14 @@ export default function MapPage() {
                                     <X className="h-5 w-5" />
                                 </button>
                             </CardHeader>
-                        <CardContent className="pt-6">
+                        <CardContent className="pt-6 overflow-y-auto flex-1 flex flex-col">
                             {mapClickMode && (
                                 <div className="mb-4 space-y-3">
                                     {/* Map Container */}
                                     <div
                                         ref={mapModalRef}
-                                        className="rounded-lg overflow-hidden border-2 border-blue-300 bg-gray-100"
-                                        style={{ height: "400px", width: "100%" }}
+                                        className="rounded-lg overflow-hidden border-2 border-blue-300 bg-gray-100 w-full flex-shrink-0"
+                                        style={{ height: "clamp(250px, 40vh, 400px)" }}
                                     />
 
                                     {/* Info & Buttons */}
@@ -864,7 +864,7 @@ export default function MapPage() {
                                     </div>
                                 )}
 
-                                <div className="flex gap-2 pt-4 border-t">
+                                <div className="flex gap-2 pt-4 border-t mt-auto flex-shrink-0 bg-white sticky bottom-0">
                                     <Button
                                         type="button"
                                         variant="outline"
