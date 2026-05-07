@@ -78,7 +78,10 @@ const rolePermissions = {
 };
 
 export default function UsersPage() {
-    const [users, setUsers] = useState(usersData);
+    const [users, setUsers] = useState(() => {
+        const stored = localStorage.getItem("users");
+        return stored ? JSON.parse(stored) : usersData;
+    });
     const [selectedRole, setSelectedRole] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<{type: "success" | "error"; message: string} | null>(null);
