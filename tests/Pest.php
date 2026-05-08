@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__.'/browser-socket-polyfill.php';
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
@@ -20,7 +22,7 @@ pest()->extend(TestCase::class)
 
         $this->freezeTime();
     })
-    ->in('Browser', 'Feature', 'Unit');
+    ->in('Feature', 'Unit');
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
 

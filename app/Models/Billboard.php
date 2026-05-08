@@ -68,4 +68,12 @@ final class Billboard extends Model
     {
         return $this->hasOne(BillboardPricing::class)->where('is_active', true);
     }
+
+    /**
+     * @return HasMany<Rental, $this>
+     */
+    public function rentals(): HasMany
+    {
+        return $this->hasMany(Rental::class);
+    }
 }

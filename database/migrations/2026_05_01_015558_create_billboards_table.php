@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -22,7 +23,11 @@ return new class extends Migration
             $table->text('address');
             $table->string('district', 100)->nullable()->comment('Kecamatan');
             $table->string('city', 100)->default('Samarinda');
-            $table->geography('location', subtype: 'point', srid: 4326)->nullable();
+            if (DB::getDriverName() === 'pgsql') {
+                $table->geography('location', subtype: 'point', srid: 4326)->nullable();
+            } else {
+                $table->text('location')->nullable();
+            }
             $table->string('facing_direction', 10)->nullable()->comment('N, S, E, W, NE, NW, SE, SW');
             $table->string('traffic_density', 20)->default('medium')->comment('low | medium | high');
             $table->boolean('is_illuminated')->default(false)->comment('Apakah ada penerangan malam');
@@ -31,7 +36,9 @@ return new class extends Migration
             $table->foreignUuid('created_by')->nullable()->constrained('admins');
             $table->timestamps();
 
-            $table->spatialIndex('location');
+            if (DB::getDriverName() === 'pgsql') {
+                $table->spatialIndex('location');
+            }
             $table->index('district');
             $table->index('is_active');
         });

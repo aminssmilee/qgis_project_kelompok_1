@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
-import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,104 +11,54 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-    Plus,
-    Edit2,
-    Trash2,
-    Shield,
-    MoreHorizontal,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
-    CheckCircle2,
-    XCircle,
-} from "lucide-react";
-import {
-    useReactTable,
-    getCoreRowModel,
-    getPaginationRowModel,
-    flexRender,
-    createColumnHelper,
-} from "@tanstack/react-table";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Plus, Edit2, Trash2, Shield, User, X, CheckCircle, AlertCircle } from "lucide-react";
 
 const usersData = [
     {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
-        "name": "Admin Utama",
-        "email": "admin@billboards.id",
-        "role": "Super Admin",
-        "status": "Active",
-        "lastLogin": "2024-05-04 14:30",
-        "joinDate": "2023-01-10",
-        "company_id": null,
-        "is_verified": true,
-        "is_active": true
+        id: 1,
+        name: "Admin Utama",
+        email: "admin@billboards.id",
+        role: "Super Admin",
+        status: "Active",
+        lastLogin: "2024-05-04 14:30",
+        joinDate: "2023-01-10",
     },
     {
-        "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-        "name": "Siti Nurhaliza",
-        "email": "siti@billboards.id",
-        "role": "Admin",
-        "status": "Active",
-        "lastLogin": "2024-05-04 10:15",
-        "joinDate": "2023-06-20",
-        "company_id": "7890e840-e29b-41d4-a716-446655440123",
-        "is_verified": true,
-        "is_active": true
+        id: 2,
+        name: "Siti Nurhaliza",
+        email: "siti@billboards.id",
+        role: "Admin",
+        status: "Active",
+        lastLogin: "2024-05-04 10:15",
+        joinDate: "2023-06-20",
     },
     {
-        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "name": "Budi Santoso",
-        "email": "budi@billboards.id",
-        "role": "Manager",
-        "status": "Active",
-        "lastLogin": "2024-05-03 16:45",
-        "joinDate": "2023-08-15",
-        "company_id": "7890e840-e29b-41d4-a716-446655440123",
-        "is_verified": true,
-        "is_active": true
+        id: 3,
+        name: "Budi Santoso",
+        email: "budi@billboards.id",
+        role: "Manager",
+        status: "Active",
+        lastLogin: "2024-05-03 16:45",
+        joinDate: "2023-08-15",
     },
     {
-        "id": "123e4567-e89b-12d3-a456-426614174000",
-        "name": "Rini Wijaya",
-        "email": "rini@billboards.id",
-        "role": "Staff",
-        "status": "Active",
-        "lastLogin": "2024-05-04 09:20",
-        "joinDate": "2023-11-01",
-        "company_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-        "is_verified": true,
-        "is_active": true
+        id: 4,
+        name: "Rini Wijaya",
+        email: "rini@billboards.id",
+        role: "Staff",
+        status: "Active",
+        lastLogin: "2024-05-04 09:20",
+        joinDate: "2023-11-01",
     },
     {
-        "id": "258d4a00-e29b-41d4-a716-446655449999",
-        "name": "Eko Priyanto",
-        "email": "eko@billboards.id",
-        "role": "Staff",
-        "status": "Inactive",
-        "lastLogin": "2024-04-15 13:00",
-        "joinDate": "2024-01-10",
-        "company_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-        "is_verified": false,
-        "is_active": false
-    }
+        id: 5,
+        name: "Eko Priyanto",
+        email: "eko@billboards.id",
+        role: "Staff",
+        status: "Inactive",
+        lastLogin: "2024-04-15 13:00",
+        joinDate: "2024-01-10",
+    },
 ];
 
 const rolePermissions = {
@@ -128,13 +77,82 @@ const rolePermissions = {
     Staff: ["Lihat data billboard", "Input informasi field"],
 };
 
-const columnHelper = createColumnHelper<any>();
-
 export default function UsersPage() {
-    const [users] = useState(usersData);
-    const [selectedRole, setSelectedRole] = useState<string | null>(null);
+    const [users, setUsers] = useState(() => {
+        const stored = localStorage.getItem("users");
+        return stored ? JSON.parse(stored) : usersData;
+    });
+    const [selectedRole, setSelectedRole] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [submitStatus, setSubmitStatus] = useState<{type: "success" | "error"; message: string} | null>(null);
+    const [formData, setFormData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        role: "Staff",
+        status: "Active",
+    });
+    const [errors, setErrors] = useState({});
 
-    const getRoleColor = (role: string) => {
+    const validateForm = () => {
+        const newErrors: any = {};
+        
+        if (!formData.name.trim()) newErrors.name = "Nama wajib diisi";
+        if (!formData.email.trim()) newErrors.email = "Email wajib diisi";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Format email tidak valid";
+        if (!formData.password.trim()) newErrors.password = "Password wajib diisi";
+        if (formData.password.length < 6) newErrors.password = "Password minimal 6 karakter";
+        if (!formData.role) newErrors.role = "Role wajib dipilih";
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleAddUser = (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitStatus(null);
+
+        if (!validateForm()) {
+            setSubmitStatus({ type: "error", message: "Mohon periksa kembali data Anda" });
+            return;
+        }
+
+        // Create new user with generated ID
+        const newUser = {
+            id: Math.max(...users.map(u => u.id), 0) + 1,
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+            status: formData.status,
+            lastLogin: "—",
+            joinDate: new Date().toISOString().split('T')[0],
+        };
+
+        // Add user to list
+        const updatedUsers = [...users, newUser];
+        setUsers(updatedUsers);
+
+        // Save to localStorage
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+        // Show success message
+        setSubmitStatus({ type: "success", message: `User ${formData.name} berhasil ditambahkan!` });
+
+        // Reset form
+        setTimeout(() => {
+            setFormData({ name: "", email: "", password: "", role: "Staff", status: "Active" });
+            setShowModal(false);
+            setSubmitStatus(null);
+        }, 1500);
+    };
+
+    const handleDeleteUser = (userId: number) => {
+        const updatedUsers = users.filter(u => u.id !== userId);
+        setUsers(updatedUsers);
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+    };
+
+    const getRoleColor = (role) => {
         switch (role) {
             case "Super Admin":
                 return "bg-red-100 text-red-800";
@@ -149,113 +167,18 @@ export default function UsersPage() {
         }
     };
 
-    const columns = [
-        columnHelper.accessor("name", {
-            header: "Nama",
-            cell: (info) => <span className="font-medium">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("email", {
-            header: "Email",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("role", {
-            header: "Role",
-            cell: (info) => (
-                <Badge className={getRoleColor(info.getValue())}>
-                    {info.getValue()}
-                </Badge>
-            ),
-        }),
-        columnHelper.accessor("status", {
-            header: "Status",
-            cell: (info) => {
-                const status = info.getValue();
-                const isActive = status === "Active";
-                return (
-                    <Badge
-                        className={cn(
-                            "gap-1 px-2 py-0.5 font-medium",
-                            isActive
-                                ? "bg-green-100 text-green-800 hover:bg-green-100/80"
-                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80"
-                        )}
-                    >
-                        {isActive ? (
-                            <CheckCircle2 className="h-3 w-3" />
-                        ) : (
-                            <XCircle className="h-3 w-3" />
-                        )}
-                        {status}
-                    </Badge>
-                );
-            },
-        }),
-        columnHelper.accessor("lastLogin", {
-            header: "Last Login",
-            cell: (info) => <span className="text-sm text-gray-500">{info.getValue()}</span>,
-        }),
-        columnHelper.display({
-            id: "actions",
-            header: () => <div className="text-right">Aksi</div>,
-            cell: (info) => (
-                <div className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => console.log("Edit", info.row.original.id)}>
-                                <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
-                                <span>Edit User</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => console.log("Delete", info.row.original.id)}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Hapus User</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
-        }),
-    ];
-
-    const table = useReactTable({
-        data: users,
-        columns,
-        getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
-        },
-    });
-
     return (
         <DashboardLayout title="Pengaturan User">
+            {/* Stats */}
             <div className="grid gap-4 md:grid-cols-3 mb-6">
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Total User</p>
-                            <p className="text-3xl font-bold text-blue-600">{users.length}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">User Aktif</p>
-                            <p className="text-3xl font-bold text-green-600">
-                                {users.filter((u) => u.status === "Active").length}
+                            <p className="text-sm font-medium text-gray-600">
+                                Total User
+                            </p>
+                            <p className="text-3xl font-bold text-blue-600">
+                                {users.length}
                             </p>
                         </div>
                     </CardContent>
@@ -263,9 +186,28 @@ export default function UsersPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Admin</p>
+                            <p className="text-sm font-medium text-gray-600">
+                                User Aktif
+                            </p>
+                            <p className="text-3xl font-bold text-green-600">
+                                {users.filter((u) => u.status === "Active")
+                                    .length}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-gray-600">
+                                Admin
+                            </p>
                             <p className="text-3xl font-bold text-orange-600">
-                                {users.filter((u) => u.role === "Super Admin" || u.role === "Admin").length}
+                                {users.filter(
+                                    (u) =>
+                                        u.role === "Super Admin" ||
+                                        u.role === "Admin"
+                                ).length}
                             </p>
                         </div>
                     </CardContent>
@@ -273,133 +215,105 @@ export default function UsersPage() {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6">
+                {/* Users Table */}
                 <div className="lg:col-span-2">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Daftar Pengguna</CardTitle>
-                            <Button size="sm" className="gap-2">
+                            <Button size="sm" className="gap-2" onClick={() => setShowModal(true)}>
                                 <Plus className="h-4 w-4" />
                                 Tambah User
                             </Button>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent>
                             <div className="rounded-lg border overflow-hidden">
                                 <Table>
                                     <TableHeader className="bg-gray-50">
-                                        {table.getHeaderGroups().map((headerGroup) => (
-                                            <TableRow key={headerGroup.id}>
-                                                {headerGroup.headers.map((header) => (
-                                                    <TableHead key={header.id} className="font-semibold">
-                                                        {header.isPlaceholder
-                                                            ? null
-                                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                                    </TableHead>
-                                                ))}
-                                            </TableRow>
-                                        ))}
+                                        <TableRow>
+                                            <TableHead className="font-semibold">
+                                                Nama
+                                            </TableHead>
+                                            <TableHead className="font-semibold">
+                                                Email
+                                            </TableHead>
+                                            <TableHead className="font-semibold">
+                                                Role
+                                            </TableHead>
+                                            <TableHead className="font-semibold">
+                                                Status
+                                            </TableHead>
+                                            <TableHead className="font-semibold">
+                                                Last Login
+                                            </TableHead>
+                                            <TableHead className="font-semibold text-right">
+                                                Aksi
+                                            </TableHead>
+                                        </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {table.getRowModel().rows.length > 0 ? (
-                                            table.getRowModel().rows.map((row) => (
-                                                <TableRow
-                                                    key={row.id}
-                                                    className="hover:bg-gray-50 cursor-pointer"
-                                                    onClick={() => setSelectedRole(row.original.role)}
-                                                >
-                                                    {row.getVisibleCells().map((cell) => (
-                                                        <TableCell key={cell.id}>
-                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                        </TableCell>
-                                                    ))}
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={columns.length} className="h-24 text-center">
-                                                    No results.
+                                        {users.map((user) => (
+                                            <TableRow
+                                                key={user.id}
+                                                className="hover:bg-gray-50 cursor-pointer"
+                                                onClick={() =>
+                                                    setSelectedRole(user.role)
+                                                }
+                                            >
+                                                <TableCell className="font-medium">
+                                                    {user.name}
+                                                </TableCell>
+                                                <TableCell className="text-sm">
+                                                    {user.email}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge className={getRoleColor(user.role)}>
+                                                        {user.role}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={
+                                                            user.status ===
+                                                            "Active"
+                                                                ? "bg-green-100 text-green-800"
+                                                                : "bg-gray-100 text-gray-800"
+                                                        }
+                                                    >
+                                                        {user.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-sm text-gray-500">
+                                                    {user.lastLogin}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-orange-600 hover:text-orange-700"
+                                                        >
+                                                            <Edit2 className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-700"
+                                                            onClick={() => handleDeleteUser(user.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
-                                        )}
+                                        ))}
                                     </TableBody>
                                 </Table>
-                            </div>
-
-                            {/* Pagination */}
-                            <div className="flex items-center justify-between px-2 py-2">
-                                <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-                                    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                                    {table.getFilteredRowModel().rows.length} row(s) selected.
-                                </div>
-                                <div className="flex w-full items-center gap-8 lg:w-fit">
-                                    <div className="hidden items-center gap-2 lg:flex">
-                                        <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                                            Rows per page
-                                        </Label>
-                                        <Select
-                                            value={`${table.getState().pagination.pageSize}`}
-                                            onValueChange={(value) => {
-                                                table.setPageSize(Number(value));
-                                            }}
-                                        >
-                                            <SelectTrigger className="h-8 w-20" id="rows-per-page">
-                                                <SelectValue placeholder={table.getState().pagination.pageSize} />
-                                            </SelectTrigger>
-                                            <SelectContent side="top">
-                                                {[10, 20, 30, 40, 50].map((pageSize) => (
-                                                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                                                        {pageSize}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-                                    </div>
-                                    <div className="ml-auto flex items-center gap-2 lg:ml-0">
-                                        <Button
-                                            variant="outline"
-                                            className="hidden h-8 w-8 p-0 lg:flex"
-                                            onClick={() => table.setPageIndex(0)}
-                                            disabled={!table.getCanPreviousPage()}
-                                        >
-                                            <span className="sr-only">Go to first page</span>
-                                            <ChevronsLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => table.previousPage()}
-                                            disabled={!table.getCanPreviousPage()}
-                                        >
-                                            <span className="sr-only">Go to previous page</span>
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => table.nextPage()}
-                                            disabled={!table.getCanNextPage()}
-                                        >
-                                            <span className="sr-only">Go to next page</span>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            className="hidden h-8 w-8 p-0 lg:flex"
-                                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                                            disabled={!table.getCanNextPage()}
-                                        >
-                                            <span className="sr-only">Go to last page</span>
-                                            <ChevronsRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
 
+                {/* Role Permissions */}
                 <div className="lg:col-span-1 space-y-4">
                     <Card>
                         <CardHeader>
@@ -410,19 +324,23 @@ export default function UsersPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {Object.entries(rolePermissions).map(([role, permissions]) => (
-                                    <div
-                                        key={role}
-                                        onClick={() => setSelectedRole(role)}
-                                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                                            selectedRole === role
-                                                ? "border-blue-500 bg-blue-50"
-                                                : "border-gray-200 hover:border-gray-300"
-                                        }`}
-                                    >
-                                        <Badge className={getRoleColor(role)}>{role}</Badge>
-                                    </div>
-                                ))}
+                                {Object.entries(rolePermissions).map(
+                                    ([role, permissions]) => (
+                                        <div
+                                            key={role}
+                                            onClick={() => setSelectedRole(role)}
+                                            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                                selectedRole === role
+                                                    ? "border-blue-500 bg-blue-50"
+                                                    : "border-gray-200 hover:border-gray-300"
+                                            }`}
+                                        >
+                                            <Badge className={getRoleColor(role)}>
+                                                {role}
+                                            </Badge>
+                                        </div>
+                                    )
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -430,23 +348,235 @@ export default function UsersPage() {
                     {selectedRole && (
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-base">Permission: {selectedRole}</CardTitle>
+                                <CardTitle className="text-base">
+                                    Permission: {selectedRole}
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <ul className="space-y-2">
-                                    {(rolePermissions as any)[selectedRole].map((permission: string, idx: number) => (
-                                        <li key={idx} className="flex items-start gap-2">
-                                            <span className="text-green-600 font-bold">✓</span>
-                                            <span className="text-sm">{permission}</span>
-                                        </li>
-                                    ))}
+                                    {rolePermissions[selectedRole].map(
+                                        (permission, idx) => (
+                                            <li
+                                                key={idx}
+                                                className="flex items-start gap-2"
+                                            >
+                                                <span className="text-green-600 font-bold">
+                                                    ✓
+                                                </span>
+                                                <span className="text-sm">
+                                                    {permission}
+                                                </span>
+                                            </li>
+                                        )
+                                    )}
                                 </ul>
                             </CardContent>
                         </Card>
                     )}
                 </div>
             </div>
+
+            {/* Add User Modal */}
+            {showModal && (
+                <>
+                    <div
+                        className="fixed inset-0 bg-black/50 z-40"
+                        onClick={() => setShowModal(false)}
+                    />
+                    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+                        <Card className="w-full max-w-md shadow-2xl pointer-events-auto">
+                            <CardHeader className="flex flex-row items-center justify-between border-b">
+                                <CardTitle className="text-lg">Tambah User Baru</CardTitle>
+                                <button
+                                    onClick={() => setShowModal(false)}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </CardHeader>
+                            <CardContent className="pt-6">
+                                {submitStatus && (
+                                    <div
+                                        className={`mb-4 p-3 rounded-lg flex items-gap-2 ${
+                                            submitStatus.type === "success"
+                                                ? "bg-green-50 border border-green-200"
+                                                : "bg-red-50 border border-red-200"
+                                        }`}
+                                    >
+                                        {submitStatus.type === "success" ? (
+                                            <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
+                                        ) : (
+                                            <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0" />
+                                        )}
+                                        <p
+                                            className={`text-sm ${
+                                                submitStatus.type === "success"
+                                                    ? "text-green-700"
+                                                    : "text-red-700"
+                                            }`}
+                                        >
+                                            {submitStatus.message}
+                                        </p>
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleAddUser} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Nama Lengkap *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            required
+                                            autoFocus
+                                            value={formData.name}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    name: e.target.value,
+                                                })
+                                            }
+                                            className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
+                                                errors.name
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                            }`}
+                                            placeholder="Contoh: Budi Santoso"
+                                        />
+                                        {errors.name && (
+                                            <p className="text-xs text-red-600 mt-1">
+                                                {errors.name}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Email *
+                                        </label>
+                                        <input
+                                            type="email"
+                                            required
+                                            value={formData.email}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    email: e.target.value,
+                                                })
+                                            }
+                                            className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
+                                                errors.email
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                            }`}
+                                            placeholder="budi@billboards.id"
+                                        />
+                                        {errors.email && (
+                                            <p className="text-xs text-red-600 mt-1">
+                                                {errors.email}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                            Password *
+                                        </label>
+                                        <input
+                                            type="password"
+                                            required
+                                            value={formData.password}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    password: e.target.value,
+                                                })
+                                            }
+                                            className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
+                                                errors.password
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                            }`}
+                                            placeholder="Minimal 6 karakter"
+                                        />
+                                        {errors.password && (
+                                            <p className="text-xs text-red-600 mt-1">
+                                                {errors.password}
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Role *
+                                            </label>
+                                            <select
+                                                required
+                                                value={formData.role}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        role: e.target.value,
+                                                    })
+                                                }
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
+                                                    errors.role
+                                                        ? "border-red-500 focus:ring-red-500"
+                                                        : "border-gray-300 focus:ring-blue-500"
+                                                }`}
+                                            >
+                                                <option value="Super Admin">Super Admin</option>
+                                                <option value="Admin">Admin</option>
+                                                <option value="Manager">Manager</option>
+                                                <option value="Staff">Staff</option>
+                                            </select>
+                                            {errors.role && (
+                                                <p className="text-xs text-red-600 mt-1">
+                                                    {errors.role}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Status
+                                            </label>
+                                            <select
+                                                value={formData.status}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        status: e.target.value,
+                                                    })
+                                                }
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                <option value="Active">Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-3 pt-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="flex-1"
+                                            onClick={() => setShowModal(false)}
+                                        >
+                                            Batal
+                                        </Button>
+                                        <Button type="submit" className="flex-1 gap-2">
+                                            <Plus className="h-4 w-4" />
+                                            Tambah User
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </>
+            )}
         </DashboardLayout>
     );
 }
-

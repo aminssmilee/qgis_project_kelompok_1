@@ -12,21 +12,35 @@ interface Billboard {
     name: string;
     lat: number;
     lng: number;
-    traffic: string;
     price: string;
     size: string;
     address: string;
+    markerVariant?: number;
 }
 
 interface FormData {
     name: string;
     lat: string;
     lng: string;
-    traffic: string;
     price: string;
     size: string;
     address: string;
 }
+
+// Paket ukuran dan harga
+interface SizePackage {
+    size: string;
+    price: string;
+}
+
+const BILLBOARD_PACKAGES: SizePackage[] = [
+    { size: "2x4", price: "10 Juta/6 bulan" },
+    { size: "3x4", price: "35 Juta/6 bulan" },
+    { size: "4x8", price: "75 Juta/6 bulan" },
+    { size: "5x10", price: "225 Juta/6 bulan" },
+    { size: "8x16", price: "250 Juta/6 bulan" },
+    { size: "10x20", price: "500 Juta/6 bulan" },
+];
 
 interface Errors {
     [key: string]: string;
@@ -47,33 +61,118 @@ L.Icon.Default.mergeOptions({
         "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Mock billboard locations (Lamongan area)
-const initialBillboards: Billboard[] = [
+const locationMarkerIcon = L.icon({
+    iconUrl: "/assets/icons/location-marker.png",
+    iconSize: [48, 64],
+    iconAnchor: [24, 64],
+    popupAnchor: [0, -58],
+});
+
+const billboardMarkerIcons = [
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-wrench.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-star.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-tag.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-crown.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-lock.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+];
+
+const defaultBillboards: Billboard[] = [
     {
         id: 1,
         name: "Billboard Pusat Kota Lamongan",
         lat: -6.8944,
         lng: 112.2147,
-        traffic: "Tinggi",
-        price: "Rp 30 Juta/bulan",
-        size: "8m x 3m",
+        price: "75 Juta/6 bulan",
+        size: "4x8",
         address: "Jalan Ahmad Yani, Lamongan",
+        markerVariant: 0,
     },
     {
         id: 2,
         name: "Billboard Jalan Raya Surabaya",
-        lat: -6.8900,
-        lng: 112.2200,
-        traffic: "Sedang",
-        price: "Rp 25 Juta/bulan",
-        size: "6m x 3m",
+        lat: -6.89,
+        lng: 112.22,
+        price: "35 Juta/6 bulan",
+        size: "3x4",
         address: "Jalan Raya Surabaya, Lamongan",
+        markerVariant: 1,
+    },
+    {
+        id: 3,
+        name: "Billboard Palang Utama",
+        lat: -6.9393,
+        lng: 112.2171,
+        price: "250 Juta/6 bulan",
+        size: "8x16",
+        address: "Jalan Raya Palang Utara, Lamongan",
+        markerVariant: 2,
+    },
+    {
+        id: 4,
+        name: "Billboard Alun-Alun",
+        lat: -6.8921,
+        lng: 112.2287,
+        price: "225 Juta/6 bulan",
+        size: "5x10",
+        address: "Area Alun-Alun Lamongan",
+        markerVariant: 3,
+    },
+    {
+        id: 5,
+        name: "Billboard Gerbang Kota",
+        lat: -6.9012,
+        lng: 112.2063,
+        price: "500 Juta/6 bulan",
+        size: "10x20",
+        address: "Gerbang Masuk Kota Lamongan",
+        markerVariant: 4,
     },
 ];
 
+const normalizeBillboards = (items: Billboard[]): Billboard[] =>
+    items.map((item, index) => ({
+        ...item,
+        markerVariant: item.markerVariant ?? index % billboardMarkerIcons.length,
+    }));
+
+const getBillboardMarkerIcon = (markerVariant?: number): any => {
+    const variantIndex = markerVariant ?? 0;
+    return billboardMarkerIcons[variantIndex % billboardMarkerIcons.length];
+};
+
+const DEFAULT_LAMONGAN_CENTER: [number, number] = [-7.1168, 112.4178];
+
 export default function MapPage() {
     const mapRef = useRef<HTMLDivElement>(null);
-    const mapInstanceRef = useRef<L.Map | null>(null);
+    const mapInstanceRef = useRef<any>(null);
+    const mapModalRef = useRef<HTMLDivElement>(null);
+    const mapModalInstanceRef = useRef<any>(null);
+    const markerRef = useRef<any>(null);
     const [billboards, setBillboards] = useState<Billboard[]>([]);
     const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -86,45 +185,43 @@ export default function MapPage() {
         name: "",
         lat: "",
         lng: "",
-        traffic: "Sedang",
         price: "",
         size: "",
         address: "",
     });
+
+    const [dummyMapMode, setDummyMapMode] = useState(false);
+    const [dummyMarker, setDummyMarker] = useState<{
+        x: number;
+        y: number;
+        lat: number;
+        lng: number;
+    } | null>(null);
 
     // Load billboards from localStorage on mount
     useEffect(() => {
         try {
             const saved = localStorage.getItem("billboards");
             if (saved) {
-                setBillboards(JSON.parse(saved));
+                const parsedBillboards = normalizeBillboards(JSON.parse(saved));
+                const missingDefaultBillboards = defaultBillboards.filter(
+                    (defaultBillboard) =>
+                        !parsedBillboards.some((savedBillboard) => savedBillboard.id === defaultBillboard.id)
+                );
+                const mergedBillboards = [...parsedBillboards, ...missingDefaultBillboards];
+                setBillboards(mergedBillboards);
+                localStorage.setItem("billboards", JSON.stringify(mergedBillboards));
             } else {
-                setBillboards(initialBillboards);
-                localStorage.setItem("billboards", JSON.stringify(initialBillboards));
+                setBillboards(defaultBillboards);
+                localStorage.setItem("billboards", JSON.stringify(defaultBillboards));
             }
         } catch (error) {
             console.error("Error loading billboards:", error);
-            setBillboards(initialBillboards);
+            setBillboards(defaultBillboards);
         } finally {
             setIsLoading(false);
         }
     }, []);
-
-    // Get icon based on traffic level
-    const getMarkerIcon = (traffic: string): L.Icon => {
-        let color = "#10b981"; // green - sedang
-        if (traffic === "Tinggi") color = "#f97316"; // orange
-        if (traffic === "Sangat Tinggi") color = "#ef4444"; // red
-
-        const svgString = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="${color}"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`;
-
-        return L.icon({
-            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgString)}`,
-            iconSize: [32, 48],
-            iconAnchor: [16, 48],
-            popupAnchor: [0, -48],
-        });
-    };
 
     // Update map when billboards change
     useEffect(() => {
@@ -139,7 +236,7 @@ export default function MapPage() {
 
             // Initialize map
             const map = L.map(mapRef.current, {
-                center: [-6.8944, 112.2147],
+                center: DEFAULT_LAMONGAN_CENTER,
                 zoom: 12,
                 zoomControl: true,
                 attributionControl: true,
@@ -154,23 +251,20 @@ export default function MapPage() {
 
             // Tambah event listener untuk klik map saat mode pick location
             if (mapClickMode) {
-                map.on("click", (e) => {
-                    setFormData({
-                        ...formData,
+                map.on("click", (e: { latlng: { lat: number; lng: number } }) => {
+                    setFormData((prev) => ({
+                        ...prev,
                         lat: e.latlng.lat.toString(),
                         lng: e.latlng.lng.toString(),
-                    });
-                    // Tambah marker sementara di lokasi yang dipilih
+                    }));
                     L.marker([e.latlng.lat, e.latlng.lng], {
-                        icon: L.icon({
-                            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#3b82f6"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
-                            )}`,
-                            iconSize: [32, 48],
-                            iconAnchor: [16, 48],
-                            popupAnchor: [0, -48],
-                        }),
-                    }).addTo(map).bindPopup(`📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`).openPopup();
+                        icon: locationMarkerIcon,
+                    })
+                        .addTo(map)
+                        .bindPopup(
+                            `📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`
+                        )
+                        .openPopup();
                 });
             }
 
@@ -178,7 +272,7 @@ export default function MapPage() {
             if (billboards.length > 0) {
                 billboards.forEach((billboard) => {
                     const marker = L.marker([billboard.lat, billboard.lng], {
-                        icon: getMarkerIcon(billboard.traffic),
+                        icon: getBillboardMarkerIcon(billboard.markerVariant),
                     }).addTo(map);
 
                     // Popup content
@@ -188,7 +282,6 @@ export default function MapPage() {
                             <p class="text-xs text-gray-600 mt-1">${billboard.address}</p>
                             <div class="mt-2 text-xs space-y-1">
                                 <p><strong>Ukuran:</strong> ${billboard.size}</p>
-                                <p><strong>Traffic:</strong> ${billboard.traffic}</p>
                                 <p class="font-semibold text-blue-600">${billboard.price}</p>
                             </div>
                         </div>
@@ -208,8 +301,109 @@ export default function MapPage() {
         } catch (error) {
             console.error("Error initializing map:", error);
         }
-    }, [billboards, mapClickMode, formData]);
+    }, [billboards, mapClickMode]);
 
+    // Initialize modal map for location picking
+    useEffect(() => {
+        if (!mapClickMode || !showModal || !mapModalRef.current) return;
+
+        try {
+            // Clear existing modal map
+            if (mapModalInstanceRef.current) {
+                mapModalInstanceRef.current.remove();
+                mapModalInstanceRef.current = null;
+            }
+            
+            // Clear existing marker ref
+            if (markerRef.current) {
+                markerRef.current.remove();
+                markerRef.current = null;
+            }
+
+            // Small delay to ensure DOM is ready
+            const timeout = setTimeout(() => {
+                if (!mapModalRef.current) return;
+
+                // Determine initial map center
+                const defaultCenter: [number, number] = DEFAULT_LAMONGAN_CENTER;
+                const mapCenter: [number, number] = formData.lat && formData.lng 
+                    ? [parseFloat(formData.lat), parseFloat(formData.lng)]
+                    : defaultCenter;
+
+                // Initialize modal map with selected location as center
+                const modalMap = L.map(mapModalRef.current, {
+                    center: mapCenter,
+                    zoom: 12,
+                    zoomControl: true,
+                });
+
+                // Add OpenStreetMap tiles
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19,
+                }).addTo(modalMap);
+
+                // Restore marker from formData if location already selected
+                if (formData.lat && formData.lng) {
+                    const lat = parseFloat(formData.lat);
+                    const lng = parseFloat(formData.lng);
+                    
+                    const marker = L.marker([lat, lng], {
+                        icon: locationMarkerIcon,
+                    }).addTo(modalMap);
+
+                    marker.bindPopup(
+                        `📍 Lokasi Terpilih<br/>Lat: ${lat.toFixed(4)}<br/>Lng: ${lng.toFixed(4)}`
+                    ).openPopup();
+
+                    markerRef.current = marker;
+                }
+
+                // Click handler to select location
+                modalMap.on("click", (e: { latlng: { lat: number; lng: number } }) => {
+                    // Remove old marker if exists
+                    if (markerRef.current) {
+                        markerRef.current.remove();
+                        markerRef.current = null;
+                    }
+
+                    // Update form data
+                    setFormData((prev) => ({
+                        ...prev,
+                        lat: e.latlng.lat.toString(),
+                        lng: e.latlng.lng.toString(),
+                    }));
+
+                    // Add new marker at clicked location
+                    const newMarker = L.marker([e.latlng.lat, e.latlng.lng], {
+                        icon: locationMarkerIcon,
+                    }).addTo(modalMap);
+
+                    newMarker.bindPopup(
+                        `📍 Lokasi Terpilih<br/>Lat: ${e.latlng.lat.toFixed(4)}<br/>Lng: ${e.latlng.lng.toFixed(4)}`
+                    ).openPopup();
+
+                    // Pan map to marker
+                    modalMap.panTo(newMarker.getLatLng());
+
+                    markerRef.current = newMarker;
+                });
+
+                mapModalInstanceRef.current = modalMap;
+            }, 100);
+
+            return () => {
+                clearTimeout(timeout);
+                if (mapModalInstanceRef.current) {
+                    mapModalInstanceRef.current.remove();
+                    mapModalInstanceRef.current = null;
+                }
+            };
+        } catch (error) {
+            console.error("Error initializing modal map:", error);
+        }
+    }, [mapClickMode, showModal]);
 
     const validateForm = (): boolean => {
         const newErrors: Errors = {};
@@ -217,7 +411,6 @@ export default function MapPage() {
         if (!formData.name.trim()) newErrors.name = "Nama billboard wajib diisi";
         if (!formData.address.trim()) newErrors.address = "Alamat wajib diisi";
         if (!formData.size.trim()) newErrors.size = "Ukuran wajib diisi";
-        if (!formData.price.trim()) newErrors.price = "Harga wajib diisi";
         if (!formData.lat) newErrors.lat = "Pilih lokasi di map terlebih dahulu";
         if (!formData.lng) newErrors.lng = "Pilih lokasi di map terlebih dahulu";
 
@@ -240,10 +433,10 @@ export default function MapPage() {
             name: formData.name,
             lat: parseFloat(formData.lat),
             lng: parseFloat(formData.lng),
-            traffic: formData.traffic,
             price: formData.price,
             size: formData.size,
             address: formData.address,
+            markerVariant: billboards.length % billboardMarkerIcons.length,
         };
 
         const updated = [...billboards, newBillboard];
@@ -259,7 +452,6 @@ export default function MapPage() {
                 name: "",
                 lat: "",
                 lng: "",
-                traffic: "Sedang",
                 price: "",
                 size: "",
                 address: "",
@@ -371,27 +563,6 @@ export default function MapPage() {
 
                                         <div>
                                             <p className="text-xs text-gray-500 uppercase font-semibold">
-                                                Tingkat Traffic
-                                            </p>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                                        selectedBillboard.traffic ===
-                                                        "Sangat Tinggi"
-                                                            ? "bg-red-100 text-red-800"
-                                                            : selectedBillboard.traffic ===
-                                                              "Tinggi"
-                                                            ? "bg-orange-100 text-orange-800"
-                                                            : "bg-green-100 text-green-800"
-                                                    }`}
-                                                >
-                                                    {selectedBillboard.traffic}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs text-gray-500 uppercase font-semibold">
                                                 Koordinat
                                             </p>
                                             <p className="text-xs font-mono text-gray-600">
@@ -470,15 +641,9 @@ export default function MapPage() {
                                                     </p>
                                                 </div>
                                                 <span
-                                                    className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2 ${
-                                                        bb.traffic === "Sangat Tinggi"
-                                                            ? "bg-red-100 text-red-700"
-                                                            : bb.traffic === "Tinggi"
-                                                            ? "bg-orange-100 text-orange-700"
-                                                            : "bg-green-100 text-green-700"
-                                                    }`}
+                                                    className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap ml-2 bg-blue-100 text-blue-700`}
                                                 >
-                                                    {bb.traffic}
+                                                    {bb.size}
                                                 </span>
                                             </div>
                                         </button>
@@ -505,10 +670,10 @@ export default function MapPage() {
                         onClick={() => setShowModal(false)}
                     />
                     <div
-                        className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none"
+                        className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none overflow-y-auto"
                     >
-                        <Card className="w-full max-w-md shadow-2xl pointer-events-auto">
-                            <CardHeader className="flex flex-row items-center justify-between border-b">
+                        <Card className="w-full max-w-md shadow-2xl pointer-events-auto my-auto flex flex-col max-h-[90vh]">
+                            <CardHeader className="flex flex-row items-center justify-between border-b flex-shrink-0">
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <Plus className="h-5 w-5" />
                                     Tambah Billboard Baru
@@ -520,23 +685,83 @@ export default function MapPage() {
                                     <X className="h-5 w-5" />
                                 </button>
                             </CardHeader>
-                        <CardContent className="pt-6">
+                        <CardContent className="pt-6 overflow-y-auto flex-1 flex flex-col">
                             {mapClickMode && (
-                                <div className="mb-4 p-4 bg-blue-50 border border-blue-300 rounded-lg">
-                                    <p className="text-sm font-semibold text-blue-900 mb-2">
-                                        📍 Klik di map untuk set lokasi
-                                    </p>
-                                    {formData.lat && formData.lng && (
-                                        <p className="text-xs text-blue-700">
-                                            Lokasi: {parseFloat(formData.lat).toFixed(4)}, {parseFloat(formData.lng).toFixed(4)}
+                                <div className="mb-4 space-y-3">
+                                    {/* Map Container */}
+                                    <div
+                                        ref={mapModalRef}
+                                        className="rounded-lg overflow-hidden border-2 border-blue-300 bg-gray-100 w-full flex-shrink-0"
+                                        style={{ height: "clamp(250px, 40vh, 400px)" }}
+                                    />
+
+                                    {/* Info & Buttons */}
+                                    <div className="p-3 bg-blue-50 border border-blue-300 rounded-lg">
+                                        <p className="text-sm font-semibold text-blue-900 mb-2">
+                                            📍 Klik di map untuk set lokasi
                                         </p>
+                                        {formData.lat && formData.lng && (
+                                            <p className="text-xs text-blue-700 font-semibold mb-3">
+                                                ✅ Lokasi: {parseFloat(formData.lat).toFixed(4)}, {parseFloat(formData.lng).toFixed(4)}
+                                            </p>
+                                        )}
+
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setMapClickMode(false)}
+                                                className="text-xs px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded font-semibold transition-all"
+                                            >
+                                                ✓ Selesai memilih
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={() => { setDummyMapMode((v) => !v); setDummyMarker(null); }}
+                                                className="text-xs px-3 py-1 bg-gray-400 hover:bg-gray-500 text-white rounded font-semibold transition-all"
+                                            >
+                                                Gunakan Dummy Map
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Dummy Map Fallback */}
+                                    {dummyMapMode && (
+                                        <div
+                                            className="mt-2 border rounded bg-gray-100 relative overflow-hidden cursor-crosshair"
+                                            style={{ height: "200px" }}
+                                            onClick={(e) => {
+                                                const el = e.currentTarget as HTMLDivElement;
+                                                const rect = el.getBoundingClientRect();
+                                                const clientX = (e as unknown as MouseEvent).clientX;
+                                                const clientY = (e as unknown as MouseEvent).clientY;
+                                                const x = clientX - rect.left;
+                                                const y = clientY - rect.top;
+
+                                                const latTop = -6.85;
+                                                const latBottom = -6.95;
+                                                const lngLeft = 112.18;
+                                                const lngRight = 112.25;
+
+                                                const lat = latTop + (y / rect.height) * (latBottom - latTop);
+                                                const lng = lngLeft + (x / rect.width) * (lngRight - lngLeft);
+
+                                                setFormData({ ...formData, lat: lat.toString(), lng: lng.toString() });
+                                                setDummyMarker({ x, y, lat, lng });
+                                            }}
+                                        >
+                                            {dummyMarker && (
+                                                <span
+                                                    className="absolute text-2xl"
+                                                    style={{ left: dummyMarker.x - 12, top: dummyMarker.y - 24 }}
+                                                >
+                                                    📍
+                                                </span>
+                                            )}
+                                            <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-500 pointer-events-none">
+                                                Klik area ini untuk memilih lokasi (dummy)
+                                            </div>
+                                        </div>
                                     )}
-                                    <button
-                                        onClick={() => setMapClickMode(false)}
-                                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold mt-2 underline"
-                                    >
-                                        Selesai memilih lokasi
-                                    </button>
                                 </div>
                             )}
 
@@ -628,23 +853,30 @@ export default function MapPage() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                                             Ukuran *
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             required
                                             value={formData.size}
-                                            onChange={(e) =>
+                                            onChange={(e) => {
+                                                const selectedPkg = BILLBOARD_PACKAGES.find((pkg) => pkg.size === e.target.value);
                                                 setFormData({
                                                     ...formData,
                                                     size: e.target.value,
-                                                })
-                                            }
+                                                    price: selectedPkg?.price || "",
+                                                });
+                                            }}
                                             className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
                                                 errors.size
                                                     ? "border-red-500 focus:ring-red-500"
                                                     : "border-gray-300 focus:ring-blue-500"
                                             }`}
-                                            placeholder="8m x 3m"
-                                        />
+                                        >
+                                            <option value="">Pilih ukuran...</option>
+                                            {BILLBOARD_PACKAGES.map((pkg) => (
+                                                <option key={pkg.size} value={pkg.size}>
+                                                    {pkg.size} - {pkg.price}
+                                                </option>
+                                            ))}
+                                        </select>
                                         {errors.size && (
                                             <p className="text-xs text-red-600 mt-1">
                                                 {errors.size}
@@ -653,51 +885,12 @@ export default function MapPage() {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Traffic *
+                                            Harga
                                         </label>
-                                        <select
-                                            value={formData.traffic}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    traffic: e.target.value,
-                                                })
-                                            }
-                                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option>Sedang</option>
-                                            <option>Tinggi</option>
-                                            <option>Sangat Tinggi</option>
-                                        </select>
+                                        <div className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-600 font-semibold">
+                                            {formData.price || "—"}
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        Harga/Bulan *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formData.price}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                price: e.target.value,
-                                            })
-                                        }
-                                        className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                            errors.price
-                                                ? "border-red-500 focus:ring-red-500"
-                                                : "border-gray-300 focus:ring-blue-500"
-                                        }`}
-                                        placeholder="Rp 30 Juta/bulan"
-                                    />
-                                    {errors.price && (
-                                        <p className="text-xs text-red-600 mt-1">
-                                            {errors.price}
-                                        </p>
-                                    )}
                                 </div>
 
                                 {!mapClickMode && (
@@ -724,7 +917,7 @@ export default function MapPage() {
                                     </div>
                                 )}
 
-                                <div className="flex gap-2 pt-4 border-t">
+                                <div className="flex gap-2 pt-4 border-t mt-auto flex-shrink-0 bg-white sticky bottom-0">
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -735,7 +928,6 @@ export default function MapPage() {
                                                 name: "",
                                                 lat: "",
                                                 lng: "",
-                                                traffic: "Sedang",
                                                 price: "",
                                                 size: "",
                                                 address: "",

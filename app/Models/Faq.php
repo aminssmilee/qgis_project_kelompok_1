@@ -18,7 +18,7 @@ final class Faq extends Model
         'is_active',
     ];
 
-    protected function casts(): array
+    public function casts(): array
     {
         return [
             'is_active' => 'boolean',
