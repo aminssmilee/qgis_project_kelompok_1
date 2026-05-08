@@ -7,22 +7,21 @@ use Illuminate\Support\Facades\Hash;
 
 test('user can register', function (): void {
     $response = $this->postJson('/api/v1/user/register', [
-        'name' => 'John Doe',
         'email' => 'john@test.com',
-        'phone' => '081234567890',
+        'company_name' => 'PT John Test',
+        'nib' => '1234567890123',
         'password' => 'password',
-        'password_confirmation' => 'password',
     ]);
 
     $response->assertStatus(201)
         ->assertJsonStructure([
-            'message',
-            'data' => [
+            'access_token',
+            'refresh_token',
+            'user' => [
                 'id',
                 'name',
                 'email',
             ],
-            'access_token',
         ]);
 
     $this->assertDatabaseHas('users', [
@@ -45,8 +44,13 @@ test('user can login', function (): void {
 
     $response->assertStatus(200)
         ->assertJsonStructure([
-            'message',
             'access_token',
+            'refresh_token',
+            'user' => [
+                'id',
+                'name',
+                'email',
+            ],
         ]);
 });
 

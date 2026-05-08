@@ -15,6 +15,7 @@ interface Billboard {
     price: string;
     size: string;
     address: string;
+    markerVariant?: number;
 }
 
 interface FormData {
@@ -60,8 +61,47 @@ L.Icon.Default.mergeOptions({
         "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Mock billboard locations (Lamongan area)
-const initialBillboards: Billboard[] = [
+const locationMarkerIcon = L.icon({
+    iconUrl: "/assets/icons/location-marker.png",
+    iconSize: [48, 64],
+    iconAnchor: [24, 64],
+    popupAnchor: [0, -58],
+});
+
+const billboardMarkerIcons = [
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-wrench.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-star.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-tag.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-crown.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+    L.icon({
+        iconUrl: "/assets/icons/location-marker-lock.png",
+        iconSize: [48, 64],
+        iconAnchor: [24, 64],
+        popupAnchor: [0, -58],
+    }),
+];
+
+const defaultBillboards: Billboard[] = [
     {
         id: 1,
         name: "Billboard Pusat Kota Lamongan",
@@ -70,15 +110,17 @@ const initialBillboards: Billboard[] = [
         price: "75 Juta/6 bulan",
         size: "4x8",
         address: "Jalan Ahmad Yani, Lamongan",
+        markerVariant: 0,
     },
     {
         id: 2,
         name: "Billboard Jalan Raya Surabaya",
-        lat: -6.8900,
-        lng: 112.2200,
+        lat: -6.89,
+        lng: 112.22,
         price: "35 Juta/6 bulan",
         size: "3x4",
         address: "Jalan Raya Surabaya, Lamongan",
+        markerVariant: 1,
     },
     {
         id: 3,
@@ -88,15 +130,49 @@ const initialBillboards: Billboard[] = [
         price: "250 Juta/6 bulan",
         size: "8x16",
         address: "Jalan Raya Palang Utara, Lamongan",
+        markerVariant: 2,
+    },
+    {
+        id: 4,
+        name: "Billboard Alun-Alun",
+        lat: -6.8921,
+        lng: 112.2287,
+        price: "225 Juta/6 bulan",
+        size: "5x10",
+        address: "Area Alun-Alun Lamongan",
+        markerVariant: 3,
+    },
+    {
+        id: 5,
+        name: "Billboard Gerbang Kota",
+        lat: -6.9012,
+        lng: 112.2063,
+        price: "500 Juta/6 bulan",
+        size: "10x20",
+        address: "Gerbang Masuk Kota Lamongan",
+        markerVariant: 4,
     },
 ];
 
+const normalizeBillboards = (items: Billboard[]): Billboard[] =>
+    items.map((item, index) => ({
+        ...item,
+        markerVariant: item.markerVariant ?? index % billboardMarkerIcons.length,
+    }));
+
+const getBillboardMarkerIcon = (markerVariant?: number): any => {
+    const variantIndex = markerVariant ?? 0;
+    return billboardMarkerIcons[variantIndex % billboardMarkerIcons.length];
+};
+
+const DEFAULT_LAMONGAN_CENTER: [number, number] = [-7.1168, 112.4178];
+
 export default function MapPage() {
     const mapRef = useRef<HTMLDivElement>(null);
-    const mapInstanceRef = useRef<L.Map | null>(null);
+    const mapInstanceRef = useRef<any>(null);
     const mapModalRef = useRef<HTMLDivElement>(null);
-    const mapModalInstanceRef = useRef<L.Map | null>(null);
-    const markerRef = useRef<L.Marker | null>(null);
+    const mapModalInstanceRef = useRef<any>(null);
+    const markerRef = useRef<any>(null);
     const [billboards, setBillboards] = useState<Billboard[]>([]);
     const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
     const [showModal, setShowModal] = useState(false);
@@ -127,32 +203,25 @@ export default function MapPage() {
         try {
             const saved = localStorage.getItem("billboards");
             if (saved) {
-                setBillboards(JSON.parse(saved));
+                const parsedBillboards = normalizeBillboards(JSON.parse(saved));
+                const missingDefaultBillboards = defaultBillboards.filter(
+                    (defaultBillboard) =>
+                        !parsedBillboards.some((savedBillboard) => savedBillboard.id === defaultBillboard.id)
+                );
+                const mergedBillboards = [...parsedBillboards, ...missingDefaultBillboards];
+                setBillboards(mergedBillboards);
+                localStorage.setItem("billboards", JSON.stringify(mergedBillboards));
             } else {
-                setBillboards(initialBillboards);
-                localStorage.setItem("billboards", JSON.stringify(initialBillboards));
+                setBillboards(defaultBillboards);
+                localStorage.setItem("billboards", JSON.stringify(defaultBillboards));
             }
         } catch (error) {
             console.error("Error loading billboards:", error);
-            setBillboards(initialBillboards);
+            setBillboards(defaultBillboards);
         } finally {
             setIsLoading(false);
         }
     }, []);
-
-    // Get icon for markers
-    const getMarkerIcon = (): L.Icon => {
-        const color = "#3b82f6"; // blue
-
-        const svgString = `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="${color}"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`;
-
-        return L.icon({
-            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgString)}`,
-            iconSize: [32, 48],
-            iconAnchor: [16, 48],
-            popupAnchor: [0, -48],
-        });
-    };
 
     // Update map when billboards change
     useEffect(() => {
@@ -167,7 +236,7 @@ export default function MapPage() {
 
             // Initialize map
             const map = L.map(mapRef.current, {
-                center: [-6.8944, 112.2147],
+                center: DEFAULT_LAMONGAN_CENTER,
                 zoom: 12,
                 zoomControl: true,
                 attributionControl: true,
@@ -182,23 +251,20 @@ export default function MapPage() {
 
             // Tambah event listener untuk klik map saat mode pick location
             if (mapClickMode) {
-                map.on("click", (e) => {
+                map.on("click", (e: { latlng: { lat: number; lng: number } }) => {
                     setFormData((prev) => ({
                         ...prev,
                         lat: e.latlng.lat.toString(),
                         lng: e.latlng.lng.toString(),
                     }));
-                    // Tambah marker sementara di lokasi yang dipilih
                     L.marker([e.latlng.lat, e.latlng.lng], {
-                        icon: L.icon({
-                            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#3b82f6"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
-                            )}`,
-                            iconSize: [32, 48],
-                            iconAnchor: [16, 48],
-                            popupAnchor: [0, -48],
-                        }),
-                    }).addTo(map).bindPopup(`📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`).openPopup();
+                        icon: locationMarkerIcon,
+                    })
+                        .addTo(map)
+                        .bindPopup(
+                            `📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`
+                        )
+                        .openPopup();
                 });
             }
 
@@ -206,7 +272,7 @@ export default function MapPage() {
             if (billboards.length > 0) {
                 billboards.forEach((billboard) => {
                     const marker = L.marker([billboard.lat, billboard.lng], {
-                        icon: getMarkerIcon(),
+                        icon: getBillboardMarkerIcon(billboard.markerVariant),
                     }).addTo(map);
 
                     // Popup content
@@ -259,7 +325,7 @@ export default function MapPage() {
                 if (!mapModalRef.current) return;
 
                 // Determine initial map center
-                const defaultCenter: [number, number] = [-6.8944, 112.2147];
+                const defaultCenter: [number, number] = DEFAULT_LAMONGAN_CENTER;
                 const mapCenter: [number, number] = formData.lat && formData.lng 
                     ? [parseFloat(formData.lat), parseFloat(formData.lng)]
                     : defaultCenter;
@@ -284,14 +350,7 @@ export default function MapPage() {
                     const lng = parseFloat(formData.lng);
                     
                     const marker = L.marker([lat, lng], {
-                        icon: L.icon({
-                            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#10b981"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
-                            )}`,
-                            iconSize: [32, 48],
-                            iconAnchor: [16, 48],
-                            popupAnchor: [0, -48],
-                        }),
+                        icon: locationMarkerIcon,
                     }).addTo(modalMap);
 
                     marker.bindPopup(
@@ -302,7 +361,7 @@ export default function MapPage() {
                 }
 
                 // Click handler to select location
-                modalMap.on("click", (e) => {
+                modalMap.on("click", (e: { latlng: { lat: number; lng: number } }) => {
                     // Remove old marker if exists
                     if (markerRef.current) {
                         markerRef.current.remove();
@@ -318,14 +377,7 @@ export default function MapPage() {
 
                     // Add new marker at clicked location
                     const newMarker = L.marker([e.latlng.lat, e.latlng.lng], {
-                        icon: L.icon({
-                            iconUrl: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-                                `<svg width="32" height="48" viewBox="0 0 32 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="48" rx="8" fill="#10b981"/><path d="M16 12C13.24 12 11 14.24 11 17c0 5 5 11 5 11s5-6 5-11c0-2.76-2.24-5-5-5z" fill="white"/></svg>`
-                            )}`,
-                            iconSize: [32, 48],
-                            iconAnchor: [16, 48],
-                            popupAnchor: [0, -48],
-                        }),
+                        icon: locationMarkerIcon,
                     }).addTo(modalMap);
 
                     newMarker.bindPopup(
@@ -384,6 +436,7 @@ export default function MapPage() {
             price: formData.price,
             size: formData.size,
             address: formData.address,
+            markerVariant: billboards.length % billboardMarkerIcons.length,
         };
 
         const updated = [...billboards, newBillboard];
