@@ -43,6 +43,7 @@ final class User extends Authenticatable
         'email',
         'phone',
         'password',
+        'role',
         'avatar_url',
         'is_verified',
         'is_active',

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Plus,
     Edit2,
@@ -48,69 +49,21 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { fetchUsers, deleteUser, UserData } from "@/components/user/user-api";
+import AddUserModal from "@/components/user/AddUserModal";
+import EditUserModal from "@/components/user/EditUserModal";
+import { toast } from "sonner";
 
-const usersData = [
-    {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
-        "name": "Admin Utama",
-        "email": "admin@billboards.id",
-        "role": "Super Admin",
-        "status": "Active",
-        "lastLogin": "2024-05-04 14:30",
-        "joinDate": "2023-01-10",
-        "company_id": null,
-        "is_verified": true,
-        "is_active": true
-    },
-    {
-        "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-        "name": "Siti Nurhaliza",
-        "email": "siti@billboards.id",
-        "role": "Admin",
-        "status": "Active",
-        "lastLogin": "2024-05-04 10:15",
-        "joinDate": "2023-06-20",
-        "company_id": "7890e840-e29b-41d4-a716-446655440123",
-        "is_verified": true,
-        "is_active": true
-    },
-    {
-        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        "name": "Budi Santoso",
-        "email": "budi@billboards.id",
-        "role": "Manager",
-        "status": "Active",
-        "lastLogin": "2024-05-03 16:45",
-        "joinDate": "2023-08-15",
-        "company_id": "7890e840-e29b-41d4-a716-446655440123",
-        "is_verified": true,
-        "is_active": true
-    },
-    {
-        "id": "123e4567-e89b-12d3-a456-426614174000",
-        "name": "Rini Wijaya",
-        "email": "rini@billboards.id",
-        "role": "Staff",
-        "status": "Active",
-        "lastLogin": "2024-05-04 09:20",
-        "joinDate": "2023-11-01",
-        "company_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-        "is_verified": true,
-        "is_active": true
-    },
-    {
-        "id": "258d4a00-e29b-41d4-a716-446655449999",
-        "name": "Eko Priyanto",
-        "email": "eko@billboards.id",
-        "role": "Staff",
-        "status": "Inactive",
-        "lastLogin": "2024-04-15 13:00",
-        "joinDate": "2024-01-10",
-        "company_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-        "is_verified": false,
-        "is_active": false
-    }
-];
 
 const rolePermissions = {
     "Super Admin": [
@@ -126,73 +79,46 @@ const rolePermissions = {
     ],
     Manager: ["Kelola billboard", "Lihat pemesanan"],
     Staff: ["Lihat data billboard", "Input informasi field"],
+    user: ["Akses dashboard", "Lihat profil", "Lakukan pemesanan"],
 };
 
 const columnHelper = createColumnHelper<any>();
 
 export default function UsersPage() {
-    const [users, setUsers] = useState(() => {
-        const stored = localStorage.getItem("users");
-        return stored ? JSON.parse(stored) : usersData;
-    });
+    const [users, setUsers] = useState<UserData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [selectedRole, setSelectedRole] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
-    const [submitStatus, setSubmitStatus] = useState<{type: "success" | "error"; message: string} | null>(null);
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
-        role: "Staff",
-        status: "Active",
-    });
-    const [errors, setErrors] = useState<any>({});
+    const [editingUser, setEditingUser] = useState<UserData | null>(null);
+    const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
 
-    const validateForm = () => {
-        const newErrors: any = {};
-        
-        if (!formData.name.trim()) newErrors.name = "Nama wajib diisi";
-        if (!formData.email.trim()) newErrors.email = "Email wajib diisi";
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Format email tidak valid";
-        if (!formData.password.trim()) newErrors.password = "Password wajib diisi";
-        if (formData.password.length < 6) newErrors.password = "Password minimal 6 karakter";
-        if (!formData.role) newErrors.role = "Role wajib dipilih";
-        
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+    useEffect(() => {
+        loadUsers();
+    }, []);
+
+    const loadUsers = async () => {
+        try {
+            const data = await fetchUsers();
+            setUsers(data);
+        } catch (error) {
+            console.error("Failed to load users:", error);
+            toast.error("Gagal memuat data pengguna.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleAddUser = (e: React.FormEvent) => {
-        e.preventDefault();
-        setSubmitStatus(null);
-
-        if (!validateForm()) {
-            setSubmitStatus({ type: "error", message: "Mohon periksa kembali data Anda" });
-            return;
+    const handleDeleteUser = async (id: string) => {
+        try {
+            await deleteUser(id);
+            setUsers(users.filter(u => u.id !== id));
+            toast.success("User berhasil dihapus.");
+        } catch (error) {
+            console.error("Failed to delete user:", error);
+            toast.error("Gagal menghapus user.");
+        } finally {
+            setDeletingUser(null);
         }
-
-        const newUser = {
-            id: crypto.randomUUID(),
-            name: formData.name,
-            email: formData.email,
-            role: formData.role,
-            status: formData.status,
-            lastLogin: "—",
-            joinDate: new Date().toISOString().split('T')[0],
-            company_id: null,
-            is_verified: true,
-            is_active: formData.status === "Active"
-        };
-
-        const updatedUsers = [...users, newUser];
-        setUsers(updatedUsers);
-        localStorage.setItem("users", JSON.stringify(updatedUsers));
-        setSubmitStatus({ type: "success", message: `User ${formData.name} berhasil ditambahkan!` });
-
-        setTimeout(() => {
-            setFormData({ name: "", email: "", password: "", role: "Staff", status: "Active" });
-            setShowModal(false);
-            setSubmitStatus(null);
-        }, 1500);
     };
 
     const getRoleColor = (role: string) => {
@@ -270,13 +196,13 @@ export default function UsersPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => console.log("Edit", info.row.original.id)}>
+                            <DropdownMenuItem onClick={() => setEditingUser(info.row.original)}>
                                 <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
                                 <span>Edit User</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 variant="destructive"
-                                onClick={() => console.log("Delete", info.row.original.id)}
+                                onClick={() => setDeletingUser(info.row.original)}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Hapus User</span>
@@ -360,7 +286,20 @@ export default function UsersPage() {
                                         ))}
                                     </TableHeader>
                                     <TableBody>
-                                        {table.getRowModel().rows.length > 0 ? (
+                                        {isLoading ? (
+                                            <>
+                                                {[1, 2, 3, 4, 5].map((i) => (
+                                                    <TableRow key={i}>
+                                                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                                        <TableCell><Skeleton className="h-8 w-8 rounded-md float-right" /></TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </>
+                                        ) : table.getRowModel().rows.length > 0 ? (
                                             table.getRowModel().rows.map((row) => (
                                                 <TableRow
                                                     key={row.id}
@@ -377,7 +316,7 @@ export default function UsersPage() {
                                         ) : (
                                             <TableRow>
                                                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                                                    No results.
+                                                    Tidak ada data pengguna.
                                                 </TableCell>
                                             </TableRow>
                                         )}
@@ -495,7 +434,7 @@ export default function UsersPage() {
                             </CardHeader>
                             <CardContent>
                                 <ul className="space-y-2">
-                                    {(rolePermissions as any)[selectedRole].map((permission: string, idx: number) => (
+                                    {(rolePermissions as any)[selectedRole]?.map((permission: string, idx: number) => (
                                         <li key={idx} className="flex items-start gap-2">
                                             <span className="text-green-600 font-bold">✓</span>
                                             <span className="text-sm">{permission}</span>
@@ -508,207 +447,47 @@ export default function UsersPage() {
                 </div>
             </div>
 
-            {/* Add User Modal */}
             {showModal && (
-                <>
-                    <div
-                        className="fixed inset-0 bg-black/50 z-[9998]"
-                        onClick={() => setShowModal(false)}
-                    />
-                    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4 pointer-events-none">
-                        <Card className="w-full max-w-md shadow-2xl pointer-events-auto">
-                            <CardHeader className="flex flex-row items-center justify-between border-b">
-                                <CardTitle className="text-lg">Tambah User Baru</CardTitle>
-                                <button
-                                    onClick={() => setShowModal(false)}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                >
-                                    <XCircle className="h-5 w-5" />
-                                </button>
-                            </CardHeader>
-                            <CardContent className="pt-6">
-                                {submitStatus && (
-                                    <div
-                                        className={`mb-4 p-3 rounded-lg flex items-gap-2 ${
-                                            submitStatus.type === "success"
-                                                ? "bg-green-50 border border-green-200"
-                                                : "bg-red-50 border border-red-200"
-                                        }`}
-                                    >
-                                        {submitStatus.type === "success" ? (
-                                            <CheckCircle2 className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
-                                        ) : (
-                                            <XCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0" />
-                                        )}
-                                        <p
-                                            className={`text-sm ${
-                                                submitStatus.type === "success"
-                                                    ? "text-green-700"
-                                                    : "text-red-700"
-                                            }`}
-                                        >
-                                            {submitStatus.message}
-                                        </p>
-                                    </div>
-                                )}
-
-                                <form onSubmit={handleAddUser} className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Nama Lengkap *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            autoFocus
-                                            value={formData.name}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    name: e.target.value,
-                                                })
-                                            }
-                                            className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                errors.name
-                                                    ? "border-red-500 focus:ring-red-500"
-                                                    : "border-gray-300 focus:ring-blue-500"
-                                            }`}
-                                            placeholder="Contoh: Budi Santoso"
-                                        />
-                                        {errors.name && (
-                                            <p className="text-xs text-red-600 mt-1">
-                                                {errors.name}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Email *
-                                        </label>
-                                        <input
-                                            type="email"
-                                            required
-                                            value={formData.email}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    email: e.target.value,
-                                                })
-                                            }
-                                            className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                errors.email
-                                                    ? "border-red-500 focus:ring-red-500"
-                                                    : "border-gray-300 focus:ring-blue-500"
-                                            }`}
-                                            placeholder="budi@billboards.id"
-                                        />
-                                        {errors.email && (
-                                            <p className="text-xs text-red-600 mt-1">
-                                                {errors.email}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Password *
-                                        </label>
-                                        <input
-                                            type="password"
-                                            required
-                                            value={formData.password}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    password: e.target.value,
-                                                })
-                                            }
-                                            className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                errors.password
-                                                    ? "border-red-500 focus:ring-red-500"
-                                                    : "border-gray-300 focus:ring-blue-500"
-                                            }`}
-                                            placeholder="Minimal 6 karakter"
-                                        />
-                                        {errors.password && (
-                                            <p className="text-xs text-red-600 mt-1">
-                                                {errors.password}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Role *
-                                            </label>
-                                            <select
-                                                required
-                                                value={formData.role}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        role: e.target.value,
-                                                    })
-                                                }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    errors.role
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
-                                            >
-                                                <option value="Super Admin">Super Admin</option>
-                                                <option value="Admin">Admin</option>
-                                                <option value="Manager">Manager</option>
-                                                <option value="Staff">Staff</option>
-                                            </select>
-                                            {errors.role && (
-                                                <p className="text-xs text-red-600 mt-1">
-                                                    {errors.role}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                                Status
-                                            </label>
-                                            <select
-                                                value={formData.status}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        status: e.target.value,
-                                                    })
-                                                }
-                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                            >
-                                                <option value="Active">Active</option>
-                                                <option value="Inactive">Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-3 pt-4">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            className="flex-1"
-                                            onClick={() => setShowModal(false)}
-                                        >
-                                            Batal
-                                        </Button>
-                                        <Button type="submit" className="flex-1 gap-2">
-                                            <Plus className="h-4 w-4" />
-                                            Tambah User
-                                        </Button>
-                                    </div>
-                                </form>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </>
+                <AddUserModal
+                    onClose={() => setShowModal(false)}
+                    onSuccess={(newUser) => {
+                        setUsers([newUser, ...users]);
+                        setShowModal(false);
+                    }}
+                />
             )}
+            {editingUser && (
+                <EditUserModal
+                    user={editingUser}
+                    onClose={() => setEditingUser(null)}
+                    onSuccess={(updatedUser) => {
+                        setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+                        setEditingUser(null);
+                    }}
+                />
+            )}
+
+            <AlertDialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus User?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus user 
+                            <span className="font-semibold text-slate-900"> {deletingUser?.name} </span> 
+                            dan menghapus datanya dari server.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => deletingUser && handleDeleteUser(deletingUser.id)}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        >
+                            Ya, Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </DashboardLayout>
     );
 }

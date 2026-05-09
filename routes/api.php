@@ -71,6 +71,13 @@ Route::prefix('v1')->group(function (): void {
             
             // Photos
             Route::post('/billboards/{id}/photos', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'uploadPhoto']);
+
+            // Users CRUD
+            Route::get('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'index']);
+            Route::get('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'show']);
+            Route::post('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'store']);
+            Route::put('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'update']);
+            Route::delete('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'destroy']);
         });
     });
 });
