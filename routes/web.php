@@ -13,12 +13,11 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('dashboard')->name('dashboard.')->group(function (): void {
-    Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+    // Removed Route::get('/clients') and Route::get('/rentals') to allow SPA to handle these URLs
     Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
     Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
 
-    Route::get('/rentals', [RentalController::class, 'index'])->name('rentals.index');
     Route::post('/rentals', [RentalController::class, 'store'])->name('rentals.store');
     Route::put('/rentals/{rental}', [RentalController::class, 'update'])->name('rentals.update');
     Route::delete('/rentals/{rental}', [RentalController::class, 'destroy'])->name('rentals.destroy');
@@ -27,7 +26,7 @@ Route::prefix('dashboard')->name('dashboard.')->group(function (): void {
 
     Route::get('/options', function () {
         return response()->json([
-            'clients' => Client::query()->orderBy('name')->get(['id', 'name']),
+            'clients' => \App\Models\Company::query()->orderBy('name')->get(['id', 'name']),
             'billboards' => Billboard::query()->orderBy('name')->get(['id', 'name']),
             'categories' => BillboardCategory::query()->orderBy('name')->get(['id', 'name']),
         ]);

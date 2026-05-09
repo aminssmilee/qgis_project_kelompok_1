@@ -19,7 +19,7 @@ final class UserResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'role' => $this->role === 'user' ? 'Customer' : ucfirst($this->role),
+            'role' => $this->role,
             'email' => $this->email,
             'avatar_url' => $this->avatar_url,
             'company_id' => $this->company_id,

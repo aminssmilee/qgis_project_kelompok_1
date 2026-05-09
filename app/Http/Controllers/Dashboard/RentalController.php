@@ -21,13 +21,13 @@ final class RentalController extends BaseController
     public function index(): View
     {
         $rentals = Rental::query()
-            ->with(['client', 'billboard'])
+            ->with(['company', 'billboard'])
             ->latest()
             ->get();
 
         return view('dashboard.rentals.index', [
             'rentals' => $rentals,
-            'clients' => Client::query()->orderBy('name')->get(),
+            'clients' => \App\Models\Company::query()->orderBy('name')->get(),
             'billboards' => Billboard::query()->orderBy('name')->get(),
             'activeRentals' => $rentals->count(),
             'paidRentals' => $rentals->where('payment_status', 'Paid')->count(),
