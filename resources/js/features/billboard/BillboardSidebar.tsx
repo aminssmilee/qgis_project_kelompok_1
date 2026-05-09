@@ -2,6 +2,7 @@ import { Search, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Billboard } from "./types";
+import { useDebounce } from "@/hooks/use-debounce";
 
 interface BillboardSidebarProps {
     billboards: Billboard[];
@@ -22,10 +23,12 @@ export default function BillboardSidebar({
     onDeleteBillboard,
     onFlyTo,
 }: BillboardSidebarProps) {
+    const debouncedSearch = useDebounce(searchTerm, 300);
+
     const filteredBillboards = billboards.filter(
         (bb) =>
-            bb.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            bb.address.toLowerCase().includes(searchTerm.toLowerCase())
+            bb.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            bb.address.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
 
     return (

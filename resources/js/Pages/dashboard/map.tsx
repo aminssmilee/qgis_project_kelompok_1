@@ -4,16 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Plus } from "lucide-react";
 
-import { Billboard } from "@/components/map/types";
-import MainMap, { MainMapHandle } from "@/components/map/MainMap";
+import { Billboard } from "@/features/billboard/types";
+import MainMap, { MainMapHandle } from "@/features/billboard/MainMap";
 import { Skeleton } from "@/components/ui/skeleton";
-import BillboardSidebar from "@/components/map/BillboardSidebar";
-import AddBillboardModal from "@/components/map/AddBillboardModal";
+import BillboardSidebar from "@/features/billboard/BillboardSidebar";
+import AddBillboardModal from "@/features/billboard/AddBillboardModal";
 import {
     fetchBillboards,
     deleteBillboard,
     ApiBillboard,
-} from "@/components/map/billboard-api";
+} from "@/features/billboard/billboard-api";
 import { toast } from "sonner";
 import {
     AlertDialog,

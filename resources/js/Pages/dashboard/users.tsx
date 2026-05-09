@@ -25,14 +25,17 @@ import {
     ChevronsRight,
     CheckCircle2,
     XCircle,
+    Search,
 } from "lucide-react";
 import {
     useReactTable,
     getCoreRowModel,
     getPaginationRowModel,
+    getFilteredRowModel,
     flexRender,
     createColumnHelper,
 } from "@tanstack/react-table";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
     Select,
     SelectContent,
@@ -49,19 +52,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { fetchUsers, deleteUser, UserData } from "@/components/user/user-api";
-import AddUserModal from "@/components/user/AddUserModal";
-import EditUserModal from "@/components/user/EditUserModal";
+import { fetchUsers, deleteUser, UserData } from "@/features/user/user-api";
+import AddUserModal from "@/features/user/AddUserModal";
+import EditUserModal from "@/features/user/EditUserModal";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { toast } from "sonner";
 
 
@@ -91,6 +85,8 @@ export default function UsersPage() {
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState<UserData | null>(null);
     const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 300);
 
     useEffect(() => {
         loadUsers();
@@ -217,8 +213,19 @@ export default function UsersPage() {
     const table = useReactTable({
         data: users,
         columns,
+        state: {
+            globalFilter: debouncedSearch,
+        },
+        onGlobalFilterChange: setSearchTerm,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const name = String(row.getValue("name")).toLowerCase();
+            const email = String(row.getValue("email")).toLowerCase();
+            const search = String(filterValue).toLowerCase();
+            return name.includes(search) || email.includes(search);
+        },
         initialState: {
             pagination: {
                 pageSize: 10,
@@ -262,12 +269,24 @@ export default function UsersPage() {
             <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle>Daftar Pengguna</CardTitle>
-                            <Button size="sm" className="gap-2" onClick={() => setShowModal(true)}>
-                                <Plus className="h-4 w-4" />
-                                Tambah User
-                            </Button>
+                            <div className="flex items-center gap-3">
+                                <div className="relative w-48">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Cari user..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <Button size="sm" className="gap-2" onClick={() => setShowModal(true)}>
+                                    <Plus className="h-4 w-4" />
+                                    Tambah User
+                                </Button>
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="rounded-lg border overflow-hidden">
@@ -467,27 +486,14 @@ export default function UsersPage() {
                 />
             )}
 
-            <AlertDialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus User?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus user 
-                            <span className="font-semibold text-slate-900"> {deletingUser?.name} </span> 
-                            dan menghapus datanya dari server.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction 
-                            onClick={() => deletingUser && handleDeleteUser(deletingUser.id)}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                        >
-                            Ya, Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteConfirmDialog
+                open={!!deletingUser}
+                onOpenChange={(open) => !open && setDeletingUser(null)}
+                onConfirm={() => deletingUser && handleDeleteUser(deletingUser.id)}
+                title="Hapus User?"
+                description={`Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus user ${deletingUser?.name} dan menghapus datanya dari server.`}
+                confirmText="Ya, Hapus"
+            />
         </DashboardLayout>
     );
 }

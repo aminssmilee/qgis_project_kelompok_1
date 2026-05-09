@@ -27,14 +27,17 @@ import {
     MoreHorizontal,
     CheckCircle2,
     XCircle,
+    Search,
 } from "lucide-react";
 import {
     useReactTable,
     getCoreRowModel,
     getPaginationRowModel,
+    getFilteredRowModel,
     flexRender,
     createColumnHelper,
 } from "@tanstack/react-table";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
     Select,
     SelectContent,
@@ -51,19 +54,10 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { fetchClients, deleteClient, ClientData } from "@/components/client/client-api";
-import AddClientModal from "@/components/client/AddClientModal";
-import EditClientModal from "@/components/client/EditClientModal";
+import { fetchClients, deleteClient, ClientData } from "@/features/client/client-api";
+import AddClientModal from "@/features/client/AddClientModal";
+import EditClientModal from "@/features/client/EditClientModal";
+import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { toast } from "sonner";
 
 const columnHelper = createColumnHelper<ClientData>();
@@ -74,6 +68,8 @@ export default function ClientsPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingClient, setEditingClient] = useState<ClientData | null>(null);
     const [deletingClient, setDeletingClient] = useState<ClientData | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 300);
 
     useEffect(() => {
         loadClients();
@@ -197,8 +193,19 @@ export default function ClientsPage() {
     const table = useReactTable({
         data: clients,
         columns,
+        state: {
+            globalFilter: debouncedSearch,
+        },
+        onGlobalFilterChange: setSearchTerm,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const name = String(row.getValue("name")).toLowerCase();
+            const email = String(row.getValue("email")).toLowerCase();
+            const search = String(filterValue).toLowerCase();
+            return name.includes(search) || email.includes(search);
+        },
         initialState: {
             pagination: {
                 pageSize: 10,
@@ -246,15 +253,27 @@ export default function ClientsPage() {
             </div>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5" />
                         Daftar Klien
                     </CardTitle>
-                    <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
-                        <Plus className="h-4 w-4" />
-                        Tambah Klien
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-64">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari klien..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+                            <Plus className="h-4 w-4" />
+                            Tambah Klien
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="rounded-lg border overflow-hidden">
@@ -403,27 +422,14 @@ export default function ClientsPage() {
                 />
             )}
 
-            <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && setDeletingClient(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Hapus Klien?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus klien 
-                            <span className="font-semibold text-slate-900"> {deletingClient?.name} </span> 
-                            beserta seluruh riwayat transaksinya dari server.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction 
-                            onClick={() => deletingClient && handleDeleteClient(deletingClient.id)}
-                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                        >
-                            Ya, Hapus
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteConfirmDialog
+                open={!!deletingClient}
+                onOpenChange={(open) => !open && setDeletingClient(null)}
+                onConfirm={() => deletingClient && handleDeleteClient(deletingClient.id)}
+                title="Hapus Klien?"
+                description={`Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus klien ${deletingClient?.name} beserta seluruh riwayat transaksinya dari server.`}
+                confirmText="Ya, Hapus"
+            />
         </DashboardLayout>
     );
 }

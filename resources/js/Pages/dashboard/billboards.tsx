@@ -17,6 +17,7 @@ import {
     Edit2,
     Trash2,
     Eye,
+    Search,
     MoreHorizontal,
     ChevronLeft,
     ChevronRight,
@@ -31,9 +32,11 @@ import {
     useReactTable,
     getCoreRowModel,
     getPaginationRowModel,
+    getFilteredRowModel,
     flexRender,
     createColumnHelper,
 } from "@tanstack/react-table";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
     Select,
     SelectContent,
@@ -51,11 +54,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchBillboards } from "@/components/map/billboard-api";
-import AddBillboardModal from "@/components/map/AddBillboardModal";
-import EditBillboardModal from "@/components/map/EditBillboardModal";
-import DetailBillboardModal from "@/components/map/DetailBillboardModal";
-import { Billboard } from "@/components/map/types";
+import { fetchBillboards } from "@/features/billboard/billboard-api";
+import AddBillboardModal from "@/features/billboard/AddBillboardModal";
+import EditBillboardModal from "@/features/billboard/EditBillboardModal";
+import DetailBillboardModal from "@/features/billboard/DetailBillboardModal";
+import { Billboard } from "@/features/billboard/types";
 
 const columnHelper = createColumnHelper<any>();
 
@@ -64,6 +67,8 @@ export default function BillboardsPage() {
     const [isLoading, setIsLoading] = React.useState(true);
     const [viewingBillboard, setViewingBillboard] = React.useState<Billboard | null>(null);
     const [editingBillboard, setEditingBillboard] = React.useState<Billboard | null>(null);
+    const [searchTerm, setSearchTerm] = React.useState("");
+    const debouncedSearch = useDebounce(searchTerm, 300);
 
     React.useEffect(() => {
         fetchBillboards()
@@ -194,8 +199,19 @@ export default function BillboardsPage() {
     const table = useReactTable({
         data: billboards,
         columns,
+        state: {
+            globalFilter: debouncedSearch,
+        },
+        onGlobalFilterChange: setSearchTerm,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        getFilteredRowModel: getFilteredRowModel(),
+        globalFilterFn: (row, columnId, filterValue) => {
+            const name = String(row.getValue("name")).toLowerCase();
+            const location = String(row.getValue("location")).toLowerCase();
+            const search = String(filterValue).toLowerCase();
+            return name.includes(search) || location.includes(search);
+        },
         initialState: {
             pagination: {
                 pageSize: 10,
@@ -226,13 +242,25 @@ export default function BillboardsPage() {
             </div>
 
             <Card>
-                {/* <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle>Daftar Billboard</CardTitle>
-                    <Button size="sm" className="gap-2">
-                        <Plus className="h-4 w-4" />
-                        Tambah Billboard
-                    </Button>
-                </CardHeader> */}
+                    <div className="flex items-center gap-3">
+                        <div className="relative w-64">
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari billboard..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        {/* <Button size="sm" className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Tambah Billboard
+                        </Button> */}
+                    </div>
+                </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="rounded-lg border overflow-hidden">
                         <Table>
