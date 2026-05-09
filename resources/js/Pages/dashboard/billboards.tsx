@@ -50,64 +50,38 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const billboardsData = [
-    {
-        id: 1,
-        name: "Billboard Pusat Kota",
-        location: "Jalan MH Thamrin",
-        size: "8m x 3m",
-        traffic: "Tinggi",
-        status: "Available",
-        category: "Statis",
-        price: "Rp 50 Juta",
-    },
-    {
-        id: 2,
-        name: "Billboard Jalan Sudirman",
-        location: "Jalan Sudirman",
-        size: "10m x 4m",
-        traffic: "Sangat Tinggi",
-        status: "Available",
-        category: "Digital",
-        price: "Rp 75 Juta",
-    },
-    {
-        id: 3,
-        name: "Billboard Gatot Subroto",
-        location: "Jalan Gatot Subroto",
-        size: "8m x 3m",
-        traffic: "Tinggi",
-        status: "Booked",
-        category: "Statis",
-        price: "Rp 60 Juta",
-    },
-    {
-        id: 4,
-        name: "Billboard Bandara",
-        location: "Jalan Bandara Soekarno-Hatta",
-        size: "6m x 3m",
-        traffic: "Sedang",
-        status: "Available",
-        category: "LED",
-        price: "Rp 45 Juta",
-    },
-    {
-        id: 5,
-        name: "Billboard Senayan",
-        location: "Jalan Benda",
-        size: "8m x 4m",
-        traffic: "Tinggi",
-        status: "Maintenance",
-        category: "Digital",
-        price: "Rp 65 Juta",
-    },
-];
+import { fetchBillboards } from "@/components/map/billboard-api";
+import EditBillboardModal from "@/components/map/EditBillboardModal";
+import { Billboard } from "@/components/map/types";
 
 const columnHelper = createColumnHelper<any>();
 
 export default function BillboardsPage() {
-    const [billboards] = useState(billboardsData);
+    const [billboards, setBillboards] = React.useState<any[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
+    const [editingBillboard, setEditingBillboard] = React.useState<Billboard | null>(null);
+
+    React.useEffect(() => {
+        fetchBillboards()
+            .then((data) => {
+                const mapped = data.map((b) => ({
+                    id: b.id,
+                    name: b.name,
+                    location: b.address, // For the table
+                    address: b.address, // For the modal
+                    lat: b.lat,
+                    lng: b.lng,
+                    size: b.size ?? "—",
+                    category: b.category ?? "Umum",
+                    traffic: b.traffic_density === "high" ? "Tinggi" : b.traffic_density === "very_high" ? "Sangat Tinggi" : "Sedang",
+                    price: b.price_label ?? "—",
+                    status: b.is_active ? "Available" : "Maintenance",
+                }));
+                setBillboards(mapped);
+            })
+            .catch((err) => console.error("Failed to fetch billboards:", err))
+            .finally(() => setIsLoading(false));
+    }, []);
 
     const getStatusConfig = (status: string) => {
         switch (status) {
@@ -194,7 +168,7 @@ export default function BillboardsPage() {
                                 <Eye className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Detail Billboard</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => console.log("Edit", info.row.original.id)}>
+                            <DropdownMenuItem onClick={() => setEditingBillboard(info.row.original as Billboard)}>
                                 <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
                                 <span>Edit Billboard</span>
                             </DropdownMenuItem>
@@ -225,10 +199,10 @@ export default function BillboardsPage() {
     });
 
     const stats = [
-        { label: "Total Billboard", value: "245", color: "text-blue-600" },
-        { label: "Available", value: "182", color: "text-green-600" },
-        { label: "Booked", value: "52", color: "text-orange-600" },
-        { label: "Maintenance", value: "11", color: "text-red-600" },
+        { label: "Total Billboard", value: billboards.length.toString(), color: "text-blue-600" },
+        { label: "Available", value: billboards.filter(b => b.status === "Available").length.toString(), color: "text-green-600" },
+        { label: "Booked", value: billboards.filter(b => b.status === "Booked").length.toString(), color: "text-orange-600" },
+        { label: "Maintenance", value: billboards.filter(b => b.status === "Maintenance").length.toString(), color: "text-red-600" },
     ];
 
     return (
@@ -271,7 +245,13 @@ export default function BillboardsPage() {
                                 ))}
                             </TableHeader>
                             <TableBody>
-                                {table.getRowModel().rows.length > 0 ? (
+                                {isLoading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                                            Memuat data...
+                                        </TableCell>
+                                    </TableRow>
+                                ) : table.getRowModel().rows.length > 0 ? (
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow key={row.id} className="hover:bg-gray-50">
                                             {row.getVisibleCells().map((cell) => (
@@ -284,7 +264,7 @@ export default function BillboardsPage() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={columns.length} className="h-24 text-center">
-                                            No results.
+                                            Tidak ada data billboard.
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -366,6 +346,25 @@ export default function BillboardsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {editingBillboard && (
+                <EditBillboardModal
+                    billboard={editingBillboard}
+                    onUpdate={(updatedBB) => {
+                        setBillboards((prev) =>
+                            prev.map((bb) => (bb.id === updatedBB.id ? {
+                                ...bb,
+                                name: updatedBB.name,
+                                location: updatedBB.address,
+                                size: updatedBB.size,
+                                price: updatedBB.price,
+                            } : bb))
+                        );
+                        setEditingBillboard(null);
+                    }}
+                    onClose={() => setEditingBillboard(null)}
+                />
+            )}
         </DashboardLayout>
     );
 }

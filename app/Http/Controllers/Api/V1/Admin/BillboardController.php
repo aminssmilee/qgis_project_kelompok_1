@@ -172,7 +172,14 @@ final class BillboardController
 
         return response()->json([
             'message' => 'Billboard berhasil diperbarui',
-            'data' => $this->format($billboard->fresh()),
+            'data'    => $this->format(
+                Billboard::query()
+                    ->with(['category', 'activePricing'])
+                    ->select('*')
+                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+                    ->findOrFail($billboard->id)
+            ),
         ]);
     }
 

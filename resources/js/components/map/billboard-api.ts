@@ -80,6 +80,33 @@ export async function createBillboard(
     return json.data as ApiBillboard;
 }
 
+export async function updateBillboard(
+    id: string,
+    payload: UpdateBillboardData
+): Promise<ApiBillboard> {
+    const token = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content') ?? '';
+
+    const res = await fetch(`${API_BASE}/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders(),
+            'X-CSRF-TOKEN': token,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.message ?? `Gagal memperbarui billboard: ${res.status}`);
+    }
+
+    const json = await res.json();
+    return json.data as ApiBillboard;
+}
+
 export async function deleteBillboard(id: string): Promise<void> {
     const token = document
         .querySelector('meta[name="csrf-token"]')
