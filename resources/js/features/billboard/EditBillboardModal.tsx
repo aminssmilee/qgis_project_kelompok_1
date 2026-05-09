@@ -3,7 +3,7 @@ import L from "leaflet";
 import { toast } from "sonner";
 import { Edit, Image as ImageIcon, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import FormModal from "../shared/FormModal";
+import FormModal from "@/components/shared/FormModal";
 import {
     Billboard,
     BillboardFormData,

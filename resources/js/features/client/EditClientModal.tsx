@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import { updateClient, ClientData } from "./client-api";
 import { toast } from "sonner";
-import FormModal from "../shared/FormModal";
+import FormModal from "@/components/shared/FormModal";
 
 interface EditClientModalProps {
     client: ClientData;

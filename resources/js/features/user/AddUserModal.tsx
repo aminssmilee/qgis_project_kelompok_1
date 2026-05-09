@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, CheckCircle2 } from "lucide-react";
 import { createUser } from "./user-api";
 import { toast } from "sonner";
-import FormModal from "../shared/FormModal";
+import FormModal from "@/components/shared/FormModal";
 
 interface AddUserModalProps {
     onClose: () => void;

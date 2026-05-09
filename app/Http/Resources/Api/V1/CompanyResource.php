@@ -19,9 +19,13 @@ final class CompanyResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'email' => $this->email,
+            'phone' => $this->phone,
             'address' => $this->address,
+            'city' => $this->city,
             'npwp' => $this->npwp,
             'nib' => $this->nib,
+            'status' => $this->status,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

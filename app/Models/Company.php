@@ -15,9 +15,13 @@ final class Company extends Model
 
     protected $fillable = [
         'name',
+        'email',
+        'phone',
         'address',
+        'city',
         'npwp',
         'nib',
+        'status',
     ];
 
     /**

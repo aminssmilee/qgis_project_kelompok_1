@@ -18,7 +18,7 @@ final class Rental extends Model
 
     protected $fillable = [
         'booking_code',
-        'client_id',
+        'company_id',
         'billboard_id',
         'rental_date',
         'duration_days',
@@ -41,11 +41,11 @@ final class Rental extends Model
     }
 
     /**
-     * @return BelongsTo<Client, $this>
+     * @return BelongsTo<Company, $this>
      */
-    public function client(): BelongsTo
+    public function company(): BelongsTo
     {
-        return $this->belongsTo(Client::class);
+        return $this->belongsTo(Company::class);
     }
 
     /**

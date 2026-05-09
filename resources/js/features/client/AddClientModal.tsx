@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { createClient } from "./client-api";
 import { toast } from "sonner";
-import FormModal from "../shared/FormModal";
+import FormModal from "@/components/shared/FormModal";
 
 interface AddClientModalProps {
     onClose: () => void;

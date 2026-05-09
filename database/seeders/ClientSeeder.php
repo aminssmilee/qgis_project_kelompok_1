@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
-use App\Models\Client;
+use App\Models\Company;
 use Illuminate\Database\Seeder;
 
 final class ClientSeeder extends Seeder
@@ -36,7 +36,7 @@ final class ClientSeeder extends Seeder
         ];
 
         foreach ($clients as $clientData) {
-            Client::query()->updateOrCreate(
+            Company::query()->updateOrCreate(
                 ['email' => $clientData['email']],
                 $clientData
             );

@@ -19,12 +19,13 @@ final class BillboardResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->name,
-            'latitude' => (float) ($this->latitude ?? null),
-            'longitude' => (float) ($this->longitude ?? null),
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
             'price_per_month' => (int) ($this->activePricing?->price_per_month ?? 0),
             'is_available' => (bool) $this->is_active,
             'impressions_per_day' => (int) $this->impressions_per_day,
             'thumbnail_url' => $this->thumbnail_url,
+            'category' => $this->category?->name,
             // Full data for detail
             'code' => $this->when($request->routeIs('*.show'), $this->code),
             'description' => $this->when($request->routeIs('*.show'), $this->description),

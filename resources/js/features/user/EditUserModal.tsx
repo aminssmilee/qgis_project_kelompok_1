@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Save } from "lucide-react";
 import { updateUser, UserData } from "./user-api";
 import { toast } from "sonner";
-import FormModal from "../shared/FormModal";
+import FormModal from "@/components/shared/FormModal";
 
 interface EditUserModalProps {
     user: UserData;

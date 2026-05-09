@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Requests\Api\V1\Admin\StoreClientRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateClientRequest;
-use App\Models\Client;
+use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 
 final class ClientController
@@ -16,11 +16,11 @@ final class ClientController
      */
     public function index(): JsonResponse
     {
-        $clients = Client::query()
+        $clients = Company::query()
             ->withCount('rentals')
             ->latest()
             ->get()
-            ->map(function (Client $client) {
+            ->map(function (Company $client) {
                 return [
                     'id' => $client->id,
                     'name' => $client->name,
@@ -44,7 +44,7 @@ final class ClientController
      */
     public function store(StoreClientRequest $request): JsonResponse
     {
-        $client = Client::query()->create($request->validated());
+        $client = Company::query()->create($request->validated());
 
         return response()->json([
             'status' => 'success',
@@ -67,7 +67,7 @@ final class ClientController
      */
     public function show(string $id): JsonResponse
     {
-        $client = Client::query()->withCount('rentals')->findOrFail($id);
+        $client = Company::query()->withCount('rentals')->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -89,7 +89,7 @@ final class ClientController
      */
     public function update(UpdateClientRequest $request, string $id): JsonResponse
     {
-        $client = Client::query()->findOrFail($id);
+        $client = Company::query()->findOrFail($id);
         $client->update($request->validated());
 
         return response()->json([
@@ -113,7 +113,7 @@ final class ClientController
      */
     public function destroy(string $id): JsonResponse
     {
-        $client = Client::query()->findOrFail($id);
+        $client = Company::query()->findOrFail($id);
         $client->delete();
 
         return response()->json([
