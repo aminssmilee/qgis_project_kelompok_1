@@ -52,10 +52,18 @@ Route::prefix('v1')->group(function (): void {
     });
     // Admin API (Web Dashboard)
     Route::prefix('admin')->group(function (): void {
+        // Hanya login yang boleh akses tanpa token
         Route::post('/login', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'login']);
 
         Route::middleware(['auth:sanctum', 'role:admin'])->group(function (): void {
             Route::post('/logout', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'logout']);
+
+            // Billboards CRUD (semua dilindungi — hanya admin login)
+            Route::get('/billboards', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'index']);
+            Route::get('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'show']);
+            Route::post('/billboards', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'store']);
+            Route::put('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'update']);
+            Route::delete('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'destroy']);
         });
     });
 });

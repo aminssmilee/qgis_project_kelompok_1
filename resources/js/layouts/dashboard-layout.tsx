@@ -6,6 +6,7 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { Toaster } from "@/components/ui/sonner";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -41,6 +42,7 @@ export default function DashboardLayout({
                     {children}
                 </div>
             </SidebarInset>
+            <Toaster position="top-center" />
         </SidebarProvider>
     );
 }
