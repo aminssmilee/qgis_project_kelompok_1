@@ -50,8 +50,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 import { fetchBillboards } from "@/components/map/billboard-api";
+import AddBillboardModal from "@/components/map/AddBillboardModal";
 import EditBillboardModal from "@/components/map/EditBillboardModal";
+import DetailBillboardModal from "@/components/map/DetailBillboardModal";
 import { Billboard } from "@/components/map/types";
 
 const columnHelper = createColumnHelper<any>();
@@ -59,6 +62,7 @@ const columnHelper = createColumnHelper<any>();
 export default function BillboardsPage() {
     const [billboards, setBillboards] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [viewingBillboard, setViewingBillboard] = React.useState<Billboard | null>(null);
     const [editingBillboard, setEditingBillboard] = React.useState<Billboard | null>(null);
 
     React.useEffect(() => {
@@ -71,6 +75,7 @@ export default function BillboardsPage() {
                     address: b.address, // For the modal
                     lat: b.lat,
                     lng: b.lng,
+                    photo_url: b.photo_url,
                     size: b.size ?? "—",
                     category: b.category ?? "Umum",
                     traffic: b.traffic_density === "high" ? "Tinggi" : b.traffic_density === "very_high" ? "Sangat Tinggi" : "Sedang",
@@ -164,7 +169,7 @@ export default function BillboardsPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => console.log("View", info.row.original.id)}>
+                            <DropdownMenuItem onClick={() => setViewingBillboard(info.row.original as Billboard)}>
                                 <Eye className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Detail Billboard</span>
                             </DropdownMenuItem>
@@ -221,13 +226,13 @@ export default function BillboardsPage() {
             </div>
 
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                {/* <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Daftar Billboard</CardTitle>
                     <Button size="sm" className="gap-2">
                         <Plus className="h-4 w-4" />
                         Tambah Billboard
                     </Button>
-                </CardHeader>
+                </CardHeader> */}
                 <CardContent className="space-y-4">
                     <div className="rounded-lg border overflow-hidden">
                         <Table>
@@ -246,11 +251,20 @@ export default function BillboardsPage() {
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center">
-                                            Memuat data...
-                                        </TableCell>
-                                    </TableRow>
+                                    <>
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <TableRow key={i}>
+                                                <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-1/2" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-1/4" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-1/2" /></TableCell>
+                                                <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                                                <TableCell><Skeleton className="h-8 w-8 rounded-md float-right" /></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </>
                                 ) : table.getRowModel().rows.length > 0 ? (
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow key={row.id} className="hover:bg-gray-50">
@@ -363,6 +377,13 @@ export default function BillboardsPage() {
                         setEditingBillboard(null);
                     }}
                     onClose={() => setEditingBillboard(null)}
+                />
+            )}
+
+            {viewingBillboard && (
+                <DetailBillboardModal
+                    billboard={viewingBillboard}
+                    onClose={() => setViewingBillboard(null)}
                 />
             )}
         </DashboardLayout>

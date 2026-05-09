@@ -19,7 +19,7 @@ final class BillboardController
     public function index(): JsonResponse
     {
         $billboards = Billboard::query()
-            ->with(['category', 'activePricing'])
+            ->with(['category', 'activePricing', 'photos'])
             ->select('*')
             ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
@@ -105,7 +105,7 @@ final class BillboardController
             'message' => 'Billboard berhasil ditambahkan',
             'data'    => $this->format(
                 Billboard::query()
-                    ->with(['category', 'activePricing'])
+                    ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
                     ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                     ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
@@ -120,7 +120,7 @@ final class BillboardController
     public function show(string $id): JsonResponse
     {
         $billboard = Billboard::query()
-            ->with(['category', 'activePricing'])
+            ->with(['category', 'activePricing', 'photos'])
             ->select('*')
             ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
@@ -174,7 +174,7 @@ final class BillboardController
             'message' => 'Billboard berhasil diperbarui',
             'data'    => $this->format(
                 Billboard::query()
-                    ->with(['category', 'activePricing'])
+                    ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
                     ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                     ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
@@ -209,11 +209,46 @@ final class BillboardController
     }
 
     /**
+     * Upload photo for a billboard.
+     */
+    public function uploadPhoto(Request $request, string $id): JsonResponse
+    {
+        $billboard = Billboard::findOrFail($id);
+
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // max 5MB
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $path = $file->store('billboards', 'public');
+            
+            // Generate full URL
+            $url = url('storage/' . $path);
+
+            $photo = \App\Models\BillboardPhoto::create([
+                'billboard_id' => $billboard->id,
+                'photo_url' => $url,
+                'is_primary' => $billboard->photos()->count() === 0, // Set as primary if it's the first photo
+                'sort_order' => $billboard->photos()->count() + 1,
+            ]);
+
+            return response()->json([
+                'message' => 'Foto berhasil diunggah',
+                'data' => $photo,
+            ], 201);
+        }
+
+        return response()->json(['message' => 'Gagal mengunggah foto'], 400);
+    }
+
+    /**
      * Format a billboard model with lat/lng from PostGIS geometry.
      */
     private function format(Billboard $billboard): array
     {
         $pricing = $billboard->activePricing;
+        $primaryPhoto = $billboard->photos->firstWhere('is_primary', true) ?? $billboard->photos->first();
 
         // Ambil ukuran dari description jika tersimpan di sana
         $size = null;
@@ -245,6 +280,7 @@ final class BillboardController
             'is_illuminated' => $billboard->is_illuminated,
             'is_active' => $billboard->is_active,
             'is_featured' => $billboard->is_featured,
+            'photo_url' => $primaryPhoto ? $primaryPhoto->photo_url : null,
             'created_at' => $billboard->created_at,
         ];
     }

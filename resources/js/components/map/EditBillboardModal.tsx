@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { toast } from "sonner";
-import { Edit, X } from "lucide-react";
+import { Edit, X, Image as ImageIcon, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +12,7 @@ import {
     DEFAULT_LAMONGAN_CENTER,
 } from "./types";
 import { locationMarkerIcon } from "./leaflet-icons";
-import { updateBillboard } from "./billboard-api";
+import { updateBillboard, uploadBillboardPhoto } from "./billboard-api";
 
 const EMPTY_FORM: BillboardFormData = {
     name: "",
@@ -57,6 +57,8 @@ export default function EditBillboardModal({
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
     // Inisialisasi peta picker dalam modal
     useEffect(() => {
@@ -158,6 +160,18 @@ export default function EditBillboardModal({
         return Object.keys(newErrors).length === 0;
     };
 
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error("Ukuran file maksimal 5MB");
+                return;
+            }
+            setPhotoFile(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent): Promise<void> => {
         e.preventDefault();
         setErrors({});
@@ -179,6 +193,15 @@ export default function EditBillboardModal({
                 address: formData.address,
                 size: formData.size || undefined,
             });
+
+            if (photoFile) {
+                try {
+                    await uploadBillboardPhoto(billboard.id.toString(), photoFile);
+                } catch (err: unknown) {
+                    console.error("Failed to upload photo:", err);
+                    toast.error("Data tersimpan, tapi gagal mengunggah foto.");
+                }
+            }
 
             const updatedBillboard: Billboard = {
                 ...billboard,
@@ -432,6 +455,41 @@ export default function EditBillboardModal({
                                     </p>
                                 </div>
                             )}
+
+                            {/* Foto Billboard */}
+                            <div className="space-y-4 pt-2 border-t">
+                                <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                    <ImageIcon className="h-4 w-4 text-blue-600" />
+                                    Foto Billboard Baru
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-4">
+                                        {photoPreview && (
+                                            <div className="relative w-24 h-24 rounded overflow-hidden border">
+                                                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                        )}
+                                        <div className="flex-1">
+                                            <label 
+                                                htmlFor="photo-upload" 
+                                                className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                                            >
+                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <Upload className="w-6 h-6 mb-2 text-gray-500" />
+                                                    <p className="text-xs text-gray-500 text-center px-2">Klik untuk upload foto <br/> (PNG, JPG, WEBP)</p>
+                                                </div>
+                                                <input 
+                                                    id="photo-upload" 
+                                                    type="file" 
+                                                    accept="image/png, image/jpeg, image/webp" 
+                                                    className="hidden" 
+                                                    onChange={handlePhotoChange}
+                                                />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Tombol Aksi */}
                             <div className="flex gap-2 pt-4 border-t mt-auto flex-shrink-0 bg-white sticky bottom-0">

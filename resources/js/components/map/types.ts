@@ -8,6 +8,7 @@ export interface Billboard {
     price: string;
     size: string;
     address: string;
+    photo_url?: string | null;
     markerVariant?: number;
 }
 

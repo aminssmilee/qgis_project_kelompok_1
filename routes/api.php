@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
 use App\Http\Controllers\Api\V1\User\BookingController;
 use App\Http\Controllers\Api\V1\User\CategoryController;
+use App\Http\Controllers\Api\V1\Admin\BillboardController as AdminBillboardController;
 use App\Http\Controllers\Api\V1\User\CompanyController;
 use App\Http\Controllers\Api\V1\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\Api\V1\User\ProfileController;
@@ -40,6 +41,9 @@ Route::prefix('v1')->group(function (): void {
             // Dashboard Summary
             Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
 
+            // Dashboard Summary
+            Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
+
             // Booking & Activity Routes
             Route::post('/spots/{id}/book', [BookingController::class, 'store']);
             Route::get('/activities', [BookingController::class, 'index']);
@@ -64,6 +68,9 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/billboards', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'store']);
             Route::put('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'update']);
             Route::delete('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'destroy']);
+            
+            // Photos
+            Route::post('/billboards/{id}/photos', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'uploadPhoto']);
         });
     });
 });

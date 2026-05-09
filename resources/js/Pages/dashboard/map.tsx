@@ -6,6 +6,7 @@ import { MapPin, Plus } from "lucide-react";
 
 import { Billboard } from "@/components/map/types";
 import MainMap, { MainMapHandle } from "@/components/map/MainMap";
+import { Skeleton } from "@/components/ui/skeleton";
 import BillboardSidebar from "@/components/map/BillboardSidebar";
 import AddBillboardModal from "@/components/map/AddBillboardModal";
 import {
@@ -34,6 +35,7 @@ function apiBillboardToLocal(b: ApiBillboard): Billboard {
         lat: b.lat,
         lng: b.lng,
         address: b.address,
+        photo_url: b.photo_url,
         price: b.price_label ?? "—",
         size: b.size ?? "—",
         markerVariant: undefined,
@@ -112,10 +114,27 @@ export default function MapPage() {
         <DashboardLayout title="Peta Billboard">
             {/* Loading */}
             {isLoading ? (
-                <div className="flex items-center justify-center h-96">
-                    <div className="text-center">
-                        <div className="w-12 h-12 rounded-full border-4 border-gray-300 border-t-blue-500 animate-spin mx-auto mb-4" />
-                        <p className="text-gray-600">Memuat data dari server...</p>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-3">
+                        <Card>
+                            <div className="p-6 pb-0 flex justify-between items-center">
+                                <Skeleton className="h-6 w-1/3" />
+                                <Skeleton className="h-10 w-32" />
+                            </div>
+                            <CardContent className="pt-6">
+                                <Skeleton className="w-full h-[600px] rounded-lg" />
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="lg:col-span-1 space-y-4">
+                        <Card>
+                            <CardContent className="p-4 space-y-4">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
 

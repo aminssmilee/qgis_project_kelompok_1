@@ -62,6 +62,14 @@ final class Billboard extends Model
     }
 
     /**
+     * @return HasMany<BillboardPhoto, $this>
+     */
+    public function photos(): HasMany
+    {
+        return $this->hasMany(BillboardPhoto::class)->orderBy('sort_order')->orderBy('created_at');
+    }
+
+    /**
      * Get the active pricing.
      */
     public function activePricing(): HasOne
