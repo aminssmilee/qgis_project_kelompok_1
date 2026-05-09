@@ -15,6 +15,7 @@ final class BillboardCategory extends Model
 
     protected $fillable = [
         'name',
+        'icon',
         'description',
     ];
 }

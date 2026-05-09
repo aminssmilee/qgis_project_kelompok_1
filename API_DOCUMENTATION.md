@@ -102,7 +102,8 @@
       "price_per_month": 15000000,
       "is_available": true,
       "impressions_per_day": 124500,
-      "thumbnail_url": "https://..."
+      "thumbnail_url": "https://...",
+      "category": "Videotron"
     }
   ]
   ```
@@ -142,9 +143,13 @@
   {
     "id": "...",
     "name": "PT Smart Tech",
+    "email": "admin@company.com",
+    "phone": "08123456789",
     "address": "...",
+    "city": "Surabaya",
     "npwp": "...",
-    "nib": "..."
+    "nib": "...",
+    "status": "Active"
   }
   ```
 

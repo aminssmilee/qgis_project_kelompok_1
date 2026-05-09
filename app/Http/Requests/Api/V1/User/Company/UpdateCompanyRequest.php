@@ -25,7 +25,10 @@ final class UpdateCompanyRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'email' => ['nullable', 'email', 'max:150', 'unique:companies,email,'.$this->route('id')],
+            'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string'],
+            'city' => ['nullable', 'string', 'max:100'],
             'npwp' => ['nullable', 'string', 'max:25'],
             'nib' => ['nullable', 'string', 'max:30'],
         ];

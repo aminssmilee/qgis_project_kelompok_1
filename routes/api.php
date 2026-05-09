@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
 use App\Http\Controllers\Api\V1\User\BookingController;
 use App\Http\Controllers\Api\V1\User\CategoryController;
+use App\Http\Controllers\Api\V1\Admin\BillboardController as AdminBillboardController;
 use App\Http\Controllers\Api\V1\User\CompanyController;
 use App\Http\Controllers\Api\V1\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\Api\V1\User\ProfileController;
@@ -40,11 +41,13 @@ Route::prefix('v1')->group(function (): void {
             // Dashboard Summary
             Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
 
+            // Dashboard Summary
+            Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
+
             // Booking & Activity Routes
             Route::post('/spots/{id}/book', [BookingController::class, 'store']);
             Route::get('/activities', [BookingController::class, 'index']);
             Route::get('/activities/{id}', [BookingController::class, 'show']);
-
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
             Route::patch('/companies/{id}', [CompanyController::class, 'update']);
@@ -53,10 +56,35 @@ Route::prefix('v1')->group(function (): void {
     });
     // Admin API (Web Dashboard)
     Route::prefix('admin')->group(function (): void {
+        // Hanya login yang boleh akses tanpa token
         Route::post('/login', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'login']);
 
         Route::middleware(['auth:sanctum', 'role:admin'])->group(function (): void {
             Route::post('/logout', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'logout']);
+
+            // Billboards CRUD (semua dilindungi — hanya admin login)
+            Route::get('/billboards', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'index']);
+            Route::get('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'show']);
+            Route::post('/billboards', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'store']);
+            Route::put('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'update']);
+            Route::delete('/billboards/{id}', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'destroy']);
+            
+            // Photos
+            Route::post('/billboards/{id}/photos', [App\Http\Controllers\Api\V1\Admin\BillboardController::class, 'uploadPhoto']);
+
+            // Users CRUD
+            Route::get('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'index']);
+            Route::get('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'show']);
+            Route::post('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'store']);
+            Route::put('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'update']);
+            Route::delete('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'destroy']);
+
+            // Clients CRUD
+            Route::get('/clients', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'index']);
+            Route::get('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'show']);
+            Route::post('/clients', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'store']);
+            Route::put('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'update']);
+            Route::delete('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'destroy']);
         });
     });
 });
