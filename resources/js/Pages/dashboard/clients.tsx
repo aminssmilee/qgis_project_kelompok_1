@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     Users,
     Plus,
@@ -50,69 +51,59 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { fetchClients, deleteClient, ClientData } from "@/components/client/client-api";
+import AddClientModal from "@/components/client/AddClientModal";
+import EditClientModal from "@/components/client/EditClientModal";
+import { toast } from "sonner";
 
-const clientsData = [
-    {
-        id: 1,
-        name: "PT. Maju Jaya",
-        email: "info@majujaya.com",
-        phone: "+62-21-1234567",
-        city: "Jakarta",
-        totalRentals: 5,
-        totalSpent: "Rp 250 Juta",
-        status: "Active",
-        joinDate: "2023-01-15",
-    },
-    {
-        id: 2,
-        name: "CV. Cipta Digital",
-        email: "admin@cipta.co.id",
-        phone: "+62-812-9876543",
-        city: "Jakarta",
-        totalRentals: 8,
-        totalSpent: "Rp 420 Juta",
-        status: "Active",
-        joinDate: "2022-11-20",
-    },
-    {
-        id: 3,
-        name: "PT. Indo Promosi",
-        email: "contact@indopromosi.id",
-        phone: "+62-21-5555666",
-        city: "Bandung",
-        totalRentals: 3,
-        totalSpent: "Rp 180 Juta",
-        status: "Active",
-        joinDate: "2024-02-10",
-    },
-    {
-        id: 4,
-        name: "PT. Media Global",
-        email: "sales@mediaglobal.com",
-        phone: "+62-21-9999888",
-        city: "Jakarta",
-        totalRentals: 12,
-        totalSpent: "Rp 680 Juta",
-        status: "Active",
-        joinDate: "2021-08-05",
-    },
-    {
-        id: 5,
-        name: "Startup Tech Indonesia",
-        email: "hello@techstartup.id",
-        phone: "+62-812-1111222",
-        city: "Jakarta",
-        totalRentals: 2,
-        totalSpent: "Rp 95 Juta",
-        status: "Inactive",
-        joinDate: "2023-06-12",
-    },
-];
-
-const columnHelper = createColumnHelper<any>();
+const columnHelper = createColumnHelper<ClientData>();
 
 export default function ClientsPage() {
-    const [clients] = useState(clientsData);
+    const [clients, setClients] = useState<ClientData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [editingClient, setEditingClient] = useState<ClientData | null>(null);
+    const [deletingClient, setDeletingClient] = useState<ClientData | null>(null);
+
+    useEffect(() => {
+        loadClients();
+    }, []);
+
+    const loadClients = async () => {
+        setIsLoading(true);
+        try {
+            const data = await fetchClients();
+            setClients(data);
+        } catch (error) {
+            console.error("Failed to load clients:", error);
+            toast.error("Gagal memuat data klien.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleDeleteClient = async (id: string) => {
+        try {
+            await deleteClient(id);
+            setClients(clients.filter(c => c.id !== id));
+            toast.success("Klien berhasil dihapus.");
+        } catch (error) {
+            console.error("Failed to delete client:", error);
+            toast.error("Gagal menghapus klien.");
+        } finally {
+            setDeletingClient(null);
+        }
+    };
 
     const columns = [
         columnHelper.accessor("name", {
@@ -141,10 +132,6 @@ export default function ClientsPage() {
         columnHelper.accessor("totalRentals", {
             header: "Total Rental",
             cell: (info) => <span className="text-sm">{info.getValue()} kali</span>,
-        }),
-        columnHelper.accessor("totalSpent", {
-            header: "Total Pengeluaran",
-            cell: (info) => <span className="font-semibold">{info.getValue()}</span>,
         }),
         columnHelper.accessor("joinDate", {
             header: "Tanggal Bergabung",
@@ -189,13 +176,13 @@ export default function ClientsPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => console.log("Edit", info.row.original.id)}>
+                            <DropdownMenuItem onClick={() => setEditingClient(info.row.original)}>
                                 <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
                                 <span>Edit Klien</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 variant="destructive"
-                                onClick={() => console.log("Delete", info.row.original.id)}
+                                onClick={() => setDeletingClient(info.row.original)}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Hapus Klien</span>
@@ -219,25 +206,43 @@ export default function ClientsPage() {
         },
     });
 
-    const stats = [
-        { label: "Total Klien", value: "182", color: "text-blue-600" },
-        { label: "Klien Aktif", value: "165", color: "text-green-600" },
-        { label: "Klien Baru (Bulan Ini)", value: "12", color: "text-orange-600" },
-    ];
-
     return (
         <DashboardLayout title="Manajemen Klien">
             <div className="grid gap-4 md:grid-cols-3 mb-6">
-                {stats.map((stat, index) => (
-                    <Card key={index}>
-                        <CardContent className="pt-6">
-                            <div className="text-center">
-                                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                                <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-gray-600">Total Klien</p>
+                            <p className="text-3xl font-bold text-blue-600">
+                                {isLoading ? <Skeleton className="h-9 w-12 mx-auto" /> : clients.length}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-gray-600">Klien Aktif</p>
+                            <p className="text-3xl font-bold text-green-600">
+                                {isLoading ? <Skeleton className="h-9 w-12 mx-auto" /> : clients.filter(c => c.status === "Active").length}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-gray-600">Klien Baru (Bulan Ini)</p>
+                            <p className="text-3xl font-bold text-orange-600">
+                                {isLoading ? <Skeleton className="h-9 w-12 mx-auto" /> : clients.filter(c => {
+                                    const joinDate = new Date(c.joinDate);
+                                    const now = new Date();
+                                    return joinDate.getMonth() === now.getMonth() && joinDate.getFullYear() === now.getFullYear();
+                                }).length}
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
 
             <Card>
@@ -246,7 +251,7 @@ export default function ClientsPage() {
                         <Users className="h-5 w-5" />
                         Daftar Klien
                     </CardTitle>
-                    <Button size="sm" className="gap-2">
+                    <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
                         <Plus className="h-4 w-4" />
                         Tambah Klien
                     </Button>
@@ -268,7 +273,21 @@ export default function ClientsPage() {
                                 ))}
                             </TableHeader>
                             <TableBody>
-                                {table.getRowModel().rows.length > 0 ? (
+                                {isLoading ? (
+                                    <>
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <TableRow key={i}>
+                                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                                <TableCell><Skeleton className="h-10 w-40" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                                <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                                <TableCell><Skeleton className="h-8 w-8 rounded-md float-right" /></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </>
+                                ) : table.getRowModel().rows.length > 0 ? (
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow key={row.id} className="hover:bg-gray-50">
                                             {row.getVisibleCells().map((cell) => (
@@ -281,7 +300,7 @@ export default function ClientsPage() {
                                 ) : (
                                     <TableRow>
                                         <TableCell colSpan={columns.length} className="h-24 text-center">
-                                            No results.
+                                            Tidak ada data klien.
                                         </TableCell>
                                     </TableRow>
                                 )}
@@ -292,13 +311,12 @@ export default function ClientsPage() {
                     {/* Pagination */}
                     <div className="flex items-center justify-between px-2 py-2">
                         <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-                            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                            {table.getFilteredRowModel().rows.length} row(s) selected.
+                            {table.getFilteredRowModel().rows.length} total baris.
                         </div>
                         <div className="flex w-full items-center gap-8 lg:w-fit">
                             <div className="hidden items-center gap-2 lg:flex">
                                 <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                                    Rows per page
+                                    Baris per halaman
                                 </Label>
                                 <Select
                                     value={`${table.getState().pagination.pageSize}`}
@@ -319,7 +337,7 @@ export default function ClientsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button
@@ -328,16 +346,16 @@ export default function ClientsPage() {
                                     onClick={() => table.setPageIndex(0)}
                                     disabled={!table.getCanPreviousPage()}
                                 >
-                                    <span className="sr-only">Go to first page</span>
+                                    <span className="sr-only">Halaman pertama</span>
                                     <ChevronsLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     variant="outline"
                                     className="h-8 w-8 p-0"
                                     onClick={() => table.previousPage()}
-                                    disabled={!!table.getCanPreviousPage() === false}
+                                    disabled={!table.getCanPreviousPage()}
                                 >
-                                    <span className="sr-only">Go to previous page</span>
+                                    <span className="sr-only">Halaman sebelumnya</span>
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -346,7 +364,7 @@ export default function ClientsPage() {
                                     onClick={() => table.nextPage()}
                                     disabled={!table.getCanNextPage()}
                                 >
-                                    <span className="sr-only">Go to next page</span>
+                                    <span className="sr-only">Halaman selanjutnya</span>
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -355,7 +373,7 @@ export default function ClientsPage() {
                                     onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                                     disabled={!table.getCanNextPage()}
                                 >
-                                    <span className="sr-only">Go to last page</span>
+                                    <span className="sr-only">Halaman terakhir</span>
                                     <ChevronsRight className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -363,7 +381,49 @@ export default function ClientsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {showAddModal && (
+                <AddClientModal
+                    onClose={() => setShowAddModal(false)}
+                    onSuccess={(newClient) => {
+                        setClients([newClient, ...clients]);
+                        setShowAddModal(false);
+                    }}
+                />
+            )}
+
+            {editingClient && (
+                <EditClientModal
+                    client={editingClient}
+                    onClose={() => setEditingClient(null)}
+                    onSuccess={(updatedClient) => {
+                        setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+                        setEditingClient(null);
+                    }}
+                />
+            )}
+
+            <AlertDialog open={!!deletingClient} onOpenChange={(open) => !open && setDeletingClient(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Klien?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus klien 
+                            <span className="font-semibold text-slate-900"> {deletingClient?.name} </span> 
+                            beserta seluruh riwayat transaksinya dari server.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => deletingClient && handleDeleteClient(deletingClient.id)}
+                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                        >
+                            Ya, Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </DashboardLayout>
     );
 }
-

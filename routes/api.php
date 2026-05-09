@@ -78,6 +78,13 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'store']);
             Route::put('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'update']);
             Route::delete('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'destroy']);
+
+            // Clients CRUD
+            Route::get('/clients', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'index']);
+            Route::get('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'show']);
+            Route::post('/clients', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'store']);
+            Route::put('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'update']);
+            Route::delete('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'destroy']);
         });
     });
 });

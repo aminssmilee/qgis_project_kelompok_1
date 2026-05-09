@@ -38,6 +38,42 @@ export interface ApiBillboard {
     created_at: string;
 }
 
+export interface StoreBillboardData {
+    name: string;
+    lat: number;
+    lng: number;
+    address: string;
+    city: string;
+    district?: string;
+    category_id?: string;
+    code?: string;
+    size?: string;
+    price_per_month?: number;
+    is_active?: boolean;
+    is_featured?: boolean;
+    is_illuminated?: boolean;
+    traffic_density?: string;
+    facing_direction?: string;
+}
+
+export interface UpdateBillboardData {
+    name?: string;
+    lat?: number;
+    lng?: number;
+    address?: string;
+    city?: string;
+    district?: string;
+    category_id?: string;
+    code?: string;
+    size?: string;
+    price_per_month?: number;
+    is_active?: boolean;
+    is_featured?: boolean;
+    is_illuminated?: boolean;
+    traffic_density?: string;
+    facing_direction?: string;
+}
+
 export async function fetchBillboards(): Promise<ApiBillboard[]> {
     const res = await fetch(API_BASE, {
         headers: authHeaders(),
@@ -52,11 +88,7 @@ export async function fetchBillboards(): Promise<ApiBillboard[]> {
 }
 
 export async function createBillboard(
-    payload: Omit<ApiBillboard, 'id' | 'category' | 'created_at'> & {
-        size?: string;
-        price_label?: string;
-        price_per_month?: number;
-    }
+    payload: StoreBillboardData
 ): Promise<ApiBillboard> {
     const token = document
         .querySelector('meta[name="csrf-token"]')
