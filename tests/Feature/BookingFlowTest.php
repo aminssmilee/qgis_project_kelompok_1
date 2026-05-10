@@ -47,14 +47,14 @@ beforeEach(function (): void {
     $this->user = User::factory()->create(['role' => 'user']);
 });
 
-it('can create a booking successfully', function (): void {
+it('can create a booking successfully with different duration types', function (string $type, int $value): void {
     $response = $this->actingAs($this->user, 'sanctum')
         ->postJson("/api/v1/user/spots/{$this->billboard->id}/book", [
             'start_date' => now()->addDays(5)->toDateString(),
             'end_date' => now()->addDays(20)->toDateString(),
-            'duration_type' => 'daily',
-            'duration_value' => 15,
-            'notes' => 'Test booking',
+            'duration_type' => $type,
+            'duration_value' => $value,
+            'notes' => 'Test booking ' . $type,
         ]);
 
     $response->assertCreated()
@@ -63,9 +63,19 @@ it('can create a booking successfully', function (): void {
     $this->assertDatabaseHas('bookings', [
         'user_id' => $this->user->id,
         'billboard_id' => $this->billboard->id,
+        'duration_type' => $type,
+        'duration_value' => $value,
         'status' => 'pending_payment',
     ]);
-});
+})->with([
+    ['daily', 15],
+    ['weekly', 2],
+    ['monthly', 1],
+    ['monthly', 3], // Should hit discount_3month
+    ['monthly', 6], // Should hit discount_6month
+    ['monthly', 12], // Should hit discount_1year
+    ['yearly', 1],
+]);
 
 it('rejects booking for inactive billboard', function (): void {
     $this->billboard->update(['is_active' => false]);
@@ -126,10 +136,10 @@ it('prevents double booking (schedule conflict)', function (): void {
         ->assertJsonPath('message', 'Billboard is already booked for the selected dates. Please choose different dates.');
 });
 
-it('allows booking after cancelled booking on same dates', function (): void {
-    // Create a cancelled booking
+it('allows booking after cancelled or rejected booking on same dates', function (string $status): void {
+    // Create a cancelled or rejected booking
     Booking::create([
-        'booking_code' => 'ORD-TEST-002',
+        'booking_code' => 'ORD-TEST-002-' . $status,
         'user_id' => $this->user->id,
         'billboard_id' => $this->billboard->id,
         'pricing_id' => $this->pricing->id,
@@ -141,10 +151,10 @@ it('allows booking after cancelled booking on same dates', function (): void {
         'base_price' => 30000000,
         'tax_amount' => 3300000,
         'total_price' => 33300000,
-        'status' => 'cancelled',
+        'status' => $status,
     ]);
 
-    // Should be allowed since the previous one was cancelled
+    // Should be allowed since the previous one was cancelled/rejected
     $response = $this->actingAs($this->user, 'sanctum')
         ->postJson("/api/v1/user/spots/{$this->billboard->id}/book", [
             'start_date' => now()->addDays(5)->toDateString(),
@@ -154,7 +164,10 @@ it('allows booking after cancelled booking on same dates', function (): void {
         ]);
 
     $response->assertCreated();
-});
+})->with([
+    ['cancelled'],
+    ['rejected'],
+]);
 
 it('only shows bookings owned by authenticated user', function (): void {
     $otherUser = User::factory()->create(['role' => 'user']);
