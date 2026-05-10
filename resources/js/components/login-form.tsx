@@ -51,7 +51,7 @@ export function LoginForm({
             await api.get("/sanctum/csrf-cookie", { baseURL: "/" });
 
             const response = await api.post("/admin/login", {
-                email,
+                email: email.trim(),
                 password,
             });
 

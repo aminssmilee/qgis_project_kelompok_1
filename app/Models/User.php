@@ -84,4 +84,12 @@ final class User extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    /**
+     * @return HasMany<Notification, $this>
+     */
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
 }
