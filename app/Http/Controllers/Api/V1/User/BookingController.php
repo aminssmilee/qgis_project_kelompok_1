@@ -8,6 +8,7 @@ use App\Http\Requests\Api\V1\User\Booking\StoreBookingRequest;
 use App\Http\Resources\Api\V1\User\BookingResource;
 use App\Models\Billboard;
 use App\Models\Booking;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,10 @@ use Illuminate\Support\Str;
 
 final class BookingController
 {
+    public function __construct(
+        private readonly NotificationService $notificationService,
+    ) {}
+
     /**
      * Display a listing of the authenticated user's bookings.
      */
@@ -152,6 +157,8 @@ final class BookingController
         ]);
 
         $booking->load(['billboard.category']);
+
+        $this->notificationService->bookingCreated($booking);
 
         return response()->json([
             'message' => 'Booking created successfully',

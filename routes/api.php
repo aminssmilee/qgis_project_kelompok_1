@@ -41,14 +41,15 @@ Route::prefix('v1')->group(function (): void {
             // Dashboard Summary
             Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
 
-            // Dashboard Summary
-            Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
-
             // Booking & Activity Routes
             Route::post('/spots/{id}/book', [BookingController::class, 'store']);
             Route::get('/activities', [BookingController::class, 'index']);
             Route::get('/activities/{id}', [BookingController::class, 'show']);
             Route::patch('/activities/{id}/cancel', [BookingController::class, 'cancel']);
+
+            // Booking Creative (Design Upload)
+            Route::get('/activities/{bookingId}/creatives', [App\Http\Controllers\Api\V1\User\BookingCreativeController::class, 'index']);
+            Route::post('/activities/{bookingId}/creatives', [App\Http\Controllers\Api\V1\User\BookingCreativeController::class, 'store']);
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
             Route::patch('/companies/{id}', [CompanyController::class, 'update']);
@@ -87,8 +88,11 @@ Route::prefix('v1')->group(function (): void {
             Route::put('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'update']);
             Route::delete('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'destroy']);
 
-            // Bookings CRUD
+            // Bookings
             Route::get('/bookings', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'index']);
+            Route::get('/bookings/{id}', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'show']);
+            Route::patch('/bookings/{id}/approve', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'approve']);
+            Route::patch('/bookings/{id}/reject', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'reject']);
         });
     });
 });

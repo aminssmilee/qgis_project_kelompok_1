@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import BookingDetailModal from "@/features/billboard/BookingDetailModal";
 
 // This will handle the API request with authentication token
 const fetchBookings = async () => {
@@ -73,6 +74,7 @@ const columnHelper = createColumnHelper<any>();
 export default function RentalsPage() {
     const [rentals, setRentals] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
     useEffect(() => {
         loadRentals();
@@ -84,7 +86,8 @@ export default function RentalsPage() {
             const data = await fetchBookings();
             // Transform the data to match the expected format in the table
             const formattedData = data.map((booking: any) => ({
-                id: booking.booking_code,
+                id: booking.id,
+                booking_code: booking.booking_code,
                 client: booking.client,
                 billboard: booking.billboard,
                 startDate: booking.start_date,
@@ -101,6 +104,33 @@ export default function RentalsPage() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleApprove = async (id: string, bookingCode: string) => {
+        if (!confirm(`Yakin ingin menyetujui booking ${bookingCode}?`)) return;
+        try {
+            await api.patch(`/admin/bookings/${id}/approve`);
+            toast.success(`Booking ${bookingCode} berhasil disetujui!`);
+            loadRentals();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Gagal menyetujui booking.");
+        }
+    };
+
+    const handleReject = async (id: string, bookingCode: string) => {
+        const reason = prompt(`Masukkan alasan penolakan untuk booking ${bookingCode}:`);
+        if (!reason) return;
+        try {
+            await api.patch(`/admin/bookings/${id}/reject`, { admin_note: reason });
+            toast.success(`Booking ${bookingCode} berhasil ditolak.`);
+            loadRentals();
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || "Gagal menolak booking.");
+        }
+    };
+
+    const handleViewDetail = (id: string) => {
+        setSelectedBookingId(id);
     };
 
     const getStatusConfig = (status: string) => {
@@ -208,21 +238,25 @@ export default function RentalsPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => console.log("View", info.row.original.id)}>
+                            <DropdownMenuItem onClick={() => handleViewDetail(info.row.original.id)}>
                                 <Eye className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Detail Penyewaan</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => console.log("Edit", info.row.original.id)}>
-                                <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
-                                <span>Edit Kontrak</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() => console.log("Delete", info.row.original.id)}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Batalkan Penyewaan</span>
-                            </DropdownMenuItem>
+                            {info.row.original.status === 'Pending' && (
+                                <>
+                                    <DropdownMenuItem onClick={() => handleApprove(info.row.original.id, info.row.original.booking_code)}>
+                                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                                        <span>Setujui</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() => handleReject(info.row.original.id, info.row.original.booking_code)}
+                                    >
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        <span>Tolak</span>
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -250,6 +284,13 @@ export default function RentalsPage() {
 
     return (
         <DashboardLayout title="Penyewaan & Kontrak">
+            {selectedBookingId && (
+                <BookingDetailModal
+                    bookingId={selectedBookingId}
+                    onClose={() => setSelectedBookingId(null)}
+                    onActionSuccess={loadRentals}
+                />
+            )}
             <div className="grid gap-4 md:grid-cols-3 mb-6">
                 {stats.map((stat, index) => {
                     const Icon = stat.icon;
