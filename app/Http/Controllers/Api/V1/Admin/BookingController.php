@@ -24,7 +24,7 @@ final class BookingController
             $query->where('status', $status);
         }
 
-        $bookings = $query->latest()->get()->map(function (Booking $booking) {
+        $bookings = $query->latest()->get()->map(function (Booking $booking): array {
             $paymentStatus = $booking->payments->last()?->status ?? 'unpaid';
             $clientName = $booking->user->company?->name ?? $booking->user->name;
 
@@ -35,8 +35,8 @@ final class BookingController
                 'billboard' => $booking->billboard->name,
                 'start_date' => $booking->start_date->format('Y-m-d'),
                 'end_date' => $booking->end_date->format('Y-m-d'),
-                'duration' => $booking->duration_value . ' ' . $booking->duration_type,
-                'amount' => 'Rp ' . number_format((float) $booking->total_price, 0, ',', '.'),
+                'duration' => $booking->duration_value.' '.$booking->duration_type,
+                'amount' => 'Rp '.number_format((float) $booking->total_price, 0, ',', '.'),
                 'status' => $this->mapStatus($booking->status),
                 'payment' => $this->mapPaymentStatus($paymentStatus),
             ];

@@ -28,7 +28,7 @@ export default function DeleteConfirmDialog({
     title = "Apakah Anda yakin?",
     description = "Tindakan ini tidak dapat dibatalkan. Data akan dihapus secara permanen dari server kami.",
     confirmText = "Hapus",
-    cancelText = "Batal"
+    cancelText = "Batal",
 }: DeleteConfirmDialogProps) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>

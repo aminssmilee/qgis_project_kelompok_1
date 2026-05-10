@@ -81,11 +81,14 @@ export default function AddBillboardModal({
                     zoomControl: true,
                 });
 
-                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                    attribution:
-                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-                    maxZoom: 19,
-                }).addTo(modalMap);
+                L.tileLayer(
+                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    {
+                        attribution:
+                            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                        maxZoom: 19,
+                    },
+                ).addTo(modalMap);
 
                 // Pulihkan marker jika lokasi sudah dipilih sebelumnya
                 if (formData.lat && formData.lng) {
@@ -96,7 +99,7 @@ export default function AddBillboardModal({
                     }).addTo(modalMap);
                     marker
                         .bindPopup(
-                            `📍 Lokasi Terpilih<br/>Lat: ${lat.toFixed(4)}<br/>Lng: ${lng.toFixed(4)}`
+                            `📍 Lokasi Terpilih<br/>Lat: ${lat.toFixed(4)}<br/>Lng: ${lng.toFixed(4)}`,
                         )
                         .openPopup();
                     markerRef.current = marker;
@@ -120,7 +123,7 @@ export default function AddBillboardModal({
                     }).addTo(modalMap);
                     newMarker
                         .bindPopup(
-                            `📍 Lokasi Terpilih<br/>Lat: ${e.latlng.lat.toFixed(4)}<br/>Lng: ${e.latlng.lng.toFixed(4)}`
+                            `📍 Lokasi Terpilih<br/>Lat: ${e.latlng.lat.toFixed(4)}<br/>Lng: ${e.latlng.lng.toFixed(4)}`,
                         )
                         .openPopup();
                     modalMap.panTo(newMarker.getLatLng());
@@ -144,11 +147,14 @@ export default function AddBillboardModal({
 
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
-        if (!formData.name.trim()) newErrors.name = "Nama billboard wajib diisi";
+        if (!formData.name.trim())
+            newErrors.name = "Nama billboard wajib diisi";
         if (!formData.address.trim()) newErrors.address = "Alamat wajib diisi";
         if (!formData.size.trim()) newErrors.size = "Ukuran wajib diisi";
-        if (!formData.lat) newErrors.lat = "Pilih lokasi di map terlebih dahulu";
-        if (!formData.lng) newErrors.lng = "Pilih lokasi di map terlebih dahulu";
+        if (!formData.lat)
+            newErrors.lat = "Pilih lokasi di map terlebih dahulu";
+        if (!formData.lng)
+            newErrors.lng = "Pilih lokasi di map terlebih dahulu";
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -197,11 +203,16 @@ export default function AddBillboardModal({
             let uploadedPhotoUrl = null;
             if (photoFile) {
                 try {
-                    const photoRes = await uploadBillboardPhoto(created.id.toString(), photoFile);
+                    const photoRes = await uploadBillboardPhoto(
+                        created.id.toString(),
+                        photoFile,
+                    );
                     uploadedPhotoUrl = photoRes.photo_url;
                 } catch (err: unknown) {
                     console.error("Failed to upload photo:", err);
-                    toast.error("Billboard tersimpan, tapi gagal mengunggah foto.");
+                    toast.error(
+                        "Billboard tersimpan, tapi gagal mengunggah foto.",
+                    );
                 }
             }
 
@@ -224,7 +235,8 @@ export default function AddBillboardModal({
             });
             onClose();
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Terjadi kesalahan";
+            const message =
+                err instanceof Error ? err.message : "Terjadi kesalahan";
             toast.error("Gagal menyimpan billboard", { description: message });
         } finally {
             setIsSubmitting(false);
@@ -249,7 +261,8 @@ export default function AddBillboardModal({
                             </p>
                             {formData.lat && formData.lng && (
                                 <p className="text-xs text-blue-700 font-semibold mb-3">
-                                    ✅ Lokasi: {parseFloat(formData.lat).toFixed(4)},{" "}
+                                    ✅ Lokasi:{" "}
+                                    {parseFloat(formData.lat).toFixed(4)},{" "}
                                     {parseFloat(formData.lng).toFixed(4)}
                                 </p>
                             )}
@@ -279,16 +292,21 @@ export default function AddBillboardModal({
                                 className="mt-2 border rounded bg-gray-100 relative overflow-hidden cursor-crosshair"
                                 style={{ height: "200px" }}
                                 onClick={(e) => {
-                                    const el = e.currentTarget as HTMLDivElement;
+                                    const el =
+                                        e.currentTarget as HTMLDivElement;
                                     const rect = el.getBoundingClientRect();
                                     const x =
-                                        (e as unknown as MouseEvent).clientX - rect.left;
+                                        (e as unknown as MouseEvent).clientX -
+                                        rect.left;
                                     const y =
-                                        (e as unknown as MouseEvent).clientY - rect.top;
+                                        (e as unknown as MouseEvent).clientY -
+                                        rect.top;
                                     const lat =
-                                        -6.85 + (y / rect.height) * (-6.95 - -6.85);
+                                        -6.85 +
+                                        (y / rect.height) * (-6.95 - -6.85);
                                     const lng =
-                                        112.18 + (x / rect.width) * (112.25 - 112.18);
+                                        112.18 +
+                                        (x / rect.width) * (112.25 - 112.18);
                                     setFormData((prev) => ({
                                         ...prev,
                                         lat: lat.toString(),
@@ -329,7 +347,10 @@ export default function AddBillboardModal({
                             autoFocus
                             value={formData.name}
                             onChange={(e) =>
-                                setFormData({ ...formData, name: e.target.value })
+                                setFormData({
+                                    ...formData,
+                                    name: e.target.value,
+                                })
                             }
                             className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
                                 errors.name
@@ -339,7 +360,9 @@ export default function AddBillboardModal({
                             placeholder="Misal: Billboard Pusat Kota"
                         />
                         {errors.name && (
-                            <p className="text-xs text-red-600 mt-1">{errors.name}</p>
+                            <p className="text-xs text-red-600 mt-1">
+                                {errors.name}
+                            </p>
                         )}
                     </div>
 
@@ -353,7 +376,10 @@ export default function AddBillboardModal({
                             required
                             value={formData.address}
                             onChange={(e) =>
-                                setFormData({ ...formData, address: e.target.value })
+                                setFormData({
+                                    ...formData,
+                                    address: e.target.value,
+                                })
                             }
                             className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
                                 errors.address
@@ -363,7 +389,9 @@ export default function AddBillboardModal({
                             placeholder="Jalan Ahmad Yani, Lamongan"
                         />
                         {errors.address && (
-                            <p className="text-xs text-red-600 mt-1">{errors.address}</p>
+                            <p className="text-xs text-red-600 mt-1">
+                                {errors.address}
+                            </p>
                         )}
                     </div>
 
@@ -378,7 +406,7 @@ export default function AddBillboardModal({
                                 value={formData.size}
                                 onChange={(e) => {
                                     const pkg = BILLBOARD_PACKAGES.find(
-                                        (p) => p.size === e.target.value
+                                        (p) => p.size === e.target.value,
                                     );
                                     setFormData({
                                         ...formData,
@@ -400,7 +428,9 @@ export default function AddBillboardModal({
                                 ))}
                             </select>
                             {errors.size && (
-                                <p className="text-xs text-red-600 mt-1">{errors.size}</p>
+                                <p className="text-xs text-red-600 mt-1">
+                                    {errors.size}
+                                </p>
                             )}
                         </div>
                         <div>
@@ -449,23 +479,30 @@ export default function AddBillboardModal({
                             <div className="flex items-center gap-4">
                                 {photoPreview && (
                                     <div className="relative w-24 h-24 rounded overflow-hidden border">
-                                        <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                        <img
+                                            src={photoPreview}
+                                            alt="Preview"
+                                            className="w-full h-full object-cover"
+                                        />
                                     </div>
                                 )}
                                 <div className="flex-1">
-                                    <label 
-                                        htmlFor="photo-upload" 
+                                    <label
+                                        htmlFor="photo-upload"
                                         className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
                                     >
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             <Upload className="w-6 h-6 mb-2 text-gray-500" />
-                                            <p className="text-xs text-gray-500 text-center px-2">Klik untuk upload foto <br/> (PNG, JPG, WEBP)</p>
+                                            <p className="text-xs text-gray-500 text-center px-2">
+                                                Klik untuk upload foto <br />{" "}
+                                                (PNG, JPG, WEBP)
+                                            </p>
                                         </div>
-                                        <input 
-                                            id="photo-upload" 
-                                            type="file" 
-                                            accept="image/png, image/jpeg, image/webp" 
-                                            className="hidden" 
+                                        <input
+                                            id="photo-upload"
+                                            type="file"
+                                            accept="image/png, image/jpeg, image/webp"
+                                            className="hidden"
                                             onChange={handlePhotoChange}
                                         />
                                     </label>
@@ -488,9 +525,7 @@ export default function AddBillboardModal({
                             type="submit"
                             className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
                             disabled={
-                                isSubmitting ||
-                                !formData.lat ||
-                                !formData.lng
+                                isSubmitting || !formData.lat || !formData.lng
                             }
                         >
                             {isSubmitting ? (

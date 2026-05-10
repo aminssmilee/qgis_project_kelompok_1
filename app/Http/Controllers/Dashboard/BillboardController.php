@@ -23,8 +23,7 @@ final class BillboardController extends BaseController
             ], 201);
         }
 
-        return redirect()
-            ->route('dashboard.billboards')
+        return to_route('dashboard.billboards')
             ->with('success', 'Billboard berhasil ditambahkan.');
     }
 }

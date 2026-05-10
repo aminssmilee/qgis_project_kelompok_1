@@ -10,7 +10,7 @@ use App\Models\Billboard;
 use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 
 final class BookingController
@@ -68,8 +68,8 @@ final class BookingController
             ], 422);
         }
 
-        $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
+        $startDate = Date::parse($request->start_date);
+        $endDate = Date::parse($request->end_date);
         $totalDays = $startDate->diffInDays($endDate);
 
         if ($totalDays < $pricing->min_duration_days) {
@@ -82,8 +82,8 @@ final class BookingController
         $hasConflict = Booking::query()
             ->where('billboard_id', $billboard->id)
             ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->where(function ($query) use ($startDate, $endDate) {
-                $query->where(function ($q) use ($startDate, $endDate) {
+            ->where(function ($query) use ($startDate, $endDate): void {
+                $query->where(function ($q) use ($startDate, $endDate): void {
                     $q->where('start_date', '<=', $endDate)
                         ->where('end_date', '>=', $startDate);
                 });
@@ -131,7 +131,7 @@ final class BookingController
         $taxAmount = $priceAfterDiscount * 0.11; // PPN 11%
         $totalPrice = $priceAfterDiscount + $taxAmount;
 
-        $booking = Booking::create([
+        $booking = Booking::query()->create([
             'booking_code' => 'ORD-'.now()->format('Ymd').'-'.mb_strtoupper(Str::random(6)),
             'user_id' => $user->id,
             'billboard_id' => $billboard->id,

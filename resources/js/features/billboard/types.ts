@@ -40,11 +40,11 @@ export interface SubmitStatus {
 export const DEFAULT_LAMONGAN_CENTER: [number, number] = [-7.1168, 112.4178];
 
 export const BILLBOARD_PACKAGES: SizePackage[] = [
-    { size: "2x4",   price: "10 Juta/6 bulan" },
-    { size: "3x4",   price: "35 Juta/6 bulan" },
-    { size: "4x8",   price: "75 Juta/6 bulan" },
-    { size: "5x10",  price: "225 Juta/6 bulan" },
-    { size: "8x16",  price: "250 Juta/6 bulan" },
+    { size: "2x4", price: "10 Juta/6 bulan" },
+    { size: "3x4", price: "35 Juta/6 bulan" },
+    { size: "4x8", price: "75 Juta/6 bulan" },
+    { size: "5x10", price: "225 Juta/6 bulan" },
+    { size: "8x16", price: "250 Juta/6 bulan" },
     { size: "10x20", price: "500 Juta/6 bulan" },
 ];
 

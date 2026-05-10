@@ -20,7 +20,7 @@ final class AdminAuthService
      */
     public function login(array $credentials): array
     {
-        $user = User::query()->where('email', trim($credentials['email']))->first();
+        $user = User::query()->where('email', mb_trim($credentials['email']))->first();
 
         if (! $user || ! Hash::check($credentials['password'], $user->password) || $user->role !== 'admin') {
             throw ValidationException::withMessages([

@@ -52,11 +52,12 @@ export const billboardMarkerIcons = [
 ];
 
 export const normalizeBillboards = (
-    items: { markerVariant?: number }[]
+    items: { markerVariant?: number }[],
 ): any[] =>
     items.map((item, index) => ({
         ...item,
-        markerVariant: item.markerVariant ?? index % billboardMarkerIcons.length,
+        markerVariant:
+            item.markerVariant ?? index % billboardMarkerIcons.length,
     }));
 
 export const getBillboardMarkerIcon = (markerVariant?: number): L.Icon => {

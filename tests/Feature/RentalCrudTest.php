@@ -6,7 +6,7 @@ use App\Models\Billboard;
 use App\Models\BillboardCategory;
 use App\Models\Company;
 use App\Models\Rental;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Date;
 
 use function Pest\Laravel\delete;
 use function Pest\Laravel\get;
@@ -98,7 +98,7 @@ it('updates a rental', function (): void {
         'billboard_id' => $billboard->id,
         'rental_date' => '2026-05-08',
         'duration_days' => 15,
-        'end_date' => Carbon::parse('2026-05-08')->addDays(14)->toDateString(),
+        'end_date' => Date::parse('2026-05-08')->addDays(14)->toDateString(),
         'total_price' => 35000000,
         'payment_status' => 'Pending',
     ]);
@@ -138,7 +138,7 @@ it('deletes a rental', function (): void {
         'billboard_id' => $billboard->id,
         'rental_date' => '2026-05-08',
         'duration_days' => 10,
-        'end_date' => Carbon::parse('2026-05-08')->addDays(9)->toDateString(),
+        'end_date' => Date::parse('2026-05-08')->addDays(9)->toDateString(),
         'total_price' => 15000000,
         'payment_status' => 'Pending',
     ]);

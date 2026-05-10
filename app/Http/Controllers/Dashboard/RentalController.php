@@ -7,11 +7,12 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Requests\Dashboard\StoreRentalRequest;
 use App\Http\Requests\Dashboard\UpdateRentalRequest;
 use App\Models\Billboard;
+use App\Models\Company;
 use App\Models\Rental;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -26,7 +27,7 @@ final class RentalController extends BaseController
 
         return view('dashboard.rentals.index', [
             'rentals' => $rentals,
-            'clients' => \App\Models\Company::query()->orderBy('name')->get(),
+            'clients' => Company::query()->orderBy('name')->get(),
             'billboards' => Billboard::query()->orderBy('name')->get(),
             'activeRentals' => $rentals->count(),
             'paidRentals' => $rentals->where('payment_status', 'Paid')->count(),
@@ -38,7 +39,7 @@ final class RentalController extends BaseController
     {
         $validated = $request->validated();
         $validated['booking_code'] = $this->generateBookingCode();
-        $validated['end_date'] = Carbon::parse($validated['rental_date'])
+        $validated['end_date'] = Date::parse($validated['rental_date'])
             ->addDays((int) $validated['duration_days'] - 1)
             ->toDateString();
 
@@ -51,22 +52,20 @@ final class RentalController extends BaseController
             ], 201);
         }
 
-        return redirect()
-            ->route('dashboard.rentals.index')
+        return to_route('dashboard.rentals.index')
             ->with('success', 'Penyewaan berhasil ditambahkan.');
     }
 
     public function update(UpdateRentalRequest $request, Rental $rental): RedirectResponse
     {
         $validated = $request->validated();
-        $validated['end_date'] = Carbon::parse($validated['rental_date'])
+        $validated['end_date'] = Date::parse($validated['rental_date'])
             ->addDays((int) $validated['duration_days'] - 1)
             ->toDateString();
 
         $rental->update($validated);
 
-        return redirect()
-            ->route('dashboard.rentals.index')
+        return to_route('dashboard.rentals.index')
             ->with('success', 'Data penyewaan berhasil diperbarui.');
     }
 
@@ -74,8 +73,7 @@ final class RentalController extends BaseController
     {
         $rental->delete();
 
-        return redirect()
-            ->route('dashboard.rentals.index')
+        return to_route('dashboard.rentals.index')
             ->with('success', 'Penyewaan berhasil dihapus.');
     }
 

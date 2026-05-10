@@ -26,7 +26,6 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-
 /** Konversi response API ke tipe Billboard yang digunakan komponen */
 function apiBillboardToLocal(b: ApiBillboard): Billboard {
     return {
@@ -45,7 +44,8 @@ function apiBillboardToLocal(b: ApiBillboard): Billboard {
 export default function MapPage() {
     const [billboards, setBillboards] = useState<Billboard[]>([]);
     const [apiIds, setApiIds] = useState<Map<number, string>>(new Map()); // local id → uuid
-    const [selectedBillboard, setSelectedBillboard] = useState<Billboard | null>(null);
+    const [selectedBillboard, setSelectedBillboard] =
+        useState<Billboard | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(true);
@@ -77,7 +77,10 @@ export default function MapPage() {
     }, []);
 
     const handleAddBillboard = (newBillboard: Billboard): void => {
-        setBillboards((prev) => [...prev, { ...newBillboard, markerVariant: prev.length % 5 }]);
+        setBillboards((prev) => [
+            ...prev,
+            { ...newBillboard, markerVariant: prev.length % 5 },
+        ]);
         setSelectedBillboard(newBillboard);
     };
 
@@ -90,7 +93,7 @@ export default function MapPage() {
 
         const localId = deleteConfirmId;
         const uuid = apiIds.get(localId) ?? String(localId);
-        
+
         setIsDeleting(true);
         try {
             await deleteBillboard(uuid);
@@ -101,8 +104,8 @@ export default function MapPage() {
             toast.success("Billboard berhasil dihapus");
         } catch (err) {
             console.error("Gagal menghapus:", err);
-            toast.error("Gagal menghapus billboard", { 
-                description: "Silakan coba lagi." 
+            toast.error("Gagal menghapus billboard", {
+                description: "Silakan coba lagi.",
             });
         } finally {
             setIsDeleting(false);
@@ -137,25 +140,27 @@ export default function MapPage() {
                         </Card>
                     </div>
                 </div>
-
-            /* Error */
-            ) : loadError ? (
+            ) : /* Error */
+            loadError ? (
                 <div className="flex items-center justify-center h-96">
                     <Card>
                         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                            <p className="text-red-500 font-semibold mb-2">⚠ Terjadi Kesalahan</p>
+                            <p className="text-red-500 font-semibold mb-2">
+                                ⚠ Terjadi Kesalahan
+                            </p>
                             <p className="text-gray-500 text-sm">{loadError}</p>
                         </CardContent>
                     </Card>
                 </div>
-
-            /* Empty state */
-            ) : billboards.length === 0 ? (
+            ) : /* Empty state */
+            billboards.length === 0 ? (
                 <div className="flex items-center justify-center h-96">
                     <Card>
                         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                             <MapPin className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                            <p className="text-gray-500 mb-4">Belum ada billboard</p>
+                            <p className="text-gray-500 mb-4">
+                                Belum ada billboard
+                            </p>
                             <Button onClick={() => setShowModal(true)}>
                                 <Plus className="h-4 w-4 mr-2" />
                                 Tambah Billboard Pertama
@@ -163,9 +168,8 @@ export default function MapPage() {
                         </CardContent>
                     </Card>
                 </div>
-
-            /* Main content */
             ) : (
+                /* Main content */
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Peta Utama */}
                     <div className="lg:col-span-3">
@@ -204,7 +208,9 @@ export default function MapPage() {
                         onSearchChange={setSearchTerm}
                         onSelectBillboard={setSelectedBillboard}
                         onDeleteBillboard={handleDeleteBillboard}
-                        onFlyTo={(lat, lng) => mainMapRef.current?.flyTo(lat, lng)}
+                        onFlyTo={(lat, lng) =>
+                            mainMapRef.current?.flyTo(lat, lng)
+                        }
                     />
                 </div>
             )}
@@ -219,17 +225,23 @@ export default function MapPage() {
             )}
 
             {/* Konfirmasi Hapus Billboard */}
-            <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+            <AlertDialog
+                open={deleteConfirmId !== null}
+                onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+            >
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tindakan ini tidak dapat dibatalkan. Billboard akan dihapus secara permanen dari server.
+                            Tindakan ini tidak dapat dibatalkan. Billboard akan
+                            dihapus secara permanen dari server.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogCancel disabled={isDeleting}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmDelete();

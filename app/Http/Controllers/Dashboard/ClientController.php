@@ -37,8 +37,7 @@ final class ClientController extends BaseController
             ], 201);
         }
 
-        return redirect()
-            ->route('dashboard.clients.index')
+        return to_route('dashboard.clients.index')
             ->with('success', 'Klien berhasil ditambahkan.');
     }
 
@@ -46,8 +45,7 @@ final class ClientController extends BaseController
     {
         $client->update($request->validated());
 
-        return redirect()
-            ->route('dashboard.clients.index')
+        return to_route('dashboard.clients.index')
             ->with('success', 'Data klien berhasil diperbarui.');
     }
 
@@ -55,8 +53,7 @@ final class ClientController extends BaseController
     {
         $client->delete();
 
-        return redirect()
-            ->route('dashboard.clients.index')
+        return to_route('dashboard.clients.index')
             ->with('success', 'Klien berhasil dihapus.');
     }
 }

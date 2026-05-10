@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Admin\BillboardController as AdminBillboardController;
+use App\Http\Controllers\Api\V1\Admin\ClientController;
+use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
 use App\Http\Controllers\Api\V1\User\BookingController;
@@ -74,18 +76,18 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/billboards/{id}/photos', [AdminBillboardController::class, 'uploadPhoto']);
 
             // Users CRUD
-            Route::get('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'index']);
-            Route::get('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'show']);
-            Route::post('/users', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'store']);
-            Route::put('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'update']);
-            Route::delete('/users/{id}', [App\Http\Controllers\Api\V1\Admin\UserController::class, 'destroy']);
+            Route::get('/users', [UserController::class, 'index']);
+            Route::get('/users/{id}', [UserController::class, 'show']);
+            Route::post('/users', [UserController::class, 'store']);
+            Route::put('/users/{id}', [UserController::class, 'update']);
+            Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
             // Clients CRUD
-            Route::get('/clients', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'index']);
-            Route::get('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'show']);
-            Route::post('/clients', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'store']);
-            Route::put('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'update']);
-            Route::delete('/clients/{id}', [App\Http\Controllers\Api\V1\Admin\ClientController::class, 'destroy']);
+            Route::get('/clients', [ClientController::class, 'index']);
+            Route::get('/clients/{id}', [ClientController::class, 'show']);
+            Route::post('/clients', [ClientController::class, 'store']);
+            Route::put('/clients/{id}', [ClientController::class, 'update']);
+            Route::delete('/clients/{id}', [ClientController::class, 'destroy']);
 
             // Bookings CRUD
             Route::get('/bookings', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'index']);

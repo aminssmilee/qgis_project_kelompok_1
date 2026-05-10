@@ -66,7 +66,7 @@ final class Billboard extends Model
      */
     public function photos(): HasMany
     {
-        return $this->hasMany(BillboardPhoto::class)->orderBy('sort_order')->orderBy('created_at');
+        return $this->hasMany(BillboardPhoto::class)->orderBy('sort_order')->oldest();
     }
 
     /**

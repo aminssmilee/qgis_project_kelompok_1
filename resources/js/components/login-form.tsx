@@ -59,10 +59,13 @@ export function LoginForm({
             if (response.data.token) {
                 localStorage.setItem("admin_token", response.data.token);
             }
-            
+
             // Simpan data user jika ada
             if (response.data.data) {
-                localStorage.setItem("admin_user", JSON.stringify(response.data.data));
+                localStorage.setItem(
+                    "admin_user",
+                    JSON.stringify(response.data.data),
+                );
             }
 
             navigate("/dashboard");
@@ -170,7 +173,11 @@ export function LoginForm({
                             // Optional: simpan info user sederhana
                             localStorage.setItem(
                                 "admin_user",
-                                JSON.stringify({ name: "Admin Utama", email: "admin@billboards.id", avatar: "/assets/images/logobil.jpeg" }),
+                                JSON.stringify({
+                                    name: "Admin Utama",
+                                    email: "admin@billboards.id",
+                                    avatar: "/assets/images/logobil.jpeg",
+                                }),
                             );
                             navigate("/dashboard");
                         }}
@@ -178,7 +185,8 @@ export function LoginForm({
                         Dummy Login (dev)
                     </Button>
                     <FieldDescription className="text-center text-xs mt-2">
-                        Tombol ini hanya untuk development — login sementara tanpa backend.
+                        Tombol ini hanya untuk development — login sementara
+                        tanpa backend.
                     </FieldDescription>
                 </Field>
                 <FieldSeparator>only admin</FieldSeparator>

@@ -6,9 +6,14 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
+use App\Models\BillboardPhoto;
+use App\Models\BillboardPricing;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 final class BillboardController
@@ -25,7 +30,7 @@ final class BillboardController
             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
             ->latest()
             ->get()
-            ->map(fn (Billboard $b) => $this->format($b));
+            ->map(fn (Billboard $b): array => $this->format($b));
 
         return response()->json([
             'message' => 'Billboards retrieved',
@@ -61,7 +66,7 @@ final class BillboardController
 
         // Auto-generate code unik jika tidak dikirim dari frontend
         if (empty($data['code'])) {
-            $data['code'] = 'BBD-'.mb_strtoupper(\Illuminate\Support\Str::random(6));
+            $data['code'] = 'BBD-'.mb_strtoupper(Str::random(6));
         }
 
         // Gunakan kategori pertama sebagai default jika tidak dipilih
@@ -82,7 +87,7 @@ final class BillboardController
             $data['description'] = "Ukuran: {$size}".($priceLabel ? " | Harga: {$priceLabel}" : '');
         }
 
-        $billboard = Billboard::create([
+        $billboard = Billboard::query()->create([
             ...$data,
             'location' => DB::raw(
                 "ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography"
@@ -91,7 +96,7 @@ final class BillboardController
 
         // Buat record pricing jika ada harga
         if ($priceMonth > 0 || $size) {
-            \App\Models\BillboardPricing::create([
+            BillboardPricing::query()->create([
                 'billboard_id' => $billboard->id,
                 'price_per_month' => $priceMonth,
                 'price_per_day' => round($priceMonth / 30, 2),
@@ -103,7 +108,7 @@ final class BillboardController
 
         return response()->json([
             'message' => 'Billboard berhasil ditambahkan',
-            'data'    => $this->format(
+            'data' => $this->format(
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
@@ -137,7 +142,7 @@ final class BillboardController
      */
     public function update(Request $request, string $id): JsonResponse
     {
-        $billboard = Billboard::findOrFail($id);
+        $billboard = Billboard::query()->findOrFail($id);
 
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:150'],
@@ -172,7 +177,7 @@ final class BillboardController
 
         return response()->json([
             'message' => 'Billboard berhasil diperbarui',
-            'data'    => $this->format(
+            'data' => $this->format(
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
@@ -189,21 +194,21 @@ final class BillboardController
     public function destroy(string $id): JsonResponse
     {
         try {
-            $billboard = Billboard::findOrFail($id);
+            $billboard = Billboard::query()->findOrFail($id);
 
-            DB::transaction(function () use ($billboard) {
+            DB::transaction(function () use ($billboard): void {
                 // Hapus harga terkait agar tidak terjadi foreign key constraint error
                 $billboard->pricings()->delete();
                 $billboard->delete();
             });
 
             return response()->json(['message' => 'Billboard berhasil dihapus']);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException) {
             return response()->json(['message' => 'Billboard tidak ditemukan'], 404);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Gagal menghapus billboard. Pastikan tidak ada data yang masih terhubung.',
-                'error'   => $e->getMessage()
+                'error' => $e->getMessage(),
             ], 400);
         }
     }
@@ -213,7 +218,7 @@ final class BillboardController
      */
     public function uploadPhoto(Request $request, string $id): JsonResponse
     {
-        $billboard = Billboard::findOrFail($id);
+        $billboard = Billboard::query()->findOrFail($id);
 
         $request->validate([
             'photo' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // max 5MB
@@ -222,11 +227,11 @@ final class BillboardController
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $path = $file->store('billboards', 'public');
-            
-            // Generate full URL
-            $url = url('storage/' . $path);
 
-            $photo = \App\Models\BillboardPhoto::create([
+            // Generate full URL
+            $url = url('storage/'.$path);
+
+            $photo = BillboardPhoto::query()->create([
                 'billboard_id' => $billboard->id,
                 'photo_url' => $url,
                 'is_primary' => $billboard->photos()->count() === 0, // Set as primary if it's the first photo

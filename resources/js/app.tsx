@@ -30,14 +30,26 @@ if (container) {
                         {/* Rute Terproteksi: Hanya bisa diakses jika SUDAH login */}
                         <Route element={<ProtectedRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/dashboard/map" element={<MapPage />} />
+                            <Route
+                                path="/dashboard/map"
+                                element={<MapPage />}
+                            />
                             <Route
                                 path="/dashboard/billboards"
                                 element={<BillboardsPage />}
                             />
-                            <Route path="/dashboard/rentals" element={<RentalsPage />} />
-                            <Route path="/dashboard/clients" element={<ClientsPage />} />
-                            <Route path="/dashboard/users" element={<UsersPage />} />
+                            <Route
+                                path="/dashboard/rentals"
+                                element={<RentalsPage />}
+                            />
+                            <Route
+                                path="/dashboard/clients"
+                                element={<ClientsPage />}
+                            />
+                            <Route
+                                path="/dashboard/users"
+                                element={<UsersPage />}
+                            />
                         </Route>
 
                         {/* Redirect sembarang rute ke rute awal */}

@@ -65,8 +65,10 @@ const columnHelper = createColumnHelper<any>();
 export default function BillboardsPage() {
     const [billboards, setBillboards] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
-    const [viewingBillboard, setViewingBillboard] = React.useState<Billboard | null>(null);
-    const [editingBillboard, setEditingBillboard] = React.useState<Billboard | null>(null);
+    const [viewingBillboard, setViewingBillboard] =
+        React.useState<Billboard | null>(null);
+    const [editingBillboard, setEditingBillboard] =
+        React.useState<Billboard | null>(null);
     const [searchTerm, setSearchTerm] = React.useState("");
     const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -83,7 +85,12 @@ export default function BillboardsPage() {
                     photo_url: b.photo_url,
                     size: b.size ?? "—",
                     category: b.category ?? "Umum",
-                    traffic: b.traffic_density === "high" ? "Tinggi" : b.traffic_density === "very_high" ? "Sangat Tinggi" : "Sedang",
+                    traffic:
+                        b.traffic_density === "high"
+                            ? "Tinggi"
+                            : b.traffic_density === "very_high"
+                              ? "Sangat Tinggi"
+                              : "Sedang",
                     price: b.price_label ?? "—",
                     status: b.is_active ? "Available" : "Maintenance",
                 }));
@@ -121,7 +128,9 @@ export default function BillboardsPage() {
     const columns = [
         columnHelper.accessor("name", {
             header: "Nama",
-            cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+            cell: (info) => (
+                <span className="font-medium">{info.getValue()}</span>
+            ),
         }),
         columnHelper.accessor("location", {
             header: "Lokasi",
@@ -145,14 +154,21 @@ export default function BillboardsPage() {
         }),
         columnHelper.accessor("price", {
             header: "Harga",
-            cell: (info) => <span className="font-semibold">{info.getValue()}</span>,
+            cell: (info) => (
+                <span className="font-semibold">{info.getValue()}</span>
+            ),
         }),
         columnHelper.accessor("status", {
             header: "Status",
             cell: (info) => {
                 const config = getStatusConfig(info.getValue());
                 return (
-                    <Badge className={cn("gap-1 px-2 py-0.5 font-medium", config.color)}>
+                    <Badge
+                        className={cn(
+                            "gap-1 px-2 py-0.5 font-medium",
+                            config.color,
+                        )}
+                    >
                         {config.icon}
                         {info.getValue()}
                     </Badge>
@@ -166,7 +182,11 @@ export default function BillboardsPage() {
                 <div className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                            >
                                 <span className="sr-only">Open menu</span>
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -174,17 +194,31 @@ export default function BillboardsPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setViewingBillboard(info.row.original as Billboard)}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setViewingBillboard(
+                                        info.row.original as Billboard,
+                                    )
+                                }
+                            >
                                 <Eye className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Detail Billboard</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setEditingBillboard(info.row.original as Billboard)}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setEditingBillboard(
+                                        info.row.original as Billboard,
+                                    )
+                                }
+                            >
                                 <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
                                 <span>Edit Billboard</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 variant="destructive"
-                                onClick={() => console.log("Delete", info.row.original.id)}
+                                onClick={() =>
+                                    console.log("Delete", info.row.original.id)
+                                }
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Hapus Billboard</span>
@@ -220,10 +254,32 @@ export default function BillboardsPage() {
     });
 
     const stats = [
-        { label: "Total Billboard", value: billboards.length.toString(), color: "text-blue-600" },
-        { label: "Available", value: billboards.filter(b => b.status === "Available").length.toString(), color: "text-green-600" },
-        { label: "Booked", value: billboards.filter(b => b.status === "Booked").length.toString(), color: "text-orange-600" },
-        { label: "Maintenance", value: billboards.filter(b => b.status === "Maintenance").length.toString(), color: "text-red-600" },
+        {
+            label: "Total Billboard",
+            value: billboards.length.toString(),
+            color: "text-blue-600",
+        },
+        {
+            label: "Available",
+            value: billboards
+                .filter((b) => b.status === "Available")
+                .length.toString(),
+            color: "text-green-600",
+        },
+        {
+            label: "Booked",
+            value: billboards
+                .filter((b) => b.status === "Booked")
+                .length.toString(),
+            color: "text-orange-600",
+        },
+        {
+            label: "Maintenance",
+            value: billboards
+                .filter((b) => b.status === "Maintenance")
+                .length.toString(),
+            color: "text-red-600",
+        },
     ];
 
     return (
@@ -233,8 +289,14 @@ export default function BillboardsPage() {
                     <Card key={index}>
                         <CardContent className="pt-6">
                             <div className="text-center">
-                                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                                <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                                <p className="text-sm font-medium text-gray-600">
+                                    {stat.label}
+                                </p>
+                                <p
+                                    className={`text-3xl font-bold ${stat.color}`}
+                                >
+                                    {stat.value}
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -268,10 +330,17 @@ export default function BillboardsPage() {
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id} className="font-semibold">
+                                            <TableHead
+                                                key={header.id}
+                                                className="font-semibold"
+                                            >
                                                 {header.isPlaceholder
                                                     ? null
-                                                    : flexRender(header.column.columnDef.header, header.getContext())}
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext(),
+                                                      )}
                                             </TableHead>
                                         ))}
                                     </TableRow>
@@ -282,30 +351,58 @@ export default function BillboardsPage() {
                                     <>
                                         {[1, 2, 3, 4, 5].map((i) => (
                                             <TableRow key={i}>
-                                                <TableCell><Skeleton className="h-4 w-3/4" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-full" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-1/2" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-1/4" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-1/2" /></TableCell>
-                                                <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                                                <TableCell><Skeleton className="h-8 w-8 rounded-md float-right" /></TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-3/4" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-full" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-1/2" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-20" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-1/4" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-1/2" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-6 w-24 rounded-full" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-8 w-8 rounded-md float-right" />
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </>
                                 ) : table.getRowModel().rows.length > 0 ? (
                                     table.getRowModel().rows.map((row) => (
-                                        <TableRow key={row.id} className="hover:bg-gray-50">
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </TableCell>
-                                            ))}
+                                        <TableRow
+                                            key={row.id}
+                                            className="hover:bg-gray-50"
+                                        >
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext(),
+                                                        )}
+                                                    </TableCell>
+                                                ))}
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center"
+                                        >
                                             Tidak ada data billboard.
                                         </TableCell>
                                     </TableRow>
@@ -318,11 +415,15 @@ export default function BillboardsPage() {
                     <div className="flex items-center justify-between px-2 py-2">
                         <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
                             {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                            {table.getFilteredRowModel().rows.length} row(s) selected.
+                            {table.getFilteredRowModel().rows.length} row(s)
+                            selected.
                         </div>
                         <div className="flex w-full items-center gap-8 lg:w-fit">
                             <div className="hidden items-center gap-2 lg:flex">
-                                <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                                <Label
+                                    htmlFor="rows-per-page"
+                                    className="text-sm font-medium"
+                                >
                                     Rows per page
                                 </Label>
                                 <Select
@@ -331,20 +432,34 @@ export default function BillboardsPage() {
                                         table.setPageSize(Number(value));
                                     }}
                                 >
-                                    <SelectTrigger className="h-8 w-20" id="rows-per-page">
-                                        <SelectValue placeholder={table.getState().pagination.pageSize} />
+                                    <SelectTrigger
+                                        className="h-8 w-20"
+                                        id="rows-per-page"
+                                    >
+                                        <SelectValue
+                                            placeholder={
+                                                table.getState().pagination
+                                                    .pageSize
+                                            }
+                                        />
                                     </SelectTrigger>
                                     <SelectContent side="top">
-                                        {[10, 20, 30, 40, 50].map((pageSize) => (
-                                            <SelectItem key={pageSize} value={`${pageSize}`}>
-                                                {pageSize}
-                                            </SelectItem>
-                                        ))}
+                                        {[10, 20, 30, 40, 50].map(
+                                            (pageSize) => (
+                                                <SelectItem
+                                                    key={pageSize}
+                                                    value={`${pageSize}`}
+                                                >
+                                                    {pageSize}
+                                                </SelectItem>
+                                            ),
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                Page {table.getState().pagination.pageIndex + 1}{" "}
+                                of {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button
@@ -353,7 +468,9 @@ export default function BillboardsPage() {
                                     onClick={() => table.setPageIndex(0)}
                                     disabled={!table.getCanPreviousPage()}
                                 >
-                                    <span className="sr-only">Go to first page</span>
+                                    <span className="sr-only">
+                                        Go to first page
+                                    </span>
                                     <ChevronsLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -362,7 +479,9 @@ export default function BillboardsPage() {
                                     onClick={() => table.previousPage()}
                                     disabled={!table.getCanPreviousPage()}
                                 >
-                                    <span className="sr-only">Go to previous page</span>
+                                    <span className="sr-only">
+                                        Go to previous page
+                                    </span>
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -371,16 +490,24 @@ export default function BillboardsPage() {
                                     onClick={() => table.nextPage()}
                                     disabled={!table.getCanNextPage()}
                                 >
-                                    <span className="sr-only">Go to next page</span>
+                                    <span className="sr-only">
+                                        Go to next page
+                                    </span>
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     variant="outline"
                                     className="hidden h-8 w-8 p-0 lg:flex"
-                                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                    onClick={() =>
+                                        table.setPageIndex(
+                                            table.getPageCount() - 1,
+                                        )
+                                    }
                                     disabled={!table.getCanNextPage()}
                                 >
-                                    <span className="sr-only">Go to last page</span>
+                                    <span className="sr-only">
+                                        Go to last page
+                                    </span>
                                     <ChevronsRight className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -394,13 +521,17 @@ export default function BillboardsPage() {
                     billboard={editingBillboard}
                     onUpdate={(updatedBB) => {
                         setBillboards((prev) =>
-                            prev.map((bb) => (bb.id === updatedBB.id ? {
-                                ...bb,
-                                name: updatedBB.name,
-                                location: updatedBB.address,
-                                size: updatedBB.size,
-                                price: updatedBB.price,
-                            } : bb))
+                            prev.map((bb) =>
+                                bb.id === updatedBB.id
+                                    ? {
+                                          ...bb,
+                                          name: updatedBB.name,
+                                          location: updatedBB.address,
+                                          size: updatedBB.size,
+                                          price: updatedBB.price,
+                                      }
+                                    : bb,
+                            ),
                         );
                         setEditingBillboard(null);
                     }}
@@ -417,4 +548,3 @@ export default function BillboardsPage() {
         </DashboardLayout>
     );
 }
-

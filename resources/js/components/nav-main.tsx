@@ -26,7 +26,9 @@ export function NavMain({
         }[];
     }[];
 }) {
-    const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+    const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
+        {},
+    );
 
     const toggleItem = (title: string) => {
         setExpandedItems((prev) => ({
@@ -44,7 +46,11 @@ export function NavMain({
                         <div key={item.title}>
                             <SidebarMenuItem>
                                 <div className="flex items-center">
-                                    <SidebarMenuButton asChild tooltip={item.title} className="flex-1">
+                                    <SidebarMenuButton
+                                        asChild
+                                        tooltip={item.title}
+                                        className="flex-1"
+                                    >
                                         <Link to={item.url}>
                                             {item.icon}
                                             <span>{item.title}</span>
@@ -52,32 +58,42 @@ export function NavMain({
                                     </SidebarMenuButton>
                                     {item.items && item.items.length > 0 && (
                                         <button
-                                            onClick={() => toggleItem(item.title)}
+                                            onClick={() =>
+                                                toggleItem(item.title)
+                                            }
                                             className="px-2 py-1 hover:bg-sidebar-accent rounded transition-colors"
                                             aria-label={`Toggle ${item.title} submenu`}
                                         >
                                             <ChevronRightIcon
                                                 className={`h-4 w-4 transition-transform ${
-                                                    expandedItems[item.title] ? "rotate-90" : ""
+                                                    expandedItems[item.title]
+                                                        ? "rotate-90"
+                                                        : ""
                                                 }`}
                                             />
                                         </button>
                                     )}
                                 </div>
                             </SidebarMenuItem>
-                            {item.items && item.items.length > 0 && expandedItems[item.title] && (
-                                <SidebarMenuSub>
-                                    {item.items.map((subItem) => (
-                                        <SidebarMenuSubItem key={subItem.title}>
-                                            <SidebarMenuSubButton asChild>
-                                                <Link to={subItem.url}>
-                                                    <span>{subItem.title}</span>
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    ))}
-                                </SidebarMenuSub>
-                            )}
+                            {item.items &&
+                                item.items.length > 0 &&
+                                expandedItems[item.title] && (
+                                    <SidebarMenuSub>
+                                        {item.items.map((subItem) => (
+                                            <SidebarMenuSubItem
+                                                key={subItem.title}
+                                            >
+                                                <SidebarMenuSubButton asChild>
+                                                    <Link to={subItem.url}>
+                                                        <span>
+                                                            {subItem.title}
+                                                        </span>
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                        ))}
+                                    </SidebarMenuSub>
+                                )}
                         </div>
                     ))}
                 </SidebarMenu>

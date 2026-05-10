@@ -23,7 +23,7 @@ it('stores a client with validation', function (): void {
         'status' => 'Active',
         'form_mode' => 'create',
     ])->assertRedirect(route('dashboard.clients.index'));
-    
+
     $client = Company::query()->where('email', 'hello@sinarjaya.id')->first();
 
     expect($client)->not()->toBeNull();

@@ -7,8 +7,8 @@ namespace Database\Seeders;
 use App\Models\Billboard;
 use App\Models\Company;
 use App\Models\Rental;
-use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Date;
 
 final class RentalSeeder extends Seeder
 {
@@ -26,9 +26,9 @@ final class RentalSeeder extends Seeder
             [
                 'company_id' => $client->id,
                 'billboard_id' => $billboard->id,
-                'rental_date' => Carbon::parse('2026-05-08')->toDateString(),
+                'rental_date' => Date::parse('2026-05-08')->toDateString(),
                 'duration_days' => 30,
-                'end_date' => Carbon::parse('2026-05-08')->addDays(29)->toDateString(),
+                'end_date' => Date::parse('2026-05-08')->addDays(29)->toDateString(),
                 'total_price' => 75000000,
                 'payment_status' => 'Paid',
             ]
