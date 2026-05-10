@@ -1,4 +1,13 @@
-import { X, MapPin, Tag, Ruler, TrendingUp, Info, Navigation, Image as ImageIcon } from "lucide-react";
+import {
+    X,
+    MapPin,
+    Tag,
+    Ruler,
+    TrendingUp,
+    Info,
+    Navigation,
+    Image as ImageIcon,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Billboard } from "./types";
@@ -10,7 +19,10 @@ interface DetailBillboardModalProps {
     onClose: () => void;
 }
 
-export default function DetailBillboardModal({ billboard, onClose }: DetailBillboardModalProps) {
+export default function DetailBillboardModal({
+    billboard,
+    onClose,
+}: DetailBillboardModalProps) {
     return (
         <>
             {/* Backdrop */}
@@ -41,9 +53,9 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
                         {/* Foto Utama */}
                         <div className="w-full h-64 bg-slate-100 flex items-center justify-center relative group">
                             {billboard.photo_url ? (
-                                <img 
-                                    src={billboard.photo_url} 
-                                    alt={billboard.name} 
+                                <img
+                                    src={billboard.photo_url}
+                                    alt={billboard.name}
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
@@ -62,10 +74,14 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
                         <div className="p-6 space-y-6">
                             {/* Header Info */}
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900 mb-2">{billboard.name}</h2>
+                                <h2 className="text-2xl font-bold text-slate-900 mb-2">
+                                    {billboard.name}
+                                </h2>
                                 <div className="flex items-start gap-2 text-slate-600">
                                     <MapPin className="h-4 w-4 mt-1 flex-shrink-0 text-red-500" />
-                                    <p className="text-sm leading-relaxed">{billboard.address}</p>
+                                    <p className="text-sm leading-relaxed">
+                                        {billboard.address}
+                                    </p>
                                 </div>
                             </div>
 
@@ -79,8 +95,12 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
                                             <Ruler className="h-4 w-4 text-blue-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Ukuran</p>
-                                            <p className="text-sm font-semibold text-slate-900">{billboard.size}</p>
+                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+                                                Ukuran
+                                            </p>
+                                            <p className="text-sm font-semibold text-slate-900">
+                                                {billboard.size}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -88,9 +108,17 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
                                             <Navigation className="h-4 w-4 text-purple-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Koordinat</p>
+                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+                                                Koordinat
+                                            </p>
                                             <p className="text-sm font-semibold text-slate-900 font-mono">
-                                                {parseFloat(billboard.lat.toString()).toFixed(5)}, {parseFloat(billboard.lng.toString()).toFixed(5)}
+                                                {parseFloat(
+                                                    billboard.lat.toString(),
+                                                ).toFixed(5)}
+                                                ,{" "}
+                                                {parseFloat(
+                                                    billboard.lng.toString(),
+                                                ).toFixed(5)}
                                             </p>
                                         </div>
                                     </div>
@@ -102,7 +130,9 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
                                             <Tag className="h-4 w-4 text-orange-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Kategori</p>
+                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+                                                Kategori
+                                            </p>
                                             <p className="text-sm font-semibold text-slate-900">
                                                 {/* Fallback text if category is missing in local billboard object */}
                                                 Umum / Baliho
@@ -114,9 +144,14 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
                                             <TrendingUp className="h-4 w-4 text-emerald-600" />
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Status</p>
+                                            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+                                                Status
+                                            </p>
                                             <div className="mt-1">
-                                                <Badge variant="outline" className="text-emerald-700 bg-emerald-50 border-emerald-200">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-emerald-700 bg-emerald-50 border-emerald-200"
+                                                >
                                                     Tersedia
                                                 </Badge>
                                             </div>
@@ -128,8 +163,8 @@ export default function DetailBillboardModal({ billboard, onClose }: DetailBillb
 
                         {/* Footer Actions */}
                         <div className="p-4 border-t bg-slate-50 flex justify-end">
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 onClick={onClose}
                                 className="px-6"
                             >

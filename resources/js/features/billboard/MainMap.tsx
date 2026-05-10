@@ -19,7 +19,7 @@ interface MainMapProps {
 
 const MainMap = forwardRef<MainMapHandle, MainMapProps>(function MainMap(
     { billboards, mapClickMode, onLocationPicked, onBillboardSelect },
-    ref
+    ref,
 ) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<L.Map | null>(null);
@@ -61,14 +61,14 @@ const MainMap = forwardRef<MainMapHandle, MainMapProps>(function MainMap(
                 map.on("click", (e: L.LeafletMouseEvent) => {
                     onLocationPicked(
                         e.latlng.lat.toString(),
-                        e.latlng.lng.toString()
+                        e.latlng.lng.toString(),
                     );
                     L.marker([e.latlng.lat, e.latlng.lng], {
                         icon: locationMarkerIcon,
                     })
                         .addTo(map)
                         .bindPopup(
-                            `📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`
+                            `📍 Lat: ${e.latlng.lat.toFixed(4)}, Lng: ${e.latlng.lng.toFixed(4)}`,
                         )
                         .openPopup();
                 });
@@ -82,7 +82,7 @@ const MainMap = forwardRef<MainMapHandle, MainMapProps>(function MainMap(
 
                 const tooltipContent = `
                     <div class="p-1 min-w-[150px]">
-                        ${billboard.photo_url ? `<div class="w-full h-24 mb-2 rounded overflow-hidden"><img src="${billboard.photo_url}" class="w-full h-full object-cover" alt="Billboard" /></div>` : ''}
+                        ${billboard.photo_url ? `<div class="w-full h-24 mb-2 rounded overflow-hidden"><img src="${billboard.photo_url}" class="w-full h-full object-cover" alt="Billboard" /></div>` : ""}
                         <h3 class="font-bold text-sm text-gray-900">${billboard.name}</h3>
                         <p class="text-xs text-gray-600 mt-1">${billboard.address}</p>
                         <div class="mt-2 text-xs space-y-1">

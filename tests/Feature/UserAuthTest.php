@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
 test('user can register', function (): void {
-    $response = $this->postJson('/api/v1/user/register', [
+    $response = $this->postJson('/api/v1/user/auth/register', [
         'email' => 'john@test.com',
         'company_name' => 'PT John Test',
         'nib' => '1234567890123',
@@ -37,7 +37,7 @@ test('user can login', function (): void {
         'role' => 'user',
     ]);
 
-    $response = $this->postJson('/api/v1/user/login', [
+    $response = $this->postJson('/api/v1/user/auth/login', [
         'email' => 'jane@test.com',
         'password' => 'password',
     ]);
@@ -61,7 +61,7 @@ test('admin cannot login as regular user', function (): void {
         'role' => 'admin',
     ]);
 
-    $response = $this->postJson('/api/v1/user/login', [
+    $response = $this->postJson('/api/v1/user/auth/login', [
         'email' => 'admin_user@test.com',
         'password' => 'password',
     ]);

@@ -17,24 +17,22 @@ final class UserController
      */
     public function index(): JsonResponse
     {
-        $users = User::query()->orderBy('created_at', 'desc')->get();
+        $users = User::query()->latest()->get();
 
         return response()->json([
             'status' => 'success',
-            'data' => $users->map(function (User $user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'role' => $user->role,
-                    'status' => $user->is_active ? 'Active' : 'Inactive',
-                    'is_active' => $user->is_active,
-                    'is_verified' => $user->is_verified,
-                    'joinDate' => $user->created_at->format('Y-m-d'),
-                    'lastLogin' => '—', // Placeholder for now
-                ];
-            }),
+            'data' => $users->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'status' => $user->is_active ? 'Active' : 'Inactive',
+                'is_active' => $user->is_active,
+                'is_verified' => $user->is_verified,
+                'joinDate' => $user->created_at->format('Y-m-d'),
+                'lastLogin' => '—', // Placeholder for now
+            ]),
         ]);
     }
 
@@ -44,13 +42,13 @@ final class UserController
     public function store(StoreUserRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        
+
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = $validated['status'] === 'Active';
         $validated['is_verified'] = true;
         unset($validated['status']);
 
-        $user = User::create($validated);
+        $user = User::query()->create($validated);
 
         return response()->json([
             'status' => 'success',
@@ -64,7 +62,7 @@ final class UserController
      */
     public function show(string $id): JsonResponse
     {
-        $user = User::findOrFail($id);
+        $user = User::query()->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -77,7 +75,7 @@ final class UserController
      */
     public function update(UpdateUserRequest $request, string $id): JsonResponse
     {
-        $user = User::findOrFail($id);
+        $user = User::query()->findOrFail($id);
         $validated = $request->validated();
 
         if (isset($validated['password'])) {
@@ -103,8 +101,8 @@ final class UserController
      */
     public function destroy(string $id): JsonResponse
     {
-        $user = User::findOrFail($id);
-        
+        $user = User::query()->findOrFail($id);
+
         // Prevent deleting yourself if needed, but skipping for simplicity
         $user->delete();
 

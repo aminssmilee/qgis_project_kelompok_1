@@ -58,7 +58,6 @@ import EditUserModal from "@/features/user/EditUserModal";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
 import { toast } from "sonner";
 
-
 const rolePermissions = {
     "Super Admin": [
         "Kelola semua billboard",
@@ -66,11 +65,7 @@ const rolePermissions = {
         "Lihat laporan",
         "Akses pengaturan",
     ],
-    Admin: [
-        "Kelola billboard",
-        "Lihat laporan",
-        "Verifikasi pembayaran",
-    ],
+    Admin: ["Kelola billboard", "Lihat laporan", "Verifikasi pembayaran"],
     Manager: ["Kelola billboard", "Lihat pemesanan"],
     Staff: ["Lihat data billboard", "Input informasi field"],
     user: ["Akses dashboard", "Lihat profil", "Lakukan pemesanan"],
@@ -107,7 +102,7 @@ export default function UsersPage() {
     const handleDeleteUser = async (id: string) => {
         try {
             await deleteUser(id);
-            setUsers(users.filter(u => u.id !== id));
+            setUsers(users.filter((u) => u.id !== id));
             toast.success("User berhasil dihapus.");
         } catch (error) {
             console.error("Failed to delete user:", error);
@@ -135,7 +130,9 @@ export default function UsersPage() {
     const columns = [
         columnHelper.accessor("name", {
             header: "Nama",
-            cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+            cell: (info) => (
+                <span className="font-medium">{info.getValue()}</span>
+            ),
         }),
         columnHelper.accessor("email", {
             header: "Email",
@@ -160,7 +157,7 @@ export default function UsersPage() {
                             "gap-1 px-2 py-0.5 font-medium",
                             isActive
                                 ? "bg-green-100 text-green-800 hover:bg-green-100/80"
-                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80"
+                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
                         )}
                     >
                         {isActive ? (
@@ -175,7 +172,9 @@ export default function UsersPage() {
         }),
         columnHelper.accessor("lastLogin", {
             header: "Last Login",
-            cell: (info) => <span className="text-sm text-gray-500">{info.getValue()}</span>,
+            cell: (info) => (
+                <span className="text-sm text-gray-500">{info.getValue()}</span>
+            ),
         }),
         columnHelper.display({
             id: "actions",
@@ -184,7 +183,11 @@ export default function UsersPage() {
                 <div className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                            >
                                 <span className="sr-only">Open menu</span>
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -192,13 +195,19 @@ export default function UsersPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setEditingUser(info.row.original)}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setEditingUser(info.row.original)
+                                }
+                            >
                                 <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
                                 <span>Edit User</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 variant="destructive"
-                                onClick={() => setDeletingUser(info.row.original)}
+                                onClick={() =>
+                                    setDeletingUser(info.row.original)
+                                }
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Hapus User</span>
@@ -239,17 +248,11 @@ export default function UsersPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Total User</p>
-                            <p className="text-3xl font-bold text-blue-600">{users.length}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">User Aktif</p>
-                            <p className="text-3xl font-bold text-green-600">
-                                {users.filter((u) => u.status === "Active").length}
+                            <p className="text-sm font-medium text-gray-600">
+                                Total User
+                            </p>
+                            <p className="text-3xl font-bold text-blue-600">
+                                {users.length}
                             </p>
                         </div>
                     </CardContent>
@@ -257,9 +260,32 @@ export default function UsersPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Admin</p>
+                            <p className="text-sm font-medium text-gray-600">
+                                User Aktif
+                            </p>
+                            <p className="text-3xl font-bold text-green-600">
+                                {
+                                    users.filter((u) => u.status === "Active")
+                                        .length
+                                }
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-gray-600">
+                                Admin
+                            </p>
                             <p className="text-3xl font-bold text-orange-600">
-                                {users.filter((u) => u.role === "Super Admin" || u.role === "Admin").length}
+                                {
+                                    users.filter(
+                                        (u) =>
+                                            u.role === "Super Admin" ||
+                                            u.role === "Admin",
+                                    ).length
+                                }
                             </p>
                         </div>
                     </CardContent>
@@ -278,11 +304,17 @@ export default function UsersPage() {
                                         type="text"
                                         placeholder="Cari user..."
                                         value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onChange={(e) =>
+                                            setSearchTerm(e.target.value)
+                                        }
                                         className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
-                                <Button size="sm" className="gap-2" onClick={() => setShowModal(true)}>
+                                <Button
+                                    size="sm"
+                                    className="gap-2"
+                                    onClick={() => setShowModal(true)}
+                                >
                                     <Plus className="h-4 w-4" />
                                     Tambah User
                                 </Button>
@@ -292,49 +324,97 @@ export default function UsersPage() {
                             <div className="rounded-lg border overflow-hidden">
                                 <Table>
                                     <TableHeader className="bg-gray-50">
-                                        {table.getHeaderGroups().map((headerGroup) => (
-                                            <TableRow key={headerGroup.id}>
-                                                {headerGroup.headers.map((header) => (
-                                                    <TableHead key={header.id} className="font-semibold">
-                                                        {header.isPlaceholder
-                                                            ? null
-                                                            : flexRender(header.column.columnDef.header, header.getContext())}
-                                                    </TableHead>
-                                                ))}
-                                            </TableRow>
-                                        ))}
+                                        {table
+                                            .getHeaderGroups()
+                                            .map((headerGroup) => (
+                                                <TableRow key={headerGroup.id}>
+                                                    {headerGroup.headers.map(
+                                                        (header) => (
+                                                            <TableHead
+                                                                key={header.id}
+                                                                className="font-semibold"
+                                                            >
+                                                                {header.isPlaceholder
+                                                                    ? null
+                                                                    : flexRender(
+                                                                          header
+                                                                              .column
+                                                                              .columnDef
+                                                                              .header,
+                                                                          header.getContext(),
+                                                                      )}
+                                                            </TableHead>
+                                                        ),
+                                                    )}
+                                                </TableRow>
+                                            ))}
                                     </TableHeader>
                                     <TableBody>
                                         {isLoading ? (
                                             <>
                                                 {[1, 2, 3, 4, 5].map((i) => (
                                                     <TableRow key={i}>
-                                                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                                        <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                                        <TableCell><Skeleton className="h-8 w-8 rounded-md float-right" /></TableCell>
+                                                        <TableCell>
+                                                            <Skeleton className="h-4 w-32" />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Skeleton className="h-4 w-40" />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Skeleton className="h-6 w-20 rounded-full" />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Skeleton className="h-6 w-20 rounded-full" />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Skeleton className="h-4 w-24" />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Skeleton className="h-8 w-8 rounded-md float-right" />
+                                                        </TableCell>
                                                     </TableRow>
                                                 ))}
                                             </>
-                                        ) : table.getRowModel().rows.length > 0 ? (
-                                            table.getRowModel().rows.map((row) => (
-                                                <TableRow
-                                                    key={row.id}
-                                                    className="hover:bg-gray-50 cursor-pointer"
-                                                    onClick={() => setSelectedRole(row.original.role)}
-                                                >
-                                                    {row.getVisibleCells().map((cell) => (
-                                                        <TableCell key={cell.id}>
-                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                        </TableCell>
-                                                    ))}
-                                                </TableRow>
-                                            ))
+                                        ) : table.getRowModel().rows.length >
+                                          0 ? (
+                                            table
+                                                .getRowModel()
+                                                .rows.map((row) => (
+                                                    <TableRow
+                                                        key={row.id}
+                                                        className="hover:bg-gray-50 cursor-pointer"
+                                                        onClick={() =>
+                                                            setSelectedRole(
+                                                                row.original
+                                                                    .role,
+                                                            )
+                                                        }
+                                                    >
+                                                        {row
+                                                            .getVisibleCells()
+                                                            .map((cell) => (
+                                                                <TableCell
+                                                                    key={
+                                                                        cell.id
+                                                                    }
+                                                                >
+                                                                    {flexRender(
+                                                                        cell
+                                                                            .column
+                                                                            .columnDef
+                                                                            .cell,
+                                                                        cell.getContext(),
+                                                                    )}
+                                                                </TableCell>
+                                                            ))}
+                                                    </TableRow>
+                                                ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={columns.length} className="h-24 text-center">
+                                                <TableCell
+                                                    colSpan={columns.length}
+                                                    className="h-24 text-center"
+                                                >
                                                     Tidak ada data pengguna.
                                                 </TableCell>
                                             </TableRow>
@@ -346,52 +426,87 @@ export default function UsersPage() {
                             {/* Pagination */}
                             <div className="flex items-center justify-between px-2 py-2">
                                 <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-                                    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                                    {table.getFilteredRowModel().rows.length} row(s) selected.
+                                    {
+                                        table.getFilteredSelectedRowModel().rows
+                                            .length
+                                    }{" "}
+                                    of {table.getFilteredRowModel().rows.length}{" "}
+                                    row(s) selected.
                                 </div>
                                 <div className="flex w-full items-center gap-8 lg:w-fit">
                                     <div className="hidden items-center gap-2 lg:flex">
-                                        <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                                        <Label
+                                            htmlFor="rows-per-page"
+                                            className="text-sm font-medium"
+                                        >
                                             Rows per page
                                         </Label>
                                         <Select
                                             value={`${table.getState().pagination.pageSize}`}
                                             onValueChange={(value) => {
-                                                table.setPageSize(Number(value));
+                                                table.setPageSize(
+                                                    Number(value),
+                                                );
                                             }}
                                         >
-                                            <SelectTrigger className="h-8 w-20" id="rows-per-page">
-                                                <SelectValue placeholder={table.getState().pagination.pageSize} />
+                                            <SelectTrigger
+                                                className="h-8 w-20"
+                                                id="rows-per-page"
+                                            >
+                                                <SelectValue
+                                                    placeholder={
+                                                        table.getState()
+                                                            .pagination.pageSize
+                                                    }
+                                                />
                                             </SelectTrigger>
                                             <SelectContent side="top">
-                                                {[10, 20, 30, 40, 50].map((pageSize) => (
-                                                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                                                        {pageSize}
-                                                    </SelectItem>
-                                                ))}
+                                                {[10, 20, 30, 40, 50].map(
+                                                    (pageSize) => (
+                                                        <SelectItem
+                                                            key={pageSize}
+                                                            value={`${pageSize}`}
+                                                        >
+                                                            {pageSize}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                                        Page{" "}
+                                        {table.getState().pagination.pageIndex +
+                                            1}{" "}
+                                        of {table.getPageCount()}
                                     </div>
                                     <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                         <Button
                                             variant="outline"
                                             className="hidden h-8 w-8 p-0 lg:flex"
-                                            onClick={() => table.setPageIndex(0)}
-                                            disabled={!table.getCanPreviousPage()}
+                                            onClick={() =>
+                                                table.setPageIndex(0)
+                                            }
+                                            disabled={
+                                                !table.getCanPreviousPage()
+                                            }
                                         >
-                                            <span className="sr-only">Go to first page</span>
+                                            <span className="sr-only">
+                                                Go to first page
+                                            </span>
                                             <ChevronsLeft className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="outline"
                                             className="h-8 w-8 p-0"
                                             onClick={() => table.previousPage()}
-                                            disabled={!table.getCanPreviousPage()}
+                                            disabled={
+                                                !table.getCanPreviousPage()
+                                            }
                                         >
-                                            <span className="sr-only">Go to previous page</span>
+                                            <span className="sr-only">
+                                                Go to previous page
+                                            </span>
                                             <ChevronLeft className="h-4 w-4" />
                                         </Button>
                                         <Button
@@ -400,16 +515,24 @@ export default function UsersPage() {
                                             onClick={() => table.nextPage()}
                                             disabled={!table.getCanNextPage()}
                                         >
-                                            <span className="sr-only">Go to next page</span>
+                                            <span className="sr-only">
+                                                Go to next page
+                                            </span>
                                             <ChevronRight className="h-4 w-4" />
                                         </Button>
                                         <Button
                                             variant="outline"
                                             className="hidden h-8 w-8 p-0 lg:flex"
-                                            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                            onClick={() =>
+                                                table.setPageIndex(
+                                                    table.getPageCount() - 1,
+                                                )
+                                            }
                                             disabled={!table.getCanNextPage()}
                                         >
-                                            <span className="sr-only">Go to last page</span>
+                                            <span className="sr-only">
+                                                Go to last page
+                                            </span>
                                             <ChevronsRight className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -429,19 +552,27 @@ export default function UsersPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {Object.entries(rolePermissions).map(([role, permissions]) => (
-                                    <div
-                                        key={role}
-                                        onClick={() => setSelectedRole(role)}
-                                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                                            selectedRole === role
-                                                ? "border-blue-500 bg-blue-50"
-                                                : "border-gray-200 hover:border-gray-300"
-                                        }`}
-                                    >
-                                        <Badge className={getRoleColor(role)}>{role}</Badge>
-                                    </div>
-                                ))}
+                                {Object.entries(rolePermissions).map(
+                                    ([role, permissions]) => (
+                                        <div
+                                            key={role}
+                                            onClick={() =>
+                                                setSelectedRole(role)
+                                            }
+                                            className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                                selectedRole === role
+                                                    ? "border-blue-500 bg-blue-50"
+                                                    : "border-gray-200 hover:border-gray-300"
+                                            }`}
+                                        >
+                                            <Badge
+                                                className={getRoleColor(role)}
+                                            >
+                                                {role}
+                                            </Badge>
+                                        </div>
+                                    ),
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -449,16 +580,29 @@ export default function UsersPage() {
                     {selectedRole && (
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-base">Permission: {selectedRole}</CardTitle>
+                                <CardTitle className="text-base">
+                                    Permission: {selectedRole}
+                                </CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <ul className="space-y-2">
-                                    {(rolePermissions as any)[selectedRole]?.map((permission: string, idx: number) => (
-                                        <li key={idx} className="flex items-start gap-2">
-                                            <span className="text-green-600 font-bold">✓</span>
-                                            <span className="text-sm">{permission}</span>
-                                        </li>
-                                    ))}
+                                    {(rolePermissions as any)[
+                                        selectedRole
+                                    ]?.map(
+                                        (permission: string, idx: number) => (
+                                            <li
+                                                key={idx}
+                                                className="flex items-start gap-2"
+                                            >
+                                                <span className="text-green-600 font-bold">
+                                                    ✓
+                                                </span>
+                                                <span className="text-sm">
+                                                    {permission}
+                                                </span>
+                                            </li>
+                                        ),
+                                    )}
                                 </ul>
                             </CardContent>
                         </Card>
@@ -480,7 +624,11 @@ export default function UsersPage() {
                     user={editingUser}
                     onClose={() => setEditingUser(null)}
                     onSuccess={(updatedUser) => {
-                        setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+                        setUsers(
+                            users.map((u) =>
+                                u.id === updatedUser.id ? updatedUser : u,
+                            ),
+                        );
                         setEditingUser(null);
                     }}
                 />
@@ -489,7 +637,9 @@ export default function UsersPage() {
             <DeleteConfirmDialog
                 open={!!deletingUser}
                 onOpenChange={(open) => !open && setDeletingUser(null)}
-                onConfirm={() => deletingUser && handleDeleteUser(deletingUser.id)}
+                onConfirm={() =>
+                    deletingUser && handleDeleteUser(deletingUser.id)
+                }
                 title="Hapus User?"
                 description={`Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus user ${deletingUser?.name} dan menghapus datanya dari server.`}
                 confirmText="Ya, Hapus"
@@ -497,4 +647,3 @@ export default function UsersPage() {
         </DashboardLayout>
     );
 }
-

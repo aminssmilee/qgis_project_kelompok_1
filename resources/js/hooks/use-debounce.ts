@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 /**
  * Hook to debounce a value.
  * Useful for search inputs where you want to wait for the user to stop typing.
- * 
+ *
  * @param value The value to debounce
  * @param delay The delay in milliseconds
  * @returns The debounced value

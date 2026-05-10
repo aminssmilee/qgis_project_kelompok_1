@@ -20,18 +20,16 @@ final class ClientController
             ->withCount('rentals')
             ->latest()
             ->get()
-            ->map(function (Company $client) {
-                return [
-                    'id' => $client->id,
-                    'name' => $client->name,
-                    'email' => $client->email,
-                    'phone' => $client->phone,
-                    'city' => $client->city,
-                    'status' => $client->status,
-                    'totalRentals' => $client->rentals_count,
-                    'joinDate' => $client->created_at->format('Y-m-d'),
-                ];
-            });
+            ->map(fn (Company $client): array => [
+                'id' => $client->id,
+                'name' => $client->name,
+                'email' => $client->email,
+                'phone' => $client->phone,
+                'city' => $client->city,
+                'status' => $client->status,
+                'totalRentals' => $client->rentals_count,
+                'joinDate' => $client->created_at->format('Y-m-d'),
+            ]);
 
         return response()->json([
             'status' => 'success',

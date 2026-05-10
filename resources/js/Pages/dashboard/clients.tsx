@@ -54,7 +54,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { fetchClients, deleteClient, ClientData } from "@/features/client/client-api";
+import {
+    fetchClients,
+    deleteClient,
+    ClientData,
+} from "@/features/client/client-api";
 import AddClientModal from "@/features/client/AddClientModal";
 import EditClientModal from "@/features/client/EditClientModal";
 import DeleteConfirmDialog from "@/components/shared/DeleteConfirmDialog";
@@ -67,7 +71,9 @@ export default function ClientsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingClient, setEditingClient] = useState<ClientData | null>(null);
-    const [deletingClient, setDeletingClient] = useState<ClientData | null>(null);
+    const [deletingClient, setDeletingClient] = useState<ClientData | null>(
+        null,
+    );
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -91,7 +97,7 @@ export default function ClientsPage() {
     const handleDeleteClient = async (id: string) => {
         try {
             await deleteClient(id);
-            setClients(clients.filter(c => c.id !== id));
+            setClients(clients.filter((c) => c.id !== id));
             toast.success("Klien berhasil dihapus.");
         } catch (error) {
             console.error("Failed to delete client:", error);
@@ -104,7 +110,9 @@ export default function ClientsPage() {
     const columns = [
         columnHelper.accessor("name", {
             header: "Nama Klien",
-            cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+            cell: (info) => (
+                <span className="font-medium">{info.getValue()}</span>
+            ),
         }),
         columnHelper.accessor("email", {
             header: "Kontak",
@@ -127,7 +135,9 @@ export default function ClientsPage() {
         }),
         columnHelper.accessor("totalRentals", {
             header: "Total Rental",
-            cell: (info) => <span className="text-sm">{info.getValue()} kali</span>,
+            cell: (info) => (
+                <span className="text-sm">{info.getValue()} kali</span>
+            ),
         }),
         columnHelper.accessor("joinDate", {
             header: "Tanggal Bergabung",
@@ -144,7 +154,7 @@ export default function ClientsPage() {
                             "gap-1 px-2 py-0.5 font-medium",
                             isActive
                                 ? "bg-green-100 text-green-800 hover:bg-green-100/80"
-                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80"
+                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
                         )}
                     >
                         {isActive ? (
@@ -164,7 +174,11 @@ export default function ClientsPage() {
                 <div className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                            >
                                 <span className="sr-only">Open menu</span>
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -172,13 +186,19 @@ export default function ClientsPage() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setEditingClient(info.row.original)}>
+                            <DropdownMenuItem
+                                onClick={() =>
+                                    setEditingClient(info.row.original)
+                                }
+                            >
                                 <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
                                 <span>Edit Klien</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 variant="destructive"
-                                onClick={() => setDeletingClient(info.row.original)}
+                                onClick={() =>
+                                    setDeletingClient(info.row.original)
+                                }
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Hapus Klien</span>
@@ -219,9 +239,15 @@ export default function ClientsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Total Klien</p>
+                            <p className="text-sm font-medium text-gray-600">
+                                Total Klien
+                            </p>
                             <p className="text-3xl font-bold text-blue-600">
-                                {isLoading ? <Skeleton className="h-9 w-12 mx-auto" /> : clients.length}
+                                {isLoading ? (
+                                    <Skeleton className="h-9 w-12 mx-auto" />
+                                ) : (
+                                    clients.length
+                                )}
                             </p>
                         </div>
                     </CardContent>
@@ -229,9 +255,16 @@ export default function ClientsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Klien Aktif</p>
+                            <p className="text-sm font-medium text-gray-600">
+                                Klien Aktif
+                            </p>
                             <p className="text-3xl font-bold text-green-600">
-                                {isLoading ? <Skeleton className="h-9 w-12 mx-auto" /> : clients.filter(c => c.status === "Active").length}
+                                {isLoading ? (
+                                    <Skeleton className="h-9 w-12 mx-auto" />
+                                ) : (
+                                    clients.filter((c) => c.status === "Active")
+                                        .length
+                                )}
                             </p>
                         </div>
                     </CardContent>
@@ -239,13 +272,24 @@ export default function ClientsPage() {
                 <Card>
                     <CardContent className="pt-6">
                         <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">Klien Baru (Bulan Ini)</p>
+                            <p className="text-sm font-medium text-gray-600">
+                                Klien Baru (Bulan Ini)
+                            </p>
                             <p className="text-3xl font-bold text-orange-600">
-                                {isLoading ? <Skeleton className="h-9 w-12 mx-auto" /> : clients.filter(c => {
-                                    const joinDate = new Date(c.joinDate);
-                                    const now = new Date();
-                                    return joinDate.getMonth() === now.getMonth() && joinDate.getFullYear() === now.getFullYear();
-                                }).length}
+                                {isLoading ? (
+                                    <Skeleton className="h-9 w-12 mx-auto" />
+                                ) : (
+                                    clients.filter((c) => {
+                                        const joinDate = new Date(c.joinDate);
+                                        const now = new Date();
+                                        return (
+                                            joinDate.getMonth() ===
+                                                now.getMonth() &&
+                                            joinDate.getFullYear() ===
+                                                now.getFullYear()
+                                        );
+                                    }).length
+                                )}
                             </p>
                         </div>
                     </CardContent>
@@ -269,7 +313,11 @@ export default function ClientsPage() {
                                 className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        <Button size="sm" className="gap-2" onClick={() => setShowAddModal(true)}>
+                        <Button
+                            size="sm"
+                            className="gap-2"
+                            onClick={() => setShowAddModal(true)}
+                        >
                             <Plus className="h-4 w-4" />
                             Tambah Klien
                         </Button>
@@ -282,10 +330,17 @@ export default function ClientsPage() {
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id} className="font-semibold">
+                                            <TableHead
+                                                key={header.id}
+                                                className="font-semibold"
+                                            >
                                                 {header.isPlaceholder
                                                     ? null
-                                                    : flexRender(header.column.columnDef.header, header.getContext())}
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext(),
+                                                      )}
                                             </TableHead>
                                         ))}
                                     </TableRow>
@@ -296,29 +351,55 @@ export default function ClientsPage() {
                                     <>
                                         {[1, 2, 3, 4, 5].map((i) => (
                                             <TableRow key={i}>
-                                                <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                                <TableCell><Skeleton className="h-10 w-40" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                                                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                                <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                                                <TableCell><Skeleton className="h-8 w-8 rounded-md float-right" /></TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-32" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-10 w-40" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-24" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-16" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-4 w-24" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-8 w-8 rounded-md float-right" />
+                                                </TableCell>
                                             </TableRow>
                                         ))}
                                     </>
                                 ) : table.getRowModel().rows.length > 0 ? (
                                     table.getRowModel().rows.map((row) => (
-                                        <TableRow key={row.id} className="hover:bg-gray-50">
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </TableCell>
-                                            ))}
+                                        <TableRow
+                                            key={row.id}
+                                            className="hover:bg-gray-50"
+                                        >
+                                            {row
+                                                .getVisibleCells()
+                                                .map((cell) => (
+                                                    <TableCell key={cell.id}>
+                                                        {flexRender(
+                                                            cell.column
+                                                                .columnDef.cell,
+                                                            cell.getContext(),
+                                                        )}
+                                                    </TableCell>
+                                                ))}
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center">
+                                        <TableCell
+                                            colSpan={columns.length}
+                                            className="h-24 text-center"
+                                        >
                                             Tidak ada data klien.
                                         </TableCell>
                                     </TableRow>
@@ -330,11 +411,15 @@ export default function ClientsPage() {
                     {/* Pagination */}
                     <div className="flex items-center justify-between px-2 py-2">
                         <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-                            {table.getFilteredRowModel().rows.length} total baris.
+                            {table.getFilteredRowModel().rows.length} total
+                            baris.
                         </div>
                         <div className="flex w-full items-center gap-8 lg:w-fit">
                             <div className="hidden items-center gap-2 lg:flex">
-                                <Label htmlFor="rows-per-page" className="text-sm font-medium">
+                                <Label
+                                    htmlFor="rows-per-page"
+                                    className="text-sm font-medium"
+                                >
                                     Baris per halaman
                                 </Label>
                                 <Select
@@ -343,20 +428,35 @@ export default function ClientsPage() {
                                         table.setPageSize(Number(value));
                                     }}
                                 >
-                                    <SelectTrigger className="h-8 w-20" id="rows-per-page">
-                                        <SelectValue placeholder={table.getState().pagination.pageSize} />
+                                    <SelectTrigger
+                                        className="h-8 w-20"
+                                        id="rows-per-page"
+                                    >
+                                        <SelectValue
+                                            placeholder={
+                                                table.getState().pagination
+                                                    .pageSize
+                                            }
+                                        />
                                     </SelectTrigger>
                                     <SelectContent side="top">
-                                        {[10, 20, 30, 40, 50].map((pageSize) => (
-                                            <SelectItem key={pageSize} value={`${pageSize}`}>
-                                                {pageSize}
-                                            </SelectItem>
-                                        ))}
+                                        {[10, 20, 30, 40, 50].map(
+                                            (pageSize) => (
+                                                <SelectItem
+                                                    key={pageSize}
+                                                    value={`${pageSize}`}
+                                                >
+                                                    {pageSize}
+                                                </SelectItem>
+                                            ),
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
+                                Halaman{" "}
+                                {table.getState().pagination.pageIndex + 1} dari{" "}
+                                {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button
@@ -365,7 +465,9 @@ export default function ClientsPage() {
                                     onClick={() => table.setPageIndex(0)}
                                     disabled={!table.getCanPreviousPage()}
                                 >
-                                    <span className="sr-only">Halaman pertama</span>
+                                    <span className="sr-only">
+                                        Halaman pertama
+                                    </span>
                                     <ChevronsLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -374,7 +476,9 @@ export default function ClientsPage() {
                                     onClick={() => table.previousPage()}
                                     disabled={!table.getCanPreviousPage()}
                                 >
-                                    <span className="sr-only">Halaman sebelumnya</span>
+                                    <span className="sr-only">
+                                        Halaman sebelumnya
+                                    </span>
                                     <ChevronLeft className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -383,16 +487,24 @@ export default function ClientsPage() {
                                     onClick={() => table.nextPage()}
                                     disabled={!table.getCanNextPage()}
                                 >
-                                    <span className="sr-only">Halaman selanjutnya</span>
+                                    <span className="sr-only">
+                                        Halaman selanjutnya
+                                    </span>
                                     <ChevronRight className="h-4 w-4" />
                                 </Button>
                                 <Button
                                     variant="outline"
                                     className="hidden h-8 w-8 p-0 lg:flex"
-                                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                                    onClick={() =>
+                                        table.setPageIndex(
+                                            table.getPageCount() - 1,
+                                        )
+                                    }
                                     disabled={!table.getCanNextPage()}
                                 >
-                                    <span className="sr-only">Halaman terakhir</span>
+                                    <span className="sr-only">
+                                        Halaman terakhir
+                                    </span>
                                     <ChevronsRight className="h-4 w-4" />
                                 </Button>
                             </div>
@@ -416,7 +528,11 @@ export default function ClientsPage() {
                     client={editingClient}
                     onClose={() => setEditingClient(null)}
                     onSuccess={(updatedClient) => {
-                        setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+                        setClients(
+                            clients.map((c) =>
+                                c.id === updatedClient.id ? updatedClient : c,
+                            ),
+                        );
                         setEditingClient(null);
                     }}
                 />
@@ -425,7 +541,9 @@ export default function ClientsPage() {
             <DeleteConfirmDialog
                 open={!!deletingClient}
                 onOpenChange={(open) => !open && setDeletingClient(null)}
-                onConfirm={() => deletingClient && handleDeleteClient(deletingClient.id)}
+                onConfirm={() =>
+                    deletingClient && handleDeleteClient(deletingClient.id)
+                }
                 title="Hapus Klien?"
                 description={`Tindakan ini tidak dapat dibatalkan. Ini akan secara permanen menghapus klien ${deletingClient?.name} beserta seluruh riwayat transaksinya dari server.`}
                 confirmText="Ya, Hapus"

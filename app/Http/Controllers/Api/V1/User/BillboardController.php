@@ -41,7 +41,7 @@ final class BillboardController
 
         // Keyword Search
         if ($keyword) {
-            $query->where(function (Builder $q) use ($keyword) {
+            $query->where(function (Builder $q) use ($keyword): void {
                 $q->where('name', 'ilike', "%{$keyword}%")
                     ->orWhere('address', 'ilike', "%{$keyword}%")
                     ->orWhere('district', 'ilike', "%{$keyword}%");

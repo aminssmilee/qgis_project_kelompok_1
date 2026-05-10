@@ -10,13 +10,13 @@ use App\Models\Billboard;
 use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 
 final class BookingController
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the authenticated user's bookings.
      */
     public function index(Request $request): JsonResponse
     {
@@ -46,7 +46,9 @@ final class BookingController
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created booking.
+     *
+     * Includes schedule conflict checking to prevent double booking.
      */
     public function store(StoreBookingRequest $request, string $id): JsonResponse
     {
@@ -66,8 +68,8 @@ final class BookingController
             ], 422);
         }
 
-        $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
+        $startDate = Date::parse($request->start_date);
+        $endDate = Date::parse($request->end_date);
         $totalDays = $startDate->diffInDays($endDate);
 
         if ($totalDays < $pricing->min_duration_days) {
@@ -76,42 +78,96 @@ final class BookingController
             ], 422);
         }
 
-        // Simple price calculation: daily rate * total days
-        $basePrice = $pricing->price_per_day * $totalDays;
-        $taxAmount = $basePrice * 0.11; // PPN 11%
-        $totalPrice = $basePrice + $taxAmount;
+        // Check for schedule conflicts (prevent double booking)
+        $hasConflict = Booking::query()
+            ->where('billboard_id', $billboard->id)
+            ->whereNotIn('status', ['cancelled', 'rejected'])
+            ->where(function ($query) use ($startDate, $endDate): void {
+                $query->where(function ($q) use ($startDate, $endDate): void {
+                    $q->where('start_date', '<=', $endDate)
+                        ->where('end_date', '>=', $startDate);
+                });
+            })
+            ->exists();
 
-        $booking = Booking::create([
-            'booking_code' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6)),
+        if ($hasConflict) {
+            return response()->json([
+                'message' => 'Billboard is already booked for the selected dates. Please choose different dates.',
+            ], 409);
+        }
+
+        $durationType = $request->duration_type;
+        $durationValue = (int) $request->duration_value;
+
+        // Price calculation based on duration type
+        $basePrice = 0;
+        $discountPercent = 0;
+
+        switch ($durationType) {
+            case 'daily':
+                $basePrice = $pricing->price_per_day * $durationValue;
+                break;
+            case 'weekly':
+                $basePrice = $pricing->price_per_week * $durationValue;
+                break;
+            case 'monthly':
+                $basePrice = $pricing->price_per_month * $durationValue;
+                if ($durationValue >= 12) {
+                    $discountPercent = $pricing->discount_1year;
+                } elseif ($durationValue >= 6) {
+                    $discountPercent = $pricing->discount_6month;
+                } elseif ($durationValue >= 3) {
+                    $discountPercent = $pricing->discount_3month;
+                }
+                break;
+            case 'yearly':
+                $basePrice = $pricing->price_per_year * $durationValue;
+                $discountPercent = $pricing->discount_1year;
+                break;
+        }
+
+        $discountAmount = $basePrice * ($discountPercent / 100);
+        $priceAfterDiscount = $basePrice - $discountAmount;
+        $taxAmount = $priceAfterDiscount * 0.11; // PPN 11%
+        $totalPrice = $priceAfterDiscount + $taxAmount;
+
+        $booking = Booking::query()->create([
+            'booking_code' => 'ORD-'.now()->format('Ymd').'-'.mb_strtoupper(Str::random(6)),
             'user_id' => $user->id,
             'billboard_id' => $billboard->id,
             'pricing_id' => $pricing->id,
-            'duration_type' => 'daily',
-            'duration_value' => $totalDays,
+            'duration_type' => $durationType,
+            'duration_value' => $durationValue,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'total_days' => $totalDays,
             'base_price' => $basePrice,
+            'discount_amount' => $discountAmount,
+            'discount_percent' => $discountPercent,
+            'tax_percent' => 11,
             'tax_amount' => $taxAmount,
             'total_price' => $totalPrice,
             'status' => 'pending_payment',
             'notes' => $request->notes,
         ]);
 
+        $booking->load(['billboard.category']);
+
         return response()->json([
             'message' => 'Booking created successfully',
-            'data' => $booking,
+            'data' => new BookingResource($booking),
         ], 201);
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified booking (only if owned by the authenticated user).
      */
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
         $booking = Booking::query()
             ->where('id', $id)
-            ->with(['billboard.category'])
+            ->where('user_id', $request->user()->id)
+            ->with(['billboard.category', 'payments', 'creatives'])
             ->firstOrFail();
 
         return response()->json([
@@ -121,18 +177,36 @@ final class BookingController
     }
 
     /**
-     * Update the specified resource in storage.
+     * Cancel a booking (only pending_payment or waiting_confirmation).
      */
-    public function update(): JsonResponse
+    public function cancel(Request $request, string $id): JsonResponse
     {
-        return response()->json([]);
-    }
+        $request->validate([
+            'cancel_reason' => ['nullable', 'string', 'max:1000'],
+        ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(): JsonResponse
-    {
-        return response()->json([]);
+        $booking = Booking::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        if (! $booking->isCancellable()) {
+            return response()->json([
+                'message' => 'This booking cannot be cancelled. Only bookings with status pending_payment or waiting_confirmation can be cancelled.',
+            ], 422);
+        }
+
+        $booking->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'cancel_reason' => $request->cancel_reason ?? 'Cancelled by user',
+        ]);
+
+        $booking->load(['billboard.category']);
+
+        return response()->json([
+            'message' => 'Booking cancelled successfully',
+            'data' => new BookingResource($booking),
+        ]);
     }
 }

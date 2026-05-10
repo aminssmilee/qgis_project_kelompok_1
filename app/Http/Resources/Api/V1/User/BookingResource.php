@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Resources\Api\V1\User;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class BookingResource extends JsonResource
+final class BookingResource extends JsonResource
 {
     public function toArray(Request $request): array
     {

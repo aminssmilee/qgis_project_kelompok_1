@@ -4,7 +4,15 @@ import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Users, MapPin, Calendar, X, CheckCircle, AlertCircle } from "lucide-react";
+import {
+    TrendingUp,
+    Users,
+    MapPin,
+    Calendar,
+    X,
+    CheckCircle,
+    AlertCircle,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -21,10 +29,11 @@ type DashboardOptionsState = {
 };
 
 export default function Page() {
-    const [dashboardOptions, setDashboardOptions] = useState<DashboardOptionsState>({
-        clients: [],
-        billboards: [],
-    });
+    const [dashboardOptions, setDashboardOptions] =
+        useState<DashboardOptionsState>({
+            clients: [],
+            billboards: [],
+        });
     const [showClientModal, setShowClientModal] = useState(false);
     const [showRentalModal, setShowRentalModal] = useState(false);
     const [clientFormData, setClientFormData] = useState({
@@ -42,9 +51,16 @@ export default function Page() {
         total_price: "",
         payment_status: "Pending",
     });
-    const [clientErrors, setClientErrors] = useState<{[key: string]: string}>({});
-    const [rentalErrors, setRentalErrors] = useState<{[key: string]: string}>({});
-    const [submitStatus, setSubmitStatus] = useState<{type: "success" | "error"; message: string} | null>(null);
+    const [clientErrors, setClientErrors] = useState<{ [key: string]: string }>(
+        {},
+    );
+    const [rentalErrors, setRentalErrors] = useState<{ [key: string]: string }>(
+        {},
+    );
+    const [submitStatus, setSubmitStatus] = useState<{
+        type: "success" | "error";
+        message: string;
+    } | null>(null);
 
     useEffect(() => {
         const loadDashboardOptions = async () => {
@@ -62,8 +78,12 @@ export default function Page() {
                 const payload = await response.json();
 
                 setDashboardOptions({
-                    clients: Array.isArray(payload.clients) ? payload.clients : [],
-                    billboards: Array.isArray(payload.billboards) ? payload.billboards : [],
+                    clients: Array.isArray(payload.clients)
+                        ? payload.clients
+                        : [],
+                    billboards: Array.isArray(payload.billboards)
+                        ? payload.billboards
+                        : [],
                 });
             } catch {
                 setDashboardOptions({ clients: [], billboards: [] });
@@ -91,22 +111,29 @@ export default function Page() {
     };
 
     const validateClientForm = () => {
-        const newErrors: {[key: string]: string} = {};
-        if (!clientFormData.name.trim()) newErrors.name = "Nama klien wajib diisi";
+        const newErrors: { [key: string]: string } = {};
+        if (!clientFormData.name.trim())
+            newErrors.name = "Nama klien wajib diisi";
         if (!clientFormData.email.trim()) newErrors.email = "Email wajib diisi";
-        if (!clientFormData.phone.trim()) newErrors.phone = "Telepon wajib diisi";
+        if (!clientFormData.phone.trim())
+            newErrors.phone = "Telepon wajib diisi";
         if (!clientFormData.city.trim()) newErrors.city = "Kota wajib diisi";
         setClientErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const validateRentalForm = () => {
-        const newErrors: {[key: string]: string} = {};
-        if (!rentalFormData.client_id) newErrors.client_id = "Klien wajib dipilih";
-        if (!rentalFormData.billboard_id) newErrors.billboard_id = "Billboard wajib dipilih";
-        if (!rentalFormData.rental_date) newErrors.rental_date = "Tanggal sewa wajib diisi";
-        if (!rentalFormData.duration_days) newErrors.duration_days = "Durasi wajib diisi";
-        if (!rentalFormData.total_price) newErrors.total_price = "Harga wajib diisi";
+        const newErrors: { [key: string]: string } = {};
+        if (!rentalFormData.client_id)
+            newErrors.client_id = "Klien wajib dipilih";
+        if (!rentalFormData.billboard_id)
+            newErrors.billboard_id = "Billboard wajib dipilih";
+        if (!rentalFormData.rental_date)
+            newErrors.rental_date = "Tanggal sewa wajib diisi";
+        if (!rentalFormData.duration_days)
+            newErrors.duration_days = "Durasi wajib diisi";
+        if (!rentalFormData.total_price)
+            newErrors.total_price = "Harga wajib diisi";
         setRentalErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -116,18 +143,24 @@ export default function Page() {
         setSubmitStatus(null);
 
         if (!validateClientForm()) {
-            setSubmitStatus({ type: "error", message: "Mohon isi semua field yang wajib" });
+            setSubmitStatus({
+                type: "error",
+                message: "Mohon isi semua field yang wajib",
+            });
             return;
         }
 
         try {
-            const response = await fetch('/dashboard/clients', {
-                method: 'POST',
+            const response = await fetch("/dashboard/clients", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN":
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content") || "",
                 },
                 body: JSON.stringify(clientFormData),
             });
@@ -135,9 +168,18 @@ export default function Page() {
             const payload = await response.json().catch(() => null);
 
             if (response.ok) {
-                setSubmitStatus({ type: "success", message: `Klien ${clientFormData.name} berhasil ditambahkan!` });
+                setSubmitStatus({
+                    type: "success",
+                    message: `Klien ${clientFormData.name} berhasil ditambahkan!`,
+                });
                 setTimeout(() => {
-                    setClientFormData({ name: "", email: "", phone: "", city: "", status: "Active" });
+                    setClientFormData({
+                        name: "",
+                        email: "",
+                        phone: "",
+                        city: "",
+                        status: "Active",
+                    });
                     setShowClientModal(false);
                     setSubmitStatus(null);
                     window.location.reload();
@@ -145,7 +187,10 @@ export default function Page() {
             } else {
                 setSubmitStatus({
                     type: "error",
-                    message: getErrorMessage(payload, "Gagal menambahkan klien"),
+                    message: getErrorMessage(
+                        payload,
+                        "Gagal menambahkan klien",
+                    ),
                 });
             }
         } catch (error) {
@@ -158,18 +203,24 @@ export default function Page() {
         setSubmitStatus(null);
 
         if (!validateRentalForm()) {
-            setSubmitStatus({ type: "error", message: "Mohon isi semua field yang wajib" });
+            setSubmitStatus({
+                type: "error",
+                message: "Mohon isi semua field yang wajib",
+            });
             return;
         }
 
         try {
-            const response = await fetch('/dashboard/rentals', {
-                method: 'POST',
+            const response = await fetch("/dashboard/rentals", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN":
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content") || "",
                 },
                 body: JSON.stringify(rentalFormData),
             });
@@ -177,7 +228,10 @@ export default function Page() {
             const payload = await response.json().catch(() => null);
 
             if (response.ok) {
-                setSubmitStatus({ type: "success", message: "Penyewaan berhasil ditambahkan!" });
+                setSubmitStatus({
+                    type: "success",
+                    message: "Penyewaan berhasil ditambahkan!",
+                });
                 setTimeout(() => {
                     setRentalFormData({
                         client_id: "",
@@ -194,7 +248,10 @@ export default function Page() {
             } else {
                 setSubmitStatus({
                     type: "error",
-                    message: getErrorMessage(payload, "Gagal menambahkan penyewaan"),
+                    message: getErrorMessage(
+                        payload,
+                        "Gagal menambahkan penyewaan",
+                    ),
                 });
             }
         } catch (error) {
@@ -285,13 +342,17 @@ export default function Page() {
                                 <CardContent>
                                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                         <button
-                                            onClick={() => setShowClientModal(true)}
+                                            onClick={() =>
+                                                setShowClientModal(true)
+                                            }
                                             className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                                         >
                                             Tambah Klien
                                         </button>
                                         <button
-                                            onClick={() => setShowRentalModal(true)}
+                                            onClick={() =>
+                                                setShowRentalModal(true)
+                                            }
                                             className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                                         >
                                             Tambah Penyewaan
@@ -326,7 +387,9 @@ export default function Page() {
                                 <CardHeader className="flex flex-row items-center justify-between border-b">
                                     <CardTitle>Tambah Klien Baru</CardTitle>
                                     <button
-                                        onClick={() => setShowClientModal(false)}
+                                        onClick={() =>
+                                            setShowClientModal(false)
+                                        }
                                         className="p-1 hover:bg-gray-100 rounded transition-colors"
                                     >
                                         <X className="h-5 w-5" />
@@ -348,7 +411,8 @@ export default function Page() {
                                             )}
                                             <p
                                                 className={`text-sm ${
-                                                    submitStatus.type === "success"
+                                                    submitStatus.type ===
+                                                    "success"
                                                         ? "text-green-700"
                                                         : "text-red-700"
                                                 }`}
@@ -358,7 +422,10 @@ export default function Page() {
                                         </div>
                                     )}
 
-                                    <form onSubmit={handleAddClient} className="space-y-4">
+                                    <form
+                                        onSubmit={handleAddClient}
+                                        className="space-y-4"
+                                    >
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                 Nama Klien *
@@ -475,7 +542,9 @@ export default function Page() {
                                         <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
                                             <button
                                                 type="button"
-                                                onClick={() => setShowClientModal(false)}
+                                                onClick={() =>
+                                                    setShowClientModal(false)
+                                                }
                                                 className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                                             >
                                                 Batal
@@ -506,7 +575,9 @@ export default function Page() {
                                 <CardHeader className="flex flex-row items-center justify-between border-b">
                                     <CardTitle>Tambah Penyewaan Baru</CardTitle>
                                     <button
-                                        onClick={() => setShowRentalModal(false)}
+                                        onClick={() =>
+                                            setShowRentalModal(false)
+                                        }
                                         className="p-1 hover:bg-gray-100 rounded transition-colors"
                                     >
                                         <X className="h-5 w-5" />
@@ -528,7 +599,8 @@ export default function Page() {
                                             )}
                                             <p
                                                 className={`text-sm ${
-                                                    submitStatus.type === "success"
+                                                    submitStatus.type ===
+                                                    "success"
                                                         ? "text-green-700"
                                                         : "text-red-700"
                                                 }`}
@@ -538,7 +610,10 @@ export default function Page() {
                                         </div>
                                     )}
 
-                                    <form onSubmit={handleAddRental} className="space-y-4">
+                                    <form
+                                        onSubmit={handleAddRental}
+                                        className="space-y-4"
+                                    >
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">
                                                 Klien *
@@ -549,7 +624,8 @@ export default function Page() {
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        client_id: e.target.value,
+                                                        client_id:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
@@ -558,12 +634,19 @@ export default function Page() {
                                                         : "border-gray-300 focus:ring-blue-500"
                                                 }`}
                                             >
-                                                <option value="">Pilih klien</option>
-                                                {dashboardOptions.clients.map((client) => (
-                                                    <option key={client.id} value={client.id}>
-                                                        {client.name}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    Pilih klien
+                                                </option>
+                                                {dashboardOptions.clients.map(
+                                                    (client) => (
+                                                        <option
+                                                            key={client.id}
+                                                            value={client.id}
+                                                        >
+                                                            {client.name}
+                                                        </option>
+                                                    ),
+                                                )}
                                             </select>
                                             {rentalErrors.client_id && (
                                                 <p className="text-xs text-red-600 mt-1">
@@ -578,11 +661,14 @@ export default function Page() {
                                             </label>
                                             <select
                                                 required
-                                                value={rentalFormData.billboard_id}
+                                                value={
+                                                    rentalFormData.billboard_id
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        billboard_id: e.target.value,
+                                                        billboard_id:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
@@ -591,12 +677,19 @@ export default function Page() {
                                                         : "border-gray-300 focus:ring-blue-500"
                                                 }`}
                                             >
-                                                <option value="">Pilih billboard</option>
-                                                {dashboardOptions.billboards.map((billboard) => (
-                                                    <option key={billboard.id} value={billboard.id}>
-                                                        {billboard.name}
-                                                    </option>
-                                                ))}
+                                                <option value="">
+                                                    Pilih billboard
+                                                </option>
+                                                {dashboardOptions.billboards.map(
+                                                    (billboard) => (
+                                                        <option
+                                                            key={billboard.id}
+                                                            value={billboard.id}
+                                                        >
+                                                            {billboard.name}
+                                                        </option>
+                                                    ),
+                                                )}
                                             </select>
                                             {rentalErrors.billboard_id && (
                                                 <p className="text-xs text-red-600 mt-1">
@@ -612,11 +705,14 @@ export default function Page() {
                                             <input
                                                 type="date"
                                                 required
-                                                value={rentalFormData.rental_date}
+                                                value={
+                                                    rentalFormData.rental_date
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        rental_date: e.target.value,
+                                                        rental_date:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
@@ -639,11 +735,14 @@ export default function Page() {
                                             <input
                                                 type="number"
                                                 required
-                                                value={rentalFormData.duration_days}
+                                                value={
+                                                    rentalFormData.duration_days
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        duration_days: e.target.value,
+                                                        duration_days:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
@@ -667,11 +766,14 @@ export default function Page() {
                                             <input
                                                 type="number"
                                                 required
-                                                value={rentalFormData.total_price}
+                                                value={
+                                                    rentalFormData.total_price
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        total_price: e.target.value,
+                                                        total_price:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
@@ -691,7 +793,9 @@ export default function Page() {
                                         <div className="flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
                                             <button
                                                 type="button"
-                                                onClick={() => setShowRentalModal(false)}
+                                                onClick={() =>
+                                                    setShowRentalModal(false)
+                                                }
                                                 className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                                             >
                                                 Batal

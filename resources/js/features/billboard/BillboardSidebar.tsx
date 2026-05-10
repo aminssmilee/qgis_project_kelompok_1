@@ -28,7 +28,7 @@ export default function BillboardSidebar({
     const filteredBillboards = billboards.filter(
         (bb) =>
             bb.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-            bb.address.toLowerCase().includes(debouncedSearch.toLowerCase())
+            bb.address.toLowerCase().includes(debouncedSearch.toLowerCase()),
     );
 
     return (
@@ -37,7 +37,9 @@ export default function BillboardSidebar({
             {selectedBillboard ? (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-lg">Detail Billboard</CardTitle>
+                        <CardTitle className="text-lg">
+                            Detail Billboard
+                        </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
@@ -54,7 +56,9 @@ export default function BillboardSidebar({
                                 <p className="text-xs text-gray-500 uppercase font-semibold">
                                     Ukuran
                                 </p>
-                                <p className="font-semibold">{selectedBillboard.size}</p>
+                                <p className="font-semibold">
+                                    {selectedBillboard.size}
+                                </p>
                             </div>
                             <div>
                                 <p className="text-xs text-gray-500 uppercase font-semibold">
@@ -76,7 +80,9 @@ export default function BillboardSidebar({
                         </div>
 
                         <Button
-                            onClick={() => onDeleteBillboard(selectedBillboard.id)}
+                            onClick={() =>
+                                onDeleteBillboard(selectedBillboard.id)
+                            }
                             variant="destructive"
                             size="sm"
                             className="w-full"
@@ -100,7 +106,8 @@ export default function BillboardSidebar({
             <Card>
                 <CardHeader>
                     <CardTitle className="text-base">
-                        Daftar Billboard ({filteredBillboards.length}/{billboards.length})
+                        Daftar Billboard ({filteredBillboards.length}/
+                        {billboards.length})
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">

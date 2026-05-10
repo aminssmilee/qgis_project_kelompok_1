@@ -8,9 +8,9 @@ use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -69,6 +69,7 @@ final class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
     /**
      * @return BelongsTo<Company, $this>
      */
@@ -83,5 +84,13 @@ final class User extends Authenticatable
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * @return HasMany<Notification, $this>
+     */
+    public function userNotifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
     }
 }

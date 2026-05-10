@@ -86,7 +86,9 @@ export default function ReportsPage() {
                                 <Icon className="h-5 w-5 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className={`text-3xl font-bold ${stat.color}`}>
+                                <div
+                                    className={`text-3xl font-bold ${stat.color}`}
+                                >
                                     {stat.value}
                                 </div>
                             </CardContent>
@@ -177,8 +179,8 @@ export default function ReportsPage() {
                                                 bb.status === "Excellent"
                                                     ? "bg-green-100 text-green-800"
                                                     : bb.status === "Good"
-                                                    ? "bg-blue-100 text-blue-800"
-                                                    : "bg-yellow-100 text-yellow-800"
+                                                      ? "bg-blue-100 text-blue-800"
+                                                      : "bg-yellow-100 text-yellow-800"
                                             }
                                         >
                                             {bb.utilization}%
@@ -187,7 +189,9 @@ export default function ReportsPage() {
                                     <div className="w-full bg-gray-200 rounded-full h-2">
                                         <div
                                             className="bg-blue-600 h-2 rounded-full"
-                                            style={{ width: `${bb.utilization}%` }}
+                                            style={{
+                                                width: `${bb.utilization}%`,
+                                            }}
                                         ></div>
                                     </div>
                                 </div>

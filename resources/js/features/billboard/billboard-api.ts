@@ -3,7 +3,7 @@ import api from "@/lib/api";
 /**
  * Base URL API — sesuai dengan konfigurasi Laravel
  */
-const API_BASE = '/admin/billboards';
+const API_BASE = "/admin/billboards";
 
 export interface ApiBillboard {
     id: string;
@@ -69,23 +69,31 @@ export async function fetchBillboards(): Promise<ApiBillboard[]> {
     return response.data.data;
 }
 
-export async function createBillboard(payload: StoreBillboardData): Promise<ApiBillboard> {
+export async function createBillboard(
+    payload: StoreBillboardData,
+): Promise<ApiBillboard> {
     const response = await api.post(API_BASE, payload);
     return response.data.data;
 }
 
-export async function updateBillboard(id: string, payload: UpdateBillboardData): Promise<ApiBillboard> {
+export async function updateBillboard(
+    id: string,
+    payload: UpdateBillboardData,
+): Promise<ApiBillboard> {
     const response = await api.put(`${API_BASE}/${id}`, payload);
     return response.data.data;
 }
 
-export async function uploadBillboardPhoto(id: string, file: File): Promise<any> {
+export async function uploadBillboardPhoto(
+    id: string,
+    file: File,
+): Promise<any> {
     const formData = new FormData();
-    formData.append('photo', file);
+    formData.append("photo", file);
 
     const response = await api.post(`${API_BASE}/${id}/photos`, formData, {
         headers: {
-            'Content-Type': 'multipart/form-data',
+            "Content-Type": "multipart/form-data",
         },
     });
     return response.data.data;

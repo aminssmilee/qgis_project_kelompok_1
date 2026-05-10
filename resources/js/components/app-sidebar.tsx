@@ -177,7 +177,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // Ambil data user dari localStorage yang disimpan saat login
     const storedUser = localStorage.getItem("admin_user");
     const parsedUser = storedUser ? JSON.parse(storedUser) : null;
-    
+
     // Gunakan data user jika ada, atau fallback ke nilai default
     const activeUser = {
         name: parsedUser?.name || "Admin",
@@ -228,4 +228,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     );
 }
 export default AppSidebar;
-
