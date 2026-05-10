@@ -176,6 +176,8 @@
   {
     "start_date": "2026-06-01",
     "end_date": "2026-07-01",
+    "duration_type": "monthly",
+    "duration_value": 1,
     "notes": "Promo Lebaran"
   }
   ```
@@ -227,4 +229,68 @@
 - **Endpoint**: `GET /activities/{id}`
 - **Headers**: `Authorization: Bearer {token}`
 - **Response (200 OK)**: Detailed activity information.
+
+### Cancel a Pending Booking
+- **Endpoint**: `PATCH /activities/{id}/cancel`
+- **Headers**: `Authorization: Bearer {token}`
+- **Request Body**:
+  ```json
+  {
+    "cancel_reason": "Berubah pikiran"
+  }
+  ```
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Booking cancelled successfully"
+  }
+  ```
+
+---
+
+## Design/Creative Upload
+
+### Get All Creatives for a Booking
+- **Endpoint**: `GET /activities/{bookingId}/creatives`
+- **Headers**: `Authorization: Bearer {token}`
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Creatives retrieved successfully.",
+    "data": [
+      {
+        "id": "...",
+        "file_name": "design.jpg",
+        "file_url": "http://...",
+        "file_size_kb": 2048,
+        "file_type": "image/jpeg",
+        "status": "pending_review",
+        "admin_note": null,
+        "uploaded_at": "2026-05-10 12:00"
+      }
+    ]
+  }
+  ```
+
+### Upload a Creative Design
+- **Endpoint**: `POST /activities/{bookingId}/creatives`
+- **Headers**: 
+  - `Authorization: Bearer {token}`
+  - `Content-Type: multipart/form-data`
+- **Request Body (FormData)**:
+  - `file`: (File - max 20MB, allowed: jpg, jpeg, png, pdf, ai, psd)
+- **Response (201 Created)**:
+  ```json
+  {
+    "message": "Creative file uploaded successfully. It is pending admin review.",
+    "data": {
+      "id": "...",
+      "file_name": "promo.pdf",
+      "file_url": "http://...",
+      "file_size_kb": 5000,
+      "status": "pending_review"
+    }
+  }
+  ```
+
 
