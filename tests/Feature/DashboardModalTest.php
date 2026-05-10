@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
-use App\Models\Client;
+use App\Models\Company;
 use App\Models\Rental;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -14,7 +14,7 @@ use function Pest\Laravel\postJson;
 uses(RefreshDatabase::class);
 
 it('returns dashboard options for rental dropdowns', function (): void {
-    $client = Client::query()->create([
+    $client = Company::query()->create([
         'name' => 'PT Maju Jaya',
         'email' => 'maju@example.com',
         'phone' => '081234567890',
@@ -59,11 +59,11 @@ it('stores a client from the dashboard modal', function (): void {
     $response->assertCreated()
         ->assertJsonPath('message', 'Klien berhasil ditambahkan.');
 
-    expect(Client::query()->where('email', 'sukses@example.com')->exists())->toBeTrue();
+    expect(Company::query()->where('email', 'sukses@example.com')->exists())->toBeTrue();
 });
 
 it('stores a rental from the dashboard modal', function (): void {
-    $client = Client::query()->create([
+    $client = Company::query()->create([
         'name' => 'PT Maju Jaya',
         'email' => 'rental-client@example.com',
         'phone' => '081234567891',
@@ -89,7 +89,7 @@ it('stores a rental from the dashboard modal', function (): void {
     ]);
 
     $response = postJson('/dashboard/rentals', [
-        'client_id' => $client->id,
+        'company_id' => $client->id,
         'billboard_id' => $billboard->id,
         'rental_date' => '2026-05-08',
         'duration_days' => 30,
@@ -100,5 +100,5 @@ it('stores a rental from the dashboard modal', function (): void {
     $response->assertCreated()
         ->assertJsonPath('message', 'Penyewaan berhasil ditambahkan.');
 
-    expect(Rental::query()->where('client_id', $client->id)->where('billboard_id', $billboard->id)->exists())->toBeTrue();
+    expect(Rental::query()->where('company_id', $client->id)->where('billboard_id', $billboard->id)->exists())->toBeTrue();
 });

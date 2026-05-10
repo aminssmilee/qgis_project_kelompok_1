@@ -61,7 +61,7 @@ final class BillboardController
 
         // Auto-generate code unik jika tidak dikirim dari frontend
         if (empty($data['code'])) {
-            $data['code'] = 'BBD-'.mb_strtoupper(mb_substr(uniqid(), -6));
+            $data['code'] = 'BBD-'.mb_strtoupper(\Illuminate\Support\Str::random(6));
         }
 
         // Gunakan kategori pertama sebagai default jika tidak dipilih

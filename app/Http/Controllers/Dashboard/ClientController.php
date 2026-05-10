@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Requests\Dashboard\StoreClientRequest;
 use App\Http\Requests\Dashboard\UpdateClientRequest;
-use App\Models\Client;
+use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Routing\Controller as BaseController;
@@ -16,7 +16,7 @@ final class ClientController extends BaseController
 {
     public function index(): View
     {
-        $clients = Client::query()->latest()->get();
+        $clients = Company::query()->latest()->get();
 
         return view('dashboard.clients.index', [
             'clients' => $clients,
@@ -28,7 +28,7 @@ final class ClientController extends BaseController
 
     public function store(StoreClientRequest $request): JsonResponse|RedirectResponse
     {
-        $client = Client::query()->create($request->validated());
+        $client = Company::query()->create($request->validated());
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -42,7 +42,7 @@ final class ClientController extends BaseController
             ->with('success', 'Klien berhasil ditambahkan.');
     }
 
-    public function update(UpdateClientRequest $request, Client $client): RedirectResponse
+    public function update(UpdateClientRequest $request, Company $client): RedirectResponse
     {
         $client->update($request->validated());
 
@@ -51,7 +51,7 @@ final class ClientController extends BaseController
             ->with('success', 'Data klien berhasil diperbarui.');
     }
 
-    public function destroy(Client $client): RedirectResponse
+    public function destroy(Company $client): RedirectResponse
     {
         $client->delete();
 

@@ -7,13 +7,14 @@ use App\Http\Controllers\Dashboard\ClientController;
 use App\Http\Controllers\Dashboard\RentalController;
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
-use App\Models\Client;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('dashboard')->name('dashboard.')->group(function (): void {
-    // Removed Route::get('/clients') and Route::get('/rentals') to allow SPA to handle these URLs
+    Route::get('/clients', fn (): Factory|View => view('app'))->name('clients.index');
+    Route::get('/rentals', fn (): Factory|View => view('app'))->name('rentals.index');
+    
     Route::post('/clients', [ClientController::class, 'store'])->name('clients.store');
     Route::put('/clients/{client}', [ClientController::class, 'update'])->name('clients.update');
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');

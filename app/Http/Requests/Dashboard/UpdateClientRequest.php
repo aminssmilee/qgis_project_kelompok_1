@@ -18,7 +18,7 @@ final class UpdateClientRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:150'],
-            'email' => ['required', 'email', 'max:150', Rule::unique('clients', 'email')->ignore($this->route('client'))],
+            'email' => ['required', 'email', 'max:150', Rule::unique('companies', 'email')->ignore($this->route('client'))],
             'phone' => ['required', 'string', 'max:30'],
             'city' => ['required', 'string', 'max:100'],
             'status' => ['required', 'in:Active,Inactive'],

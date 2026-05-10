@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Requests\Dashboard\StoreRentalRequest;
 use App\Http\Requests\Dashboard\UpdateRentalRequest;
 use App\Models\Billboard;
-use App\Models\Client;
 use App\Models\Rental;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
