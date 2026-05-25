@@ -65,7 +65,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { fetchBillboards, deleteBillboard } from "@/features/billboard/billboard-api";
+import {
+    fetchBillboards,
+    deleteBillboard,
+} from "@/features/billboard/billboard-api";
 import AddBillboardModal from "@/features/billboard/AddBillboardModal";
 import EditBillboardModal from "@/features/billboard/EditBillboardModal";
 import DetailBillboardModal from "@/features/billboard/DetailBillboardModal";
@@ -80,7 +83,9 @@ export default function BillboardsPage() {
         React.useState<Billboard | null>(null);
     const [editingBillboard, setEditingBillboard] =
         React.useState<Billboard | null>(null);
-    const [deletingBillboardId, setDeletingBillboardId] = React.useState<string | number | null>(null);
+    const [deletingBillboardId, setDeletingBillboardId] = React.useState<
+        string | number | null
+    >(null);
     const [searchTerm, setSearchTerm] = React.useState("");
     const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -114,10 +119,12 @@ export default function BillboardsPage() {
 
     const handleDeleteConfirm = async () => {
         if (!deletingBillboardId) return;
-        
+
         try {
             await deleteBillboard(deletingBillboardId.toString());
-            setBillboards((prev) => prev.filter((b) => b.id !== deletingBillboardId));
+            setBillboards((prev) =>
+                prev.filter((b) => b.id !== deletingBillboardId),
+            );
             setDeletingBillboardId(null);
             toast.success("Billboard berhasil dihapus");
         } catch (error) {
@@ -243,7 +250,9 @@ export default function BillboardsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 variant="destructive"
-                                onClick={() => setDeletingBillboardId(info.row.original.id)}
+                                onClick={() =>
+                                    setDeletingBillboardId(info.row.original.id)
+                                }
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 <span>Hapus Billboard</span>
@@ -581,12 +590,17 @@ export default function BillboardsPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Hapus Billboard</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Apakah Anda yakin ingin menghapus billboard ini? Tindakan ini tidak dapat dibatalkan dan akan menghapus data secara permanen.
+                            Apakah Anda yakin ingin menghapus billboard ini?
+                            Tindakan ini tidak dapat dibatalkan dan akan
+                            menghapus data secara permanen.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Batal</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+                        <AlertDialogAction
+                            onClick={handleDeleteConfirm}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
                             Hapus
                         </AlertDialogAction>
                     </AlertDialogFooter>
