@@ -31,4 +31,12 @@ final class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    /**
+     * @return HasMany<Rental, $this>
+     */
+    public function rentals(): HasMany
+    {
+        return $this->hasMany(Rental::class);
+    }
 }

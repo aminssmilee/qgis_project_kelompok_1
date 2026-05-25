@@ -197,8 +197,10 @@ final class BillboardController
             $billboard = Billboard::query()->findOrFail($id);
 
             DB::transaction(function () use ($billboard): void {
-                // Hapus harga terkait agar tidak terjadi foreign key constraint error
+                // Hapus harga dan foto terkait agar tidak terjadi foreign key constraint error
                 $billboard->pricings()->delete();
+                $billboard->photos()->delete();
+                $billboard->rentals()->delete();
                 $billboard->delete();
             });
 
