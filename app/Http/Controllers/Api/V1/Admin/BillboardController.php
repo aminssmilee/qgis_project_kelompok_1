@@ -188,7 +188,7 @@ final class BillboardController
         if ($size) {
             $this->upsertBillboardSize($billboard->id, $size);
 
-            if (empty($billboard->description) || str_starts_with($billboard->description, 'Ukuran:')) {
+            if (empty($billboard->description) || str_starts_with((string) $billboard->description, 'Ukuran:')) {
                 $billboard->update([
                     'description' => 'Ukuran: '.$size.($priceLabel ? ' | Harga: '.$priceLabel : ''),
                 ]);
@@ -321,7 +321,7 @@ final class BillboardController
         $normalized = mb_strtolower($priceLabel);
         $number = 0.0;
 
-        if (preg_match('/([0-9]+([\.,][0-9]+)?)/', $normalized, $matches) === 1) {
+        if (preg_match('/(\d+([\.,]\d+)?)/', $normalized, $matches) === 1) {
             $raw = str_replace(['.', ','], ['', '.'], $matches[1]);
             $number = (float) $raw;
         }
@@ -336,10 +336,10 @@ final class BillboardController
             $number *= 1000000;
         }
 
-        if (preg_match('/([0-9]+)\s*bulan/', $normalized, $periodMatches) === 1) {
+        if (preg_match('/(\d+)\s*bulan/', $normalized, $periodMatches) === 1) {
             $months = (int) $periodMatches[1];
             if ($months > 0) {
-                $number = $number / $months;
+                $number /= $months;
             }
         }
 
