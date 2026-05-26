@@ -19,7 +19,7 @@ final class BillboardResource extends JsonResource
         $size = null;
         if ($this->description && str_starts_with($this->description, 'Ukuran:')) {
             preg_match('/Ukuran: ([^|]+)/', $this->description, $sizeMatch);
-            $size = isset($sizeMatch[1]) ? trim($sizeMatch[1]) : null;
+            $size = isset($sizeMatch[1]) ? mb_trim($sizeMatch[1]) : null;
         }
 
         return [
