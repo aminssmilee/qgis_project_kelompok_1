@@ -24,7 +24,7 @@ final class BillboardController
         $keyword = $request->query('q');
 
         $query = Billboard::query()
-            ->with(['activePricing'])
+            ->with(['activePricing', 'category'])
             ->select('*')
             ->addSelect(DB::raw('ST_X(location::geometry) as longitude'))
             ->addSelect(DB::raw('ST_Y(location::geometry) as latitude'))
@@ -62,7 +62,7 @@ final class BillboardController
     public function show(string $id): JsonResponse
     {
         $billboard = Billboard::query()
-            ->with(['activePricing'])
+            ->with(['activePricing', 'category'])
             ->select('*')
             ->addSelect(DB::raw('ST_X(location::geometry) as longitude'))
             ->addSelect(DB::raw('ST_Y(location::geometry) as latitude'))

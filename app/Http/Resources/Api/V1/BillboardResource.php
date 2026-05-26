@@ -16,6 +16,12 @@ final class BillboardResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $size = null;
+        if ($this->description && str_starts_with($this->description, 'Ukuran:')) {
+            preg_match('/Ukuran: ([^|]+)/', $this->description, $sizeMatch);
+            $size = isset($sizeMatch[1]) ? mb_trim($sizeMatch[1]) : null;
+        }
+
         return [
             'id' => $this->id,
             'title' => $this->name,
@@ -26,14 +32,15 @@ final class BillboardResource extends JsonResource
             'impressions_per_day' => (int) $this->impressions_per_day,
             'thumbnail_url' => $this->thumbnail_url,
             'category' => $this->category?->name,
+            'size' => $size,
+            'address' => $this->address,
+            'district' => $this->district,
+            'city' => $this->city,
+            'traffic_density' => $this->traffic_density,
             // Full data for detail
             'code' => $this->when($request->routeIs('*.show'), $this->code),
             'description' => $this->when($request->routeIs('*.show'), $this->description),
-            'address' => $this->when($request->routeIs('*.show'), $this->address),
-            'district' => $this->when($request->routeIs('*.show'), $this->district),
-            'city' => $this->when($request->routeIs('*.show'), $this->city),
             'facing_direction' => $this->when($request->routeIs('*.show'), $this->facing_direction),
-            'traffic_density' => $this->when($request->routeIs('*.show'), $this->traffic_density),
             'is_illuminated' => $this->when($request->routeIs('*.show'), $this->is_illuminated),
             'is_featured' => $this->when($request->routeIs('*.show'), $this->is_featured),
             'created_at' => $this->when($request->routeIs('*.show'), $this->created_at?->toIso8601String()),
