@@ -80,6 +80,9 @@ final class BillboardController
         $size = $data['size'] ?? null;
         $priceLabel = $data['price_label'] ?? null;
         $priceMonth = isset($data['price_per_month']) ? (float) $data['price_per_month'] : 0;
+        if ($priceMonth <= 0 && $priceLabel) {
+            $priceMonth = $this->parsePriceLabel($priceLabel);
+        }
         unset($data['lat'], $data['lng'], $data['size'], $data['price_label'], $data['price_per_month']);
 
         // Simpan ukuran di description jika belum ada description
@@ -94,16 +97,12 @@ final class BillboardController
             ),
         ]);
 
-        // Buat record pricing jika ada harga
-        if ($priceMonth > 0 || $size) {
-            BillboardPricing::query()->create([
-                'billboard_id' => $billboard->id,
-                'price_per_month' => $priceMonth,
-                'price_per_day' => round($priceMonth / 30, 2),
-                'price_per_week' => round($priceMonth / 4, 2),
-                'price_per_year' => round($priceMonth * 12, 2),
-                'is_active' => true,
-            ]);
+        if ($priceMonth > 0) {
+            $this->upsertBillboardPricing($billboard->id, $priceMonth);
+        }
+
+        if ($size) {
+            $this->upsertBillboardSize($billboard->id, $size);
         }
 
         return response()->json([
@@ -159,7 +158,18 @@ final class BillboardController
             'is_illuminated' => ['boolean'],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
+            'size' => ['nullable', 'string', 'max:20'],
+            'price_label' => ['nullable', 'string', 'max:100'],
+            'price_per_month' => ['nullable', 'numeric', 'min:0'],
         ]);
+
+        $size = $data['size'] ?? null;
+        $priceLabel = $data['price_label'] ?? null;
+        $priceMonth = isset($data['price_per_month']) ? (float) $data['price_per_month'] : 0;
+        if ($priceMonth <= 0 && $priceLabel) {
+            $priceMonth = $this->parsePriceLabel($priceLabel);
+        }
+        unset($data['size'], $data['price_label'], $data['price_per_month']);
 
         if (isset($data['lat'], $data['lng'])) {
             $lat = (float) $data['lat'];
@@ -174,6 +184,20 @@ final class BillboardController
         }
 
         $billboard->update($data);
+
+        if ($size) {
+            $this->upsertBillboardSize($billboard->id, $size);
+
+            if (empty($billboard->description) || str_starts_with($billboard->description, 'Ukuran:')) {
+                $billboard->update([
+                    'description' => 'Ukuran: '.$size.($priceLabel ? ' | Harga: '.$priceLabel : ''),
+                ]);
+            }
+        }
+
+        if ($priceMonth > 0) {
+            $this->upsertBillboardPricing($billboard->id, $priceMonth);
+        }
 
         return response()->json([
             'message' => 'Billboard berhasil diperbarui',
@@ -290,5 +314,84 @@ final class BillboardController
             'photo_url' => $primaryPhoto ? $primaryPhoto->photo_url : null,
             'created_at' => $billboard->created_at,
         ];
+    }
+
+    private function parsePriceLabel(string $priceLabel): float
+    {
+        $normalized = mb_strtolower($priceLabel);
+        $number = 0.0;
+
+        if (preg_match('/([0-9]+([\.,][0-9]+)?)/', $normalized, $matches) === 1) {
+            $raw = str_replace(['.', ','], ['', '.'], $matches[1]);
+            $number = (float) $raw;
+        }
+
+        if ($number <= 0) {
+            return 0.0;
+        }
+
+        if (str_contains($normalized, 'miliar')) {
+            $number *= 1000000000;
+        } elseif (str_contains($normalized, 'juta')) {
+            $number *= 1000000;
+        }
+
+        if (preg_match('/([0-9]+)\s*bulan/', $normalized, $periodMatches) === 1) {
+            $months = (int) $periodMatches[1];
+            if ($months > 0) {
+                $number = $number / $months;
+            }
+        }
+
+        return $number;
+    }
+
+    private function upsertBillboardPricing(string $billboardId, float $pricePerMonth): void
+    {
+        BillboardPricing::query()->updateOrCreate(
+            ['billboard_id' => $billboardId, 'is_active' => true],
+            [
+                'price_per_month' => $pricePerMonth,
+                'price_per_day' => round($pricePerMonth / 30, 2),
+                'price_per_week' => round($pricePerMonth / 4, 2),
+                'price_per_year' => round($pricePerMonth * 12, 2),
+            ]
+        );
+    }
+
+    private function upsertBillboardSize(string $billboardId, string $sizeLabel): void
+    {
+        $sizeParts = explode('x', $sizeLabel);
+        $width = isset($sizeParts[0]) ? (float) $sizeParts[0] : 0.0;
+        $height = isset($sizeParts[1]) ? (float) $sizeParts[1] : 0.0;
+
+        $existingSize = DB::table('billboard_sizes')
+            ->where('billboard_id', $billboardId)
+            ->where('is_primary', true)
+            ->first();
+
+        $payload = [
+            'label' => $sizeLabel.'m',
+            'width_m' => $width,
+            'height_m' => $height,
+            'area_m2' => round($width * $height, 2),
+            'updated_at' => now(),
+        ];
+
+        if ($existingSize === null) {
+            DB::table('billboard_sizes')->insert([
+                'id' => (string) Str::uuid(),
+                'billboard_id' => $billboardId,
+                'is_primary' => true,
+                'created_at' => now(),
+                ...$payload,
+            ]);
+
+            return;
+        }
+
+        DB::table('billboard_sizes')
+            ->where('id', $existingSize->id)
+            ->update($payload);
     }
 }
