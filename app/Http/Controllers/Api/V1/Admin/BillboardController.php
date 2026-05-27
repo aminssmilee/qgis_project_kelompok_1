@@ -257,12 +257,18 @@ final class BillboardController
             // Generate full URL
             $url = url('storage/'.$path);
 
+            $isPrimary = $billboard->photos()->count() === 0;
+
             $photo = BillboardPhoto::query()->create([
                 'billboard_id' => $billboard->id,
                 'photo_url' => $url,
-                'is_primary' => $billboard->photos()->count() === 0, // Set as primary if it's the first photo
+                'is_primary' => $isPrimary,
                 'sort_order' => $billboard->photos()->count() + 1,
             ]);
+
+            if ($isPrimary) {
+                $billboard->update(['thumbnail_url' => $url]);
+            }
 
             return response()->json([
                 'message' => 'Foto berhasil diunggah',

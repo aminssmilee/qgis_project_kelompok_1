@@ -10,6 +10,8 @@ import RentalsPage from "./Pages/dashboard/rentals";
 import ClientsPage from "./Pages/dashboard/clients";
 import UsersPage from "./Pages/dashboard/users";
 import ReportsPage from "./Pages/dashboard/reports";
+import CategoriesPage from "./Pages/dashboard/categories";
+import PaymentsPage from "./Pages/dashboard/payments";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute, PublicRoute } from "./components/auth-middleware";
 
@@ -39,7 +41,27 @@ if (container) {
                                 element={<BillboardsPage />}
                             />
                             <Route
+                                path="/dashboard/categories"
+                                element={<CategoriesPage />}
+                            />
+                            <Route
+                                path="/dashboard/payments"
+                                element={<PaymentsPage />}
+                            />
+                            <Route
                                 path="/dashboard/rentals"
+                                element={<RentalsPage />}
+                            />
+                            <Route
+                                path="/dashboard/rentals/active"
+                                element={<RentalsPage />}
+                            />
+                            <Route
+                                path="/dashboard/rentals/schedule"
+                                element={<RentalsPage />}
+                            />
+                            <Route
+                                path="/dashboard/rentals/history"
                                 element={<RentalsPage />}
                             />
                             <Route
@@ -49,6 +71,18 @@ if (container) {
                             <Route
                                 path="/dashboard/users"
                                 element={<UsersPage />}
+                            />
+                            <Route
+                                path="/dashboard/reports"
+                                element={<ReportsPage />}
+                            />
+                            <Route
+                                path="/dashboard/reports/revenue"
+                                element={<ReportsPage />}
+                            />
+                            <Route
+                                path="/dashboard/reports/maintenance"
+                                element={<ReportsPage />}
                             />
                         </Route>
 

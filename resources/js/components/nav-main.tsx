@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,15 +26,56 @@ export function NavMain({
         }[];
     }[];
 }) {
+    const location = useLocation();
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
         {},
     );
 
-    const toggleItem = (title: string) => {
+    // Check if the parent menu item is active
+    const isParentActive = (item: (typeof items)[0]) => {
+        if (location.pathname === item.url) {
+            return true;
+        }
+        if (item.items) {
+            return item.items.some(
+                (subItem) => location.pathname === subItem.url,
+            );
+        }
+        return false;
+    };
+
+    // Check if a sub-item is active
+    const isSubActive = (subItem: { url: string }) => {
+        return location.pathname === subItem.url;
+    };
+
+    // Check if the item is expanded
+    const isItemExpanded = (item: (typeof items)[0]) => {
+        if (expandedItems[item.title] !== undefined) {
+            return expandedItems[item.title];
+        }
+        return isParentActive(item);
+    };
+
+    const toggleItem = (item: (typeof items)[0]) => {
         setExpandedItems((prev) => ({
             ...prev,
-            [title]: !prev[title],
+            [item.title]: !isItemExpanded(item),
         }));
+    };
+
+    const handleParentClick = (item: (typeof items)[0]) => {
+        if (item.items && item.items.length > 0) {
+            const isAlreadyOnParent = location.pathname === item.url;
+            if (isAlreadyOnParent) {
+                toggleItem(item);
+            } else {
+                setExpandedItems((prev) => ({
+                    ...prev,
+                    [item.title]: true,
+                }));
+            }
+        }
     };
 
     return (
@@ -42,60 +83,76 @@ export function NavMain({
             <SidebarGroupContent className="flex flex-col gap-2">
                 <SidebarMenu>{/* ... (commented items) */}</SidebarMenu>
                 <SidebarMenu>
-                    {items.map((item) => (
-                        <div key={item.title}>
-                            <SidebarMenuItem>
-                                <div className="flex items-center">
+                    {items.map((item) => {
+                        const expanded = isItemExpanded(item);
+                        return (
+                            <div key={item.title}>
+                                <SidebarMenuItem>
                                     <SidebarMenuButton
                                         asChild
                                         tooltip={item.title}
-                                        className="flex-1"
+                                        isActive={isParentActive(item)}
                                     >
-                                        <Link to={item.url}>
+                                        <Link
+                                            to={item.url}
+                                            onClick={() =>
+                                                handleParentClick(item)
+                                            }
+                                        >
                                             {item.icon}
                                             <span>{item.title}</span>
+                                            {item.items &&
+                                                item.items.length > 0 && (
+                                                    <ChevronRightIcon
+                                                        className={`ml-auto h-4 w-4 transition-transform duration-200 ${
+                                                            expanded
+                                                                ? "rotate-90"
+                                                                : ""
+                                                        }`}
+                                                    />
+                                                )}
                                         </Link>
                                     </SidebarMenuButton>
-                                    {item.items && item.items.length > 0 && (
-                                        <button
-                                            onClick={() =>
-                                                toggleItem(item.title)
-                                            }
-                                            className="px-2 py-1 hover:bg-sidebar-accent rounded transition-colors"
-                                            aria-label={`Toggle ${item.title} submenu`}
-                                        >
-                                            <ChevronRightIcon
-                                                className={`h-4 w-4 transition-transform ${
-                                                    expandedItems[item.title]
-                                                        ? "rotate-90"
-                                                        : ""
-                                                }`}
-                                            />
-                                        </button>
-                                    )}
-                                </div>
-                            </SidebarMenuItem>
-                            {item.items &&
-                                item.items.length > 0 &&
-                                expandedItems[item.title] && (
-                                    <SidebarMenuSub>
-                                        {item.items.map((subItem) => (
-                                            <SidebarMenuSubItem
-                                                key={subItem.title}
-                                            >
-                                                <SidebarMenuSubButton asChild>
-                                                    <Link to={subItem.url}>
-                                                        <span>
-                                                            {subItem.title}
-                                                        </span>
-                                                    </Link>
-                                                </SidebarMenuSubButton>
-                                            </SidebarMenuSubItem>
-                                        ))}
-                                    </SidebarMenuSub>
+                                </SidebarMenuItem>
+                                {item.items && item.items.length > 0 && (
+                                    <div
+                                        className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${
+                                            expanded
+                                                ? "grid-rows-[1fr] opacity-100"
+                                                : "grid-rows-[0fr] opacity-0"
+                                        }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <SidebarMenuSub>
+                                                {item.items.map((subItem) => (
+                                                    <SidebarMenuSubItem
+                                                        key={subItem.title}
+                                                    >
+                                                        <SidebarMenuSubButton
+                                                            asChild
+                                                            isActive={isSubActive(
+                                                                subItem,
+                                                            )}
+                                                        >
+                                                            <Link
+                                                                to={subItem.url}
+                                                            >
+                                                                <span>
+                                                                    {
+                                                                        subItem.title
+                                                                    }
+                                                                </span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                ))}
+                                            </SidebarMenuSub>
+                                        </div>
+                                    </div>
                                 )}
-                        </div>
-                    ))}
+                            </div>
+                        );
+                    })}
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>

@@ -29,7 +29,7 @@ import {
 /** Konversi response API ke tipe Billboard yang digunakan komponen */
 function apiBillboardToLocal(b: ApiBillboard): Billboard {
     return {
-        id: b.id as unknown as number,
+        id: b.id,
         name: b.name,
         lat: b.lat,
         lng: b.lng,
@@ -43,37 +43,45 @@ function apiBillboardToLocal(b: ApiBillboard): Billboard {
 
 export default function MapPage() {
     const [billboards, setBillboards] = useState<Billboard[]>([]);
-    const [apiIds, setApiIds] = useState<Map<number, string>>(new Map()); // local id → uuid
     const [selectedBillboard, setSelectedBillboard] =
         useState<Billboard | null>(null);
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<
+        string | number | null
+    >(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const mainMapRef = useRef<MainMapHandle>(null);
 
     // Load dari API saat mount
     useEffect(() => {
+        let isMounted = true;
+        setIsLoading(true);
+
         fetchBillboards()
             .then((data) => {
+                if (!isMounted) return;
                 const mapped = data.map((b, idx) => ({
                     ...apiBillboardToLocal(b),
                     markerVariant: idx % 5,
                 }));
                 setBillboards(mapped);
-
-                // Simpan pemetaan local-id → uuid untuk operasi delete
-                const idMap = new Map<number, string>();
-                data.forEach((b, idx) => idMap.set(idx, b.id));
-                setApiIds(idMap);
             })
             .catch((err) => {
+                if (!isMounted) return;
                 console.error(err);
                 setLoadError("Gagal memuat data billboard dari server.");
             })
-            .finally(() => setIsLoading(false));
+            .finally(() => {
+                if (!isMounted) return;
+                setIsLoading(false);
+            });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const handleAddBillboard = (newBillboard: Billboard): void => {
@@ -84,21 +92,20 @@ export default function MapPage() {
         setSelectedBillboard(newBillboard);
     };
 
-    const handleDeleteBillboard = (localId: number): void => {
-        setDeleteConfirmId(localId);
+    const handleDeleteBillboard = (id: string | number): void => {
+        setDeleteConfirmId(id);
     };
 
     const confirmDelete = async (): Promise<void> => {
         if (deleteConfirmId === null) return;
 
-        const localId = deleteConfirmId;
-        const uuid = apiIds.get(localId) ?? String(localId);
-
         setIsDeleting(true);
         try {
-            await deleteBillboard(uuid);
-            setBillboards((prev) => prev.filter((bb) => bb.id !== localId));
-            if (selectedBillboard?.id === localId) {
+            await deleteBillboard(String(deleteConfirmId));
+            setBillboards((prev) =>
+                prev.filter((bb) => bb.id !== deleteConfirmId),
+            );
+            if (selectedBillboard?.id === deleteConfirmId) {
                 setSelectedBillboard(null);
             }
             toast.success("Billboard berhasil dihapus");
@@ -192,6 +199,7 @@ export default function MapPage() {
                                 <MainMap
                                     ref={mainMapRef}
                                     billboards={billboards}
+                                    selectedBillboard={selectedBillboard}
                                     mapClickMode={false}
                                     onLocationPicked={() => {}}
                                     onBillboardSelect={setSelectedBillboard}

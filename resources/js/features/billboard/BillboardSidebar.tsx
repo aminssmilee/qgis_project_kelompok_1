@@ -10,7 +10,7 @@ interface BillboardSidebarProps {
     searchTerm: string;
     onSearchChange: (value: string) => void;
     onSelectBillboard: (billboard: Billboard) => void;
-    onDeleteBillboard: (id: number) => void;
+    onDeleteBillboard: (id: string | number) => void;
     onFlyTo?: (lat: number, lng: number) => void;
 }
 

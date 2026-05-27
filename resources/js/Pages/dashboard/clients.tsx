@@ -78,26 +78,35 @@ export default function ClientsPage() {
     const debouncedSearch = useDebounce(searchTerm, 300);
 
     useEffect(() => {
-        loadClients();
-    }, []);
+        let isMounted = true;
 
-    const loadClients = async () => {
-        setIsLoading(true);
-        try {
-            const data = await fetchClients();
-            setClients(data);
-        } catch (error) {
-            console.error("Failed to load clients:", error);
-            toast.error("Gagal memuat data klien.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        const loadClients = async () => {
+            setIsLoading(true);
+            try {
+                const data = await fetchClients();
+                if (!isMounted) return;
+                setClients(data);
+            } catch (error) {
+                if (!isMounted) return;
+                console.error("Failed to load clients:", error);
+                toast.error("Gagal memuat data klien.");
+            } finally {
+                if (!isMounted) return;
+                setIsLoading(false);
+            }
+        };
+
+        loadClients();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleDeleteClient = async (id: string) => {
         try {
             await deleteClient(id);
-            setClients(clients.filter((c) => c.id !== id));
+            setClients((prev) => prev.filter((c) => c.id !== id));
             toast.success("Klien berhasil dihapus.");
         } catch (error) {
             console.error("Failed to delete client:", error);
@@ -107,108 +116,115 @@ export default function ClientsPage() {
         }
     };
 
-    const columns = [
-        columnHelper.accessor("name", {
-            header: "Nama Klien",
-            cell: (info) => (
-                <span className="font-medium">{info.getValue()}</span>
-            ),
-        }),
-        columnHelper.accessor("email", {
-            header: "Kontak",
-            cell: (info) => (
-                <div className="space-y-1 text-sm">
-                    <div className="flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-gray-500" />
-                        {info.row.original.email}
+    const columns = React.useMemo(
+        () => [
+            columnHelper.accessor("name", {
+                header: "Nama Klien",
+                cell: (info) => (
+                    <span className="font-medium">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("email", {
+                header: "Kontak",
+                cell: (info) => (
+                    <div className="space-y-1 text-sm">
+                        <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3 text-gray-500" />
+                            {info.row.original.email}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Phone className="h-3 w-3 text-gray-500" />
+                            {info.row.original.phone}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                        <Phone className="h-3 w-3 text-gray-500" />
-                        {info.row.original.phone}
+                ),
+            }),
+            columnHelper.accessor("city", {
+                header: "Kota",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("totalRentals", {
+                header: "Total Rental",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()} kali</span>
+                ),
+            }),
+            columnHelper.accessor("joinDate", {
+                header: "Tanggal Bergabung",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("status", {
+                header: "Status",
+                cell: (info) => {
+                    const status = info.getValue();
+                    const isActive = status === "Active";
+                    return (
+                        <Badge
+                            className={cn(
+                                "gap-1 px-2 py-0.5 font-medium",
+                                isActive
+                                    ? "bg-green-100 text-green-800 hover:bg-green-100/80"
+                                    : "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
+                            )}
+                        >
+                            {isActive ? (
+                                <CheckCircle2 className="h-3 w-3" />
+                            ) : (
+                                <XCircle className="h-3 w-3" />
+                            )}
+                            {status}
+                        </Badge>
+                    );
+                },
+            }),
+            columnHelper.display({
+                id: "actions",
+                header: () => <div className="text-right">Aksi</div>,
+                cell: (info) => (
+                    <div className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        setEditingClient(info.row.original)
+                                    }
+                                >
+                                    <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
+                                    <span>Edit Klien</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() =>
+                                        setDeletingClient(info.row.original)
+                                    }
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Hapus Klien</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
-                </div>
-            ),
-        }),
-        columnHelper.accessor("city", {
-            header: "Kota",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("totalRentals", {
-            header: "Total Rental",
-            cell: (info) => (
-                <span className="text-sm">{info.getValue()} kali</span>
-            ),
-        }),
-        columnHelper.accessor("joinDate", {
-            header: "Tanggal Bergabung",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("status", {
-            header: "Status",
-            cell: (info) => {
-                const status = info.getValue();
-                const isActive = status === "Active";
-                return (
-                    <Badge
-                        className={cn(
-                            "gap-1 px-2 py-0.5 font-medium",
-                            isActive
-                                ? "bg-green-100 text-green-800 hover:bg-green-100/80"
-                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
-                        )}
-                    >
-                        {isActive ? (
-                            <CheckCircle2 className="h-3 w-3" />
-                        ) : (
-                            <XCircle className="h-3 w-3" />
-                        )}
-                        {status}
-                    </Badge>
-                );
-            },
-        }),
-        columnHelper.display({
-            id: "actions",
-            header: () => <div className="text-right">Aksi</div>,
-            cell: (info) => (
-                <div className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                            >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    setEditingClient(info.row.original)
-                                }
-                            >
-                                <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
-                                <span>Edit Klien</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() =>
-                                    setDeletingClient(info.row.original)
-                                }
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Hapus Klien</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
-        }),
-    ];
+                ),
+            }),
+        ],
+        [setEditingClient, setDeletingClient],
+    );
 
     const table = useReactTable({
         data: clients,

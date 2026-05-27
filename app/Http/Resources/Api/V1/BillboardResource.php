@@ -30,7 +30,7 @@ final class BillboardResource extends JsonResource
             'price_per_month' => (int) ($this->activePricing?->price_per_month ?? 0),
             'is_available' => (bool) $this->is_active,
             'impressions_per_day' => (int) $this->impressions_per_day,
-            'thumbnail_url' => $this->thumbnail_url,
+            'thumbnail_url' => $this->thumbnail_url ?? $this->photos->firstWhere('is_primary', true)?->photo_url ?? $this->photos->first()?->photo_url,
             'category' => $this->category?->name,
             'size' => $size,
             'address' => $this->address,

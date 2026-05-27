@@ -200,12 +200,14 @@ export default function EditBillboardModal({
                 size: formData.size || undefined,
             });
 
+            let uploadedPhotoUrl = null;
             if (photoFile) {
                 try {
-                    await uploadBillboardPhoto(
+                    const photoRes = await uploadBillboardPhoto(
                         billboard.id.toString(),
                         photoFile,
                     );
+                    uploadedPhotoUrl = photoRes.photo_url;
                 } catch (err: unknown) {
                     console.error("Failed to upload photo:", err);
                     toast.error("Data tersimpan, tapi gagal mengunggah foto.");
@@ -220,6 +222,7 @@ export default function EditBillboardModal({
                 address: updated.address,
                 price: updated.price_label ?? formData.price,
                 size: updated.size ?? formData.size,
+                photo_url: uploadedPhotoUrl ?? billboard.photo_url,
             };
 
             onUpdate(updatedBillboard);

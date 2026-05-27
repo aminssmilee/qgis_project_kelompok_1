@@ -1,9 +1,18 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
     TrendingUp,
     Users,
@@ -15,8 +24,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-
-import data from "./data.json";
+import api from "@/lib/api";
 
 type DashboardOption = {
     id: string;
@@ -62,6 +70,9 @@ export default function Page() {
         message: string;
     } | null>(null);
 
+    const [summary, setSummary] = useState<any>(null);
+    const [isSummaryLoading, setIsSummaryLoading] = useState(true);
+
     useEffect(() => {
         const loadDashboardOptions = async () => {
             try {
@@ -90,7 +101,20 @@ export default function Page() {
             }
         };
 
+        const loadDashboardSummary = async () => {
+            setIsSummaryLoading(true);
+            try {
+                const res = await api.get("/admin/dashboard/summary");
+                setSummary(res.data.data);
+            } catch (err) {
+                console.error("Failed to load dashboard summary:", err);
+            } finally {
+                setIsSummaryLoading(false);
+            }
+        };
+
         loadDashboardOptions();
+        loadDashboardSummary();
     }, []);
 
     const getErrorMessage = (payload: unknown, fallbackMessage: string) => {
@@ -261,31 +285,36 @@ export default function Page() {
     const stats = [
         {
             title: "Total Billboard",
-            value: "245",
-            description: "+12% dari bulan lalu",
+            value: isSummaryLoading
+                ? "..."
+                : (summary?.total_billboards?.toString() ?? "0"),
+            description: "Semua titik reklame terdaftar",
             icon: MapPin,
-            trend: "up",
         },
         {
             title: "Pemesanan Aktif",
-            value: "38",
-            description: "+5% dari bulan lalu",
+            value: isSummaryLoading
+                ? "..."
+                : (summary?.active_rentals?.toString() ?? "0"),
+            description: "Kontrak sewa sedang berjalan",
             icon: Calendar,
-            trend: "up",
         },
         {
             title: "Total Klien",
-            value: "182",
-            description: "+22% dari bulan lalu",
+            value: isSummaryLoading
+                ? "..."
+                : (summary?.total_clients?.toString() ?? "0"),
+            description: "Mitra/klien terdaftar",
             icon: Users,
-            trend: "up",
         },
         {
-            title: "Pendapatan Bulan Ini",
-            value: "Rp 145.2 M",
-            description: "+8% dari bulan lalu",
+            title: "Total Pendapatan",
+            value: isSummaryLoading
+                ? "..."
+                : "Rp " +
+                  Number(summary?.total_revenue ?? 0).toLocaleString("id-ID"),
+            description: "Akumulasi pembayaran lunas",
             icon: TrendingUp,
-            trend: "up",
         },
     ];
 
@@ -368,9 +397,144 @@ export default function Page() {
                             </Card>
 
                             {/* Recent Bookings */}
-                            <div className="px-0">
-                                <DataTable data={data} />
-                            </div>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Pemesanan Terbaru</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="rounded-lg border overflow-hidden">
+                                        <Table>
+                                            <TableHeader className="bg-gray-50">
+                                                <TableRow>
+                                                    <TableHead className="font-semibold">
+                                                        ID Booking
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Klien
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Billboard
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Durasi
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Total Harga
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Status Sewa
+                                                    </TableHead>
+                                                    <TableHead className="font-semibold">
+                                                        Pembayaran
+                                                    </TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {isSummaryLoading ? (
+                                                    <TableRow>
+                                                        <TableCell
+                                                            colSpan={7}
+                                                            className="h-24 text-center"
+                                                        >
+                                                            Memuat data...
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ) : summary?.recent_bookings
+                                                      ?.length > 0 ? (
+                                                    summary.recent_bookings.map(
+                                                        (booking: any) => (
+                                                            <TableRow
+                                                                key={booking.id}
+                                                                className="hover:bg-gray-50"
+                                                            >
+                                                                <TableCell className="font-medium text-blue-600">
+                                                                    {
+                                                                        booking.booking_code
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell className="text-sm">
+                                                                    {
+                                                                        booking.client
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell className="text-sm">
+                                                                    {
+                                                                        booking.billboard
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell className="text-sm">
+                                                                    {
+                                                                        booking.duration
+                                                                    }
+                                                                    <br />
+                                                                    <span className="text-xs text-gray-500">
+                                                                        {
+                                                                            booking.start_date
+                                                                        }{" "}
+                                                                        s/d{" "}
+                                                                        {
+                                                                            booking.end_date
+                                                                        }
+                                                                    </span>
+                                                                </TableCell>
+                                                                <TableCell className="font-semibold">
+                                                                    {
+                                                                        booking.amount
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Badge
+                                                                        className={cn(
+                                                                            "gap-1 px-2 py-0.5 font-medium",
+                                                                            booking.status ===
+                                                                                "active"
+                                                                                ? "bg-blue-100 text-blue-800 hover:bg-blue-100/80"
+                                                                                : booking.status ===
+                                                                                    "completed"
+                                                                                  ? "bg-gray-100 text-gray-800 hover:bg-gray-100/80"
+                                                                                  : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
+                                                                        )}
+                                                                    >
+                                                                        {booking.status
+                                                                            .toUpperCase()
+                                                                            .replaceAll(
+                                                                                "_",
+                                                                                " ",
+                                                                            )}
+                                                                    </Badge>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Badge
+                                                                        className={cn(
+                                                                            "gap-1 px-2 py-0.5 font-medium",
+                                                                            booking.payment ===
+                                                                                "paid"
+                                                                                ? "bg-green-100 text-green-800 hover:bg-green-100/80"
+                                                                                : "bg-red-100 text-red-800 hover:bg-red-100/80",
+                                                                        )}
+                                                                    >
+                                                                        {booking.payment.toUpperCase()}
+                                                                    </Badge>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ),
+                                                    )
+                                                ) : (
+                                                    <TableRow>
+                                                        <TableCell
+                                                            colSpan={7}
+                                                            className="h-24 text-center"
+                                                        >
+                                                            Tidak ada booking
+                                                            terbaru.
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>

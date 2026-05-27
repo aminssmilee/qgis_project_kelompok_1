@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import DashboardLayout from "@/layouts/dashboard-layout";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,23 +68,33 @@ const fetchBookings = async () => {
     }
 };
 
-const columnHelper = createColumnHelper<any>();
+interface RentalData {
+    id: string;
+    bookingCode: string;
+    client: string;
+    billboard: string;
+    startDate: string;
+    endDate: string;
+    duration: string;
+    amount: string;
+    status: string;
+    payment: string;
+}
+
+const columnHelper = createColumnHelper<RentalData>();
 
 export default function RentalsPage() {
-    const [rentals, setRentals] = useState<any[]>([]);
+    const [rentals, setRentals] = useState<RentalData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        loadRentals();
-    }, []);
-
-    const loadRentals = async () => {
+    const loadRentals = useCallback(async (isMounted = true) => {
         setIsLoading(true);
         try {
             const data = await fetchBookings();
             // Transform the data to match the expected format in the table
             const formattedData = data.map((booking: any) => ({
-                id: booking.booking_code,
+                id: booking.id,
+                bookingCode: booking.booking_code,
                 client: booking.client,
                 billboard: booking.billboard,
                 startDate: booking.start_date,
@@ -94,14 +104,48 @@ export default function RentalsPage() {
                 status: booking.status,
                 payment: booking.payment,
             }));
-            setRentals(formattedData);
+            if (isMounted) {
+                setRentals(formattedData);
+            }
         } catch (error) {
-            toast.error("Gagal memuat data penyewaan.");
-            setRentals([]); // fallback
+            if (isMounted) {
+                toast.error("Gagal memuat data penyewaan.");
+                setRentals([]); // fallback
+            }
         } finally {
-            setIsLoading(false);
+            if (isMounted) {
+                setIsLoading(false);
+            }
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        loadRentals(isMounted);
+        return () => {
+            isMounted = false;
+        };
+    }, [loadRentals]);
+
+    const handleUpdateStatus = useCallback(
+        async (bookingId: string, status: string, paymentStatus: string) => {
+            const loadingToast = toast.loading("Memperbarui status...");
+            try {
+                await api.patch(`/admin/bookings/${bookingId}`, {
+                    status,
+                    payment_status: paymentStatus,
+                });
+                toast.success("Status berhasil diperbarui!", {
+                    id: loadingToast,
+                });
+                loadRentals();
+            } catch (error) {
+                console.error("Failed to update status:", error);
+                toast.error("Gagal memperbarui status.", { id: loadingToast });
+            }
+        },
+        [loadRentals],
+    );
 
     const getStatusConfig = (status: string) => {
         switch (status) {
@@ -140,126 +184,156 @@ export default function RentalsPage() {
               };
     };
 
-    const columns = [
-        columnHelper.accessor("id", {
-            header: "ID Booking",
-            cell: (info) => (
-                <span className="font-medium text-blue-600">
-                    {info.getValue()}
-                </span>
-            ),
-        }),
-        columnHelper.accessor("client", {
-            header: "Klien",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("billboard", {
-            header: "Billboard",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("duration", {
-            header: "Durasi",
-            cell: (info) => (
-                <div className="text-sm">
-                    {info.getValue()}
-                    <br />
-                    <span className="text-xs text-gray-500">
-                        {info.row.original.startDate} s/d{" "}
-                        {info.row.original.endDate}
+    const columns = useMemo(
+        () => [
+            columnHelper.accessor("id", {
+                header: "ID Booking",
+                cell: (info) => (
+                    <span className="font-medium text-blue-600">
+                        {info.row.original.bookingCode}
                     </span>
-                </div>
-            ),
-        }),
-        columnHelper.accessor("amount", {
-            header: "Total",
-            cell: (info) => (
-                <span className="font-semibold">{info.getValue()}</span>
-            ),
-        }),
-        columnHelper.accessor("status", {
-            header: "Status",
-            cell: (info) => {
-                const config = getStatusConfig(info.getValue());
-                return (
-                    <Badge
-                        className={cn(
-                            "gap-1 px-2 py-0.5 font-medium",
-                            config.color,
-                        )}
-                    >
-                        {config.icon}
+                ),
+            }),
+            columnHelper.accessor("client", {
+                header: "Klien",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("billboard", {
+                header: "Billboard",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("duration", {
+                header: "Durasi",
+                cell: (info) => (
+                    <div className="text-sm">
                         {info.getValue()}
-                    </Badge>
-                );
-            },
-        }),
-        columnHelper.accessor("payment", {
-            header: "Pembayaran",
-            cell: (info) => {
-                const config = getPaymentConfig(info.getValue());
-                return (
-                    <Badge
-                        className={cn(
-                            "gap-1 px-2 py-0.5 font-medium",
-                            config.color,
-                        )}
-                    >
-                        {config.icon}
-                        {info.getValue()}
-                    </Badge>
-                );
-            },
-        }),
-        columnHelper.display({
-            id: "actions",
-            header: () => <div className="text-right">Aksi</div>,
-            cell: (info) => (
-                <div className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                            >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    console.log("View", info.row.original.id)
-                                }
-                            >
-                                <Eye className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>Detail Penyewaan</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    console.log("Edit", info.row.original.id)
-                                }
-                            >
-                                <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
-                                <span>Edit Kontrak</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() =>
-                                    console.log("Delete", info.row.original.id)
-                                }
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Batalkan Penyewaan</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
-        }),
-    ];
+                        <br />
+                        <span className="text-xs text-gray-500">
+                            {info.row.original.startDate} s/d{" "}
+                            {info.row.original.endDate}
+                        </span>
+                    </div>
+                ),
+            }),
+            columnHelper.accessor("amount", {
+                header: "Total",
+                cell: (info) => (
+                    <span className="font-semibold">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("status", {
+                header: "Status",
+                cell: (info) => {
+                    const config = getStatusConfig(info.getValue());
+                    return (
+                        <Badge
+                            className={cn(
+                                "gap-1 px-2 py-0.5 font-medium",
+                                config.color,
+                            )}
+                        >
+                            {config.icon}
+                            {info.getValue()}
+                        </Badge>
+                    );
+                },
+            }),
+            columnHelper.accessor("payment", {
+                header: "Pembayaran",
+                cell: (info) => {
+                    const config = getPaymentConfig(info.getValue());
+                    return (
+                        <Badge
+                            className={cn(
+                                "gap-1 px-2 py-0.5 font-medium",
+                                config.color,
+                            )}
+                        >
+                            {config.icon}
+                            {info.getValue()}
+                        </Badge>
+                    );
+                },
+            }),
+            columnHelper.display({
+                id: "actions",
+                header: () => <div className="text-right">Aksi</div>,
+                cell: (info) => (
+                    <div className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>
+                                    Aksi Status
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {info.row.original.payment !== "Paid" && (
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                info.row.original.id,
+                                                "active",
+                                                "paid",
+                                            )
+                                        }
+                                    >
+                                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                                        <span>Tandai Lunas & Aktifkan</span>
+                                    </DropdownMenuItem>
+                                )}
+                                {info.row.original.status !== "Completed" && (
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                info.row.original.id,
+                                                "completed",
+                                                info.row.original.payment ===
+                                                    "Paid"
+                                                    ? "paid"
+                                                    : "unpaid",
+                                            )
+                                        }
+                                    >
+                                        <History className="mr-2 h-4 w-4 text-blue-600" />
+                                        <span>Selesaikan Kontrak</span>
+                                    </DropdownMenuItem>
+                                )}
+                                {info.row.original.status !== "Cancelled" && (
+                                    <DropdownMenuItem
+                                        variant="destructive"
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                info.row.original.id,
+                                                "cancelled",
+                                                "unpaid",
+                                            )
+                                        }
+                                    >
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        <span>Batalkan Kontrak</span>
+                                    </DropdownMenuItem>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                ),
+            }),
+        ],
+        [handleUpdateStatus],
+    );
 
     const table = useReactTable({
         data: rentals,
@@ -273,26 +347,43 @@ export default function RentalsPage() {
         },
     });
 
-    const stats = [
-        {
-            label: "Penyewaan Aktif",
-            value: "38",
-            icon: Calendar,
-            color: "text-blue-600",
-        },
-        {
-            label: "Pending Pembayaran",
-            value: "5",
-            icon: DollarSign,
-            color: "text-orange-600",
-        },
-        {
-            label: "Selesai Bulan Ini",
-            value: "12",
-            icon: CheckCircle,
-            color: "text-green-600",
-        },
-    ];
+    const activeCount = useMemo(() => {
+        return rentals.filter((r) => r.status.toLowerCase() === "active")
+            .length;
+    }, [rentals]);
+
+    const pendingPaymentCount = useMemo(() => {
+        return rentals.filter((r) => r.payment.toLowerCase() !== "paid").length;
+    }, [rentals]);
+
+    const completedCount = useMemo(() => {
+        return rentals.filter((r) => r.status.toLowerCase() === "completed")
+            .length;
+    }, [rentals]);
+
+    const stats = useMemo(
+        () => [
+            {
+                label: "Penyewaan Aktif",
+                value: String(activeCount),
+                icon: Calendar,
+                color: "text-blue-600",
+            },
+            {
+                label: "Pending Pembayaran",
+                value: String(pendingPaymentCount),
+                icon: DollarSign,
+                color: "text-orange-600",
+            },
+            {
+                label: "Selesai",
+                value: String(completedCount),
+                icon: CheckCircle,
+                color: "text-green-600",
+            },
+        ],
+        [activeCount, pendingPaymentCount, completedCount],
+    );
 
     return (
         <DashboardLayout title="Penyewaan & Kontrak">

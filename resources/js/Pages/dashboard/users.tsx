@@ -71,7 +71,7 @@ const rolePermissions = {
     user: ["Akses dashboard", "Lihat profil", "Lakukan pemesanan"],
 };
 
-const columnHelper = createColumnHelper<any>();
+const columnHelper = createColumnHelper<UserData>();
 
 export default function UsersPage() {
     const [users, setUsers] = useState<UserData[]>([]);
@@ -84,25 +84,34 @@ export default function UsersPage() {
     const debouncedSearch = useDebounce(searchTerm, 300);
 
     useEffect(() => {
-        loadUsers();
-    }, []);
+        let isMounted = true;
 
-    const loadUsers = async () => {
-        try {
-            const data = await fetchUsers();
-            setUsers(data);
-        } catch (error) {
-            console.error("Failed to load users:", error);
-            toast.error("Gagal memuat data pengguna.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        const loadUsers = async () => {
+            try {
+                const data = await fetchUsers();
+                if (!isMounted) return;
+                setUsers(data);
+            } catch (error) {
+                if (!isMounted) return;
+                console.error("Failed to load users:", error);
+                toast.error("Gagal memuat data pengguna.");
+            } finally {
+                if (!isMounted) return;
+                setIsLoading(false);
+            }
+        };
+
+        loadUsers();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleDeleteUser = async (id: string) => {
         try {
             await deleteUser(id);
-            setUsers(users.filter((u) => u.id !== id));
+            setUsers((prev) => prev.filter((u) => u.id !== id));
             toast.success("User berhasil dihapus.");
         } catch (error) {
             console.error("Failed to delete user:", error);
@@ -127,97 +136,104 @@ export default function UsersPage() {
         }
     };
 
-    const columns = [
-        columnHelper.accessor("name", {
-            header: "Nama",
-            cell: (info) => (
-                <span className="font-medium">{info.getValue()}</span>
-            ),
-        }),
-        columnHelper.accessor("email", {
-            header: "Email",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("role", {
-            header: "Role",
-            cell: (info) => (
-                <Badge className={getRoleColor(info.getValue())}>
-                    {info.getValue()}
-                </Badge>
-            ),
-        }),
-        columnHelper.accessor("status", {
-            header: "Status",
-            cell: (info) => {
-                const status = info.getValue();
-                const isActive = status === "Active";
-                return (
-                    <Badge
-                        className={cn(
-                            "gap-1 px-2 py-0.5 font-medium",
-                            isActive
-                                ? "bg-green-100 text-green-800 hover:bg-green-100/80"
-                                : "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
-                        )}
-                    >
-                        {isActive ? (
-                            <CheckCircle2 className="h-3 w-3" />
-                        ) : (
-                            <XCircle className="h-3 w-3" />
-                        )}
-                        {status}
+    const columns = React.useMemo(
+        () => [
+            columnHelper.accessor("name", {
+                header: "Nama",
+                cell: (info) => (
+                    <span className="font-medium">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("email", {
+                header: "Email",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("role", {
+                header: "Role",
+                cell: (info) => (
+                    <Badge className={getRoleColor(info.getValue())}>
+                        {info.getValue()}
                     </Badge>
-                );
-            },
-        }),
-        columnHelper.accessor("lastLogin", {
-            header: "Last Login",
-            cell: (info) => (
-                <span className="text-sm text-gray-500">{info.getValue()}</span>
-            ),
-        }),
-        columnHelper.display({
-            id: "actions",
-            header: () => <div className="text-right">Aksi</div>,
-            cell: (info) => (
-                <div className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                            >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    setEditingUser(info.row.original)
-                                }
-                            >
-                                <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
-                                <span>Edit User</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() =>
-                                    setDeletingUser(info.row.original)
-                                }
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Hapus User</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
-        }),
-    ];
+                ),
+            }),
+            columnHelper.accessor("status", {
+                header: "Status",
+                cell: (info) => {
+                    const status = info.getValue();
+                    const isActive = status === "Active";
+                    return (
+                        <Badge
+                            className={cn(
+                                "gap-1 px-2 py-0.5 font-medium",
+                                isActive
+                                    ? "bg-green-100 text-green-800 hover:bg-green-100/80"
+                                    : "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
+                            )}
+                        >
+                            {isActive ? (
+                                <CheckCircle2 className="h-3 w-3" />
+                            ) : (
+                                <XCircle className="h-3 w-3" />
+                            )}
+                            {status}
+                        </Badge>
+                    );
+                },
+            }),
+            columnHelper.accessor("lastLogin", {
+                header: "Last Login",
+                cell: (info) => (
+                    <span className="text-sm text-gray-500">
+                        {info.getValue()}
+                    </span>
+                ),
+            }),
+            columnHelper.display({
+                id: "actions",
+                header: () => <div className="text-right">Aksi</div>,
+                cell: (info) => (
+                    <div className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        setEditingUser(info.row.original)
+                                    }
+                                >
+                                    <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
+                                    <span>Edit User</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() =>
+                                        setDeletingUser(info.row.original)
+                                    }
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Hapus User</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                ),
+            }),
+        ],
+        [setEditingUser, setDeletingUser],
+    );
 
     const table = useReactTable({
         data: users,
