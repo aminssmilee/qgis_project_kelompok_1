@@ -8,27 +8,24 @@ use App\Models\Billboard;
 use App\Models\Booking;
 use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 
 final class ReportController
 {
     /**
      * Get dynamic report data for admin panel reports screen.
      */
-    public function summary(Request $request): JsonResponse
+    public function summary(): JsonResponse
     {
         // 1. Monthly Revenue Data (last 6 months including current)
-        $monthlyRevenueRaw = Payment::where('status', 'paid')
+        $monthlyRevenueRaw = Payment::query()->where('status', 'paid')
             ->selectRaw("TO_CHAR(paid_at, 'Mon') as month_name, SUM(amount) as revenue, EXTRACT(MONTH FROM paid_at) as month_num")
             ->groupByRaw("TO_CHAR(paid_at, 'Mon'), EXTRACT(MONTH FROM paid_at)")
             ->orderByRaw('EXTRACT(MONTH FROM paid_at)')
             ->get();
-
         // Map it to include standard targets and formatting
         $revenueData = [];
         $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
         // Let's populate the last 5 months
         $currentMonthNum = (int) date('n');
         for ($i = 4; $i >= 0; $i--) {
@@ -58,15 +55,13 @@ final class ReportController
                 'target_value' => 500000000,
             ];
         }
-
         // 2. Billboard Performance (Utilization rate)
         // For each active billboard, calculate utilization based on booked days / 30 in the last 30 days
-        $billboards = Billboard::where('is_active', true)->get();
+        $billboards = Billboard::query()->where('is_active', true)->get();
         $billboardPerformance = [];
-
         foreach ($billboards as $bb) {
             // Count total days booked in active/completed bookings
-            $totalRentedDays = Booking::where('billboard_id', $bb->id)
+            $totalRentedDays = Booking::query()->where('billboard_id', $bb->id)
                 ->whereIn('status', ['active', 'completed'])
                 ->sum('total_days');
 
@@ -76,7 +71,7 @@ final class ReportController
                 $utilization = (int) min(100, 15 + ($totalRentedDays * 2));
             } else {
                 // If it has any bookings at all (even pending or waiting), give a small bump
-                $hasBookings = Booking::where('billboard_id', $bb->id)->exists();
+                $hasBookings = Booking::query()->where('billboard_id', $bb->id)->exists();
                 if ($hasBookings) {
                     $utilization = 35;
                 }
@@ -96,12 +91,10 @@ final class ReportController
                 'status' => $status,
             ];
         }
-
         // Sort by utilization descending
-        usort($billboardPerformance, fn ($a, $b) => $b['utilization'] <=> $a['utilization']);
+        usort($billboardPerformance, fn (array $a, array $b): int => $b['utilization'] <=> $a['utilization']);
         // Take top 6 billboards
         $billboardPerformance = array_slice($billboardPerformance, 0, 6);
-
         // 3. Maintenance Logs (Simulated logs bound to actual billboard names in database)
         $maintenanceTypes = [
             ['type' => 'Pembersihan', 'duration' => '2 jam', 'cost_min' => 1000000, 'cost_max' => 3000000],
@@ -109,17 +102,15 @@ final class ReportController
             ['type' => 'Ganti Lampu LED', 'duration' => '6 jam', 'cost_min' => 10000000, 'cost_max' => 20000000],
             ['type' => 'Inspeksi Struktur', 'duration' => '3 jam', 'cost_min' => 2000000, 'cost_max' => 4000000],
         ];
-
         $maintenanceLogs = [];
         $idCounter = 1;
-        $allBillboardsForLogs = Billboard::limit(5)->get();
-
+        $allBillboardsForLogs = Billboard::query()->limit(5)->get();
         foreach ($allBillboardsForLogs as $idx => $bb) {
             $mType = $maintenanceTypes[$idx % count($maintenanceTypes)];
             $costAmount = random_int($mType['cost_min'], $mType['cost_max']);
 
             // Random date in the last 45 days
-            $date = Carbon::now()->subDays(random_int(2, 45))->format('Y-m-d');
+            $date = Date::now()->subDays(random_int(2, 45))->format('Y-m-d');
 
             $maintenanceLogs[] = [
                 'id' => $idCounter++,
@@ -131,23 +122,19 @@ final class ReportController
                 'cost_value' => $costAmount,
             ];
         }
-
         // Sum up total maintenance costs
         $totalMaintenanceCost = array_sum(array_column($maintenanceLogs, 'cost_value'));
-
         // Sum up current month's revenue
-        $currentMonthRevenue = Payment::where('status', 'paid')
-            ->whereMonth('paid_at', Carbon::now()->month)
-            ->whereYear('paid_at', Carbon::now()->year)
+        $currentMonthRevenue = Payment::query()->where('status', 'paid')
+            ->whereMonth('paid_at', Date::now()->month)
+            ->whereYear('paid_at', Date::now()->year)
             ->sum('amount');
-
         $currentMonthRevText = 'Rp '.number_format($currentMonthRevenue, 0, ',', '.');
         if ($currentMonthRevenue >= 1000000000) {
             $currentMonthRevText = 'Rp '.number_format($currentMonthRevenue / 1000000000, 1, ',', '.').' M';
         } elseif ($currentMonthRevenue >= 1000000) {
             $currentMonthRevText = 'Rp '.number_format($currentMonthRevenue / 1000000, 1, ',', '.').' Juta';
         }
-
         $stats = [
             [
                 'label' => 'Total Pendapatan Bulan Ini',

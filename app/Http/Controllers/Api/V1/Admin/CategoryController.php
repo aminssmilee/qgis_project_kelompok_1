@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Models\Billboard;
 use App\Models\BillboardCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,9 +16,9 @@ final class CategoryController
      */
     public function index(): JsonResponse
     {
-        $categories = BillboardCategory::latest()->get()->map(function (BillboardCategory $cat) {
+        $categories = BillboardCategory::query()->latest()->get()->map(function (BillboardCategory $cat): array {
             // Count billboards in this category
-            $billboardsCount = \App\Models\Billboard::where('category_id', $cat->id)->count();
+            $billboardsCount = Billboard::query()->where('category_id', $cat->id)->count();
 
             return [
                 'id' => $cat->id,
@@ -45,7 +46,7 @@ final class CategoryController
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $category = BillboardCategory::create($validated);
+        $category = BillboardCategory::query()->create($validated);
 
         return response()->json([
             'status' => 'success',
@@ -59,7 +60,7 @@ final class CategoryController
      */
     public function update(Request $request, string $id): JsonResponse
     {
-        $category = BillboardCategory::findOrFail($id);
+        $category = BillboardCategory::query()->findOrFail($id);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100', 'unique:billboard_categories,name,'.$category->id],
@@ -81,10 +82,10 @@ final class CategoryController
      */
     public function destroy(string $id): JsonResponse
     {
-        $category = BillboardCategory::findOrFail($id);
+        $category = BillboardCategory::query()->findOrFail($id);
 
         // Check if there are billboards using this category
-        $billboardsCount = \App\Models\Billboard::where('category_id', $category->id)->count();
+        $billboardsCount = Billboard::query()->where('category_id', $category->id)->count();
         if ($billboardsCount > 0) {
             return response()->json([
                 'status' => 'error',

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\Booking;
+use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -74,7 +75,7 @@ final class BookingController
             $updateData['admin_note'] = $request->admin_note;
         }
 
-        if (! empty($updateData)) {
+        if ($updateData !== []) {
             $booking->update($updateData);
         }
 
@@ -99,7 +100,7 @@ final class BookingController
                 if ($paymentStatus === 'paid') {
                     $paymentPayload['paid_at'] = now();
                 }
-                \App\Models\Payment::create($paymentPayload);
+                Payment::query()->create($paymentPayload);
             }
 
             // Sync booking status to active if payment is paid

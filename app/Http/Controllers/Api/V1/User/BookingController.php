@@ -15,14 +15,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Str;
 
-final class BookingController
+final readonly class BookingController
 {
-    private TriPayService $triPay;
-
-    public function __construct(TriPayService $triPay)
-    {
-        $this->triPay = $triPay;
-    }
+    public function __construct(private TriPayService $triPay) {}
 
     /**
      * Display a listing of the authenticated user's bookings.
@@ -170,7 +165,7 @@ final class BookingController
                 $checkoutUrl = $res['data']['checkout_url'];
 
                 // Create Payment record
-                Payment::create([
+                Payment::query()->create([
                     'booking_id' => $booking->id,
                     'tripay_reference' => $res['data']['reference'],
                     'tripay_merchant_ref' => $res['data']['merchant_ref'],

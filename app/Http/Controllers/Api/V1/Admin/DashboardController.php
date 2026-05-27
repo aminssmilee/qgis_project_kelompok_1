@@ -9,29 +9,25 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class DashboardController
 {
     /**
      * Get real-time summary statistics for the admin dashboard.
      */
-    public function summary(Request $request): JsonResponse
+    public function summary(): JsonResponse
     {
-        $totalBillboards = Billboard::count();
-        $activeRentals = Booking::where('status', 'active')->count();
-        $totalClients = User::where('role', 'user')->count();
-
+        $totalBillboards = Billboard::query()->count();
+        $activeRentals = Booking::query()->where('status', 'active')->count();
+        $totalClients = User::query()->where('role', 'user')->count();
         // Sum of payments where status is paid
-        $totalRevenue = Payment::where('status', 'paid')->sum('amount');
-
+        $totalRevenue = Payment::query()->where('status', 'paid')->sum('amount');
         // Revenue grouped by month for line chart (PostgreSQL dynamic query)
-        $monthlyRevenueRaw = Payment::where('status', 'paid')
+        $monthlyRevenueRaw = Payment::query()->where('status', 'paid')
             ->selectRaw("TO_CHAR(paid_at, 'Mon') as month, SUM(amount) as revenue, EXTRACT(MONTH FROM paid_at) as month_num")
             ->groupByRaw("TO_CHAR(paid_at, 'Mon'), EXTRACT(MONTH FROM paid_at)")
             ->orderByRaw('EXTRACT(MONTH FROM paid_at)')
             ->get();
-
         $monthlyRevenue = [];
         foreach ($monthlyRevenueRaw as $row) {
             $monthlyRevenue[] = [
@@ -39,7 +35,6 @@ final class DashboardController
                 'revenue' => (float) $row->revenue,
             ];
         }
-
         // Recent 5 bookings
         $recentBookings = Booking::with(['user.company', 'billboard', 'payments'])
             ->latest()

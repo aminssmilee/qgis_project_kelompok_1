@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Booking;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -96,7 +97,7 @@ final class TriPayService
         }
 
         // Generate Signature
-        $signature = hash_hmac('sha256', $this->merchantCode.$merchantRef.$amount, $this->privateKey);
+        $signature = hash_hmac('sha256', $this->merchantCode.$merchantRef.$amount, (string) $this->privateKey);
 
         $payload = [
             'method' => $methodCode,
@@ -129,10 +130,10 @@ final class TriPayService
     /**
      * Verify Webhook Signature
      */
-    public function validateCallback(\Illuminate\Http\Request $request): bool
+    public function validateCallback(Request $request): bool
     {
         $callbackSignature = $request->header('X-Callback-Signature');
-        $signature = hash_hmac('sha256', $request->getContent(), $this->privateKey);
+        $signature = hash_hmac('sha256', $request->getContent(), (string) $this->privateKey);
 
         return $callbackSignature === $signature;
     }
@@ -142,8 +143,7 @@ final class TriPayService
      */
     private function isMock(): bool
     {
-        return empty($this->apiKey)
-            || $this->apiKey === 'DEV-xxxxxxx'
+        return in_array($this->apiKey, [null, '', '0', 'DEV-xxxxxxx'], true)
             || $this->merchantCode === 'Txxxx'
             || $this->privateKey === 'xxxxxxx';
     }

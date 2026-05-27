@@ -33,8 +33,7 @@ Route::prefix('dashboard')->name('dashboard.')->group(function (): void {
     ]))->name('options');
 });
 
-Route::get('/payment/return', function () {
-    return "
+Route::get('/payment/return', fn (): string => "
     <html>
     <head>
         <title>Payment Return</title>
@@ -57,7 +56,6 @@ Route::get('/payment/return', function () {
             <a href='javascript:void(0)' onclick='window.close();' class='btn'>Tutup Halaman</a>
         </div>
     </body>
-    </html>";
-});
+    </html>");
 
 Route::get('/{any}', fn (): Factory|View => view('app'))->where('any', '.*');

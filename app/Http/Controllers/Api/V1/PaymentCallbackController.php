@@ -27,12 +27,12 @@ final class PaymentCallbackController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid payload'], 400);
         }
 
-        $booking = Booking::where('booking_code', $data->merchant_ref)->first();
+        $booking = Booking::query()->where('booking_code', $data->merchant_ref)->first();
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
-        $payment = Payment::where('tripay_merchant_ref', $data->merchant_ref)->first();
+        $payment = Payment::query()->where('tripay_merchant_ref', $data->merchant_ref)->first();
         if ($payment) {
             $payment->update([
                 'status' => $data->status,

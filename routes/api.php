@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Admin\BillboardController as AdminBillboardController;
 use App\Http\Controllers\Api\V1\Admin\ClientController;
+use App\Http\Controllers\Api\V1\Admin\PaymentController;
+use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\PaymentCallbackController;
 use App\Http\Controllers\Api\V1\User\AuthController;
@@ -107,8 +109,8 @@ Route::prefix('v1')->group(function (): void {
             Route::apiResource('categories', App\Http\Controllers\Api\V1\Admin\CategoryController::class);
 
             // Reports & Payment logs
-            Route::get('/reports/summary', [App\Http\Controllers\Api\V1\Admin\ReportController::class, 'summary']);
-            Route::get('/payments', [App\Http\Controllers\Api\V1\Admin\PaymentController::class, 'index']);
+            Route::get('/reports/summary', [ReportController::class, 'summary']);
+            Route::get('/payments', [PaymentController::class, 'index']);
         });
     });
 });
