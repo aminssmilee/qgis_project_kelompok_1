@@ -74,10 +74,19 @@ import EditBillboardModal from "@/features/billboard/EditBillboardModal";
 import DetailBillboardModal from "@/features/billboard/DetailBillboardModal";
 import { Billboard } from "@/features/billboard/types";
 
-const columnHelper = createColumnHelper<any>();
+interface DashboardBillboard extends Billboard {
+    location: string;
+    category: string;
+    traffic: string;
+    status: "Available" | "Booked" | "Maintenance" | string;
+}
+
+const columnHelper = createColumnHelper<DashboardBillboard>();
 
 export default function BillboardsPage() {
-    const [billboards, setBillboards] = React.useState<any[]>([]);
+    const [billboards, setBillboards] = React.useState<DashboardBillboard[]>(
+        [],
+    );
     const [isLoading, setIsLoading] = React.useState(true);
     const [viewingBillboard, setViewingBillboard] =
         React.useState<Billboard | null>(null);
@@ -90,8 +99,12 @@ export default function BillboardsPage() {
     const debouncedSearch = useDebounce(searchTerm, 300);
 
     React.useEffect(() => {
+        let isMounted = true;
+        setIsLoading(true);
+
         fetchBillboards()
             .then((data) => {
+                if (!isMounted) return;
                 const mapped = data.map((b) => ({
                     id: b.id,
                     name: b.name,
@@ -114,7 +127,14 @@ export default function BillboardsPage() {
                 setBillboards(mapped);
             })
             .catch((err) => console.error("Failed to fetch billboards:", err))
-            .finally(() => setIsLoading(false));
+            .finally(() => {
+                if (!isMounted) return;
+                setIsLoading(false);
+            });
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     const handleDeleteConfirm = async () => {
@@ -159,110 +179,121 @@ export default function BillboardsPage() {
         }
     };
 
-    const columns = [
-        columnHelper.accessor("name", {
-            header: "Nama",
-            cell: (info) => (
-                <span className="font-medium">{info.getValue()}</span>
-            ),
-        }),
-        columnHelper.accessor("location", {
-            header: "Lokasi",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("size", {
-            header: "Ukuran",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("category", {
-            header: "Kategori",
-            cell: (info) => (
-                <Badge variant="outline" className="font-normal">
-                    {info.getValue()}
-                </Badge>
-            ),
-        }),
-        columnHelper.accessor("traffic", {
-            header: "Traffic",
-            cell: (info) => <span className="text-sm">{info.getValue()}</span>,
-        }),
-        columnHelper.accessor("price", {
-            header: "Harga",
-            cell: (info) => (
-                <span className="font-semibold">{info.getValue()}</span>
-            ),
-        }),
-        columnHelper.accessor("status", {
-            header: "Status",
-            cell: (info) => {
-                const config = getStatusConfig(info.getValue());
-                return (
-                    <Badge
-                        className={cn(
-                            "gap-1 px-2 py-0.5 font-medium",
-                            config.color,
-                        )}
-                    >
-                        {config.icon}
+    const columns = React.useMemo(
+        () => [
+            columnHelper.accessor("name", {
+                header: "Nama",
+                cell: (info) => (
+                    <span className="font-medium">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("location", {
+                header: "Lokasi",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("size", {
+                header: "Ukuran",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("category", {
+                header: "Kategori",
+                cell: (info) => (
+                    <Badge variant="outline" className="font-normal">
                         {info.getValue()}
                     </Badge>
-                );
-            },
-        }),
-        columnHelper.display({
-            id: "actions",
-            header: () => <div className="text-right">Aksi</div>,
-            cell: (info) => (
-                <div className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                            >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    setViewingBillboard(
-                                        info.row.original as Billboard,
-                                    )
-                                }
-                            >
-                                <Eye className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>Detail Billboard</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() =>
-                                    setEditingBillboard(
-                                        info.row.original as Billboard,
-                                    )
-                                }
-                            >
-                                <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
-                                <span>Edit Billboard</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() =>
-                                    setDeletingBillboardId(info.row.original.id)
-                                }
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Hapus Billboard</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
-        }),
-    ];
+                ),
+            }),
+            columnHelper.accessor("traffic", {
+                header: "Traffic",
+                cell: (info) => (
+                    <span className="text-sm">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("price", {
+                header: "Harga",
+                cell: (info) => (
+                    <span className="font-semibold">{info.getValue()}</span>
+                ),
+            }),
+            columnHelper.accessor("status", {
+                header: "Status",
+                cell: (info) => {
+                    const config = getStatusConfig(info.getValue());
+                    return (
+                        <Badge
+                            className={cn(
+                                "gap-1 px-2 py-0.5 font-medium",
+                                config.color,
+                            )}
+                        >
+                            {config.icon}
+                            {info.getValue()}
+                        </Badge>
+                    );
+                },
+            }),
+            columnHelper.display({
+                id: "actions",
+                header: () => <div className="text-right">Aksi</div>,
+                cell: (info) => (
+                    <div className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        setViewingBillboard(
+                                            info.row.original as Billboard,
+                                        )
+                                    }
+                                >
+                                    <Eye className="mr-2 h-4 w-4 text-blue-600" />
+                                    <span>Detail Billboard</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() =>
+                                        setEditingBillboard(
+                                            info.row.original as Billboard,
+                                        )
+                                    }
+                                >
+                                    <Edit2 className="mr-2 h-4 w-4 text-orange-600" />
+                                    <span>Edit Billboard</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    variant="destructive"
+                                    onClick={() =>
+                                        setDeletingBillboardId(
+                                            info.row.original.id,
+                                        )
+                                    }
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Hapus Billboard</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                ),
+            }),
+        ],
+        [setViewingBillboard, setEditingBillboard, setDeletingBillboardId],
+    );
 
     const table = useReactTable({
         data: billboards,
@@ -287,34 +318,37 @@ export default function BillboardsPage() {
         },
     });
 
-    const stats = [
-        {
-            label: "Total Billboard",
-            value: billboards.length.toString(),
-            color: "text-blue-600",
-        },
-        {
-            label: "Available",
-            value: billboards
-                .filter((b) => b.status === "Available")
-                .length.toString(),
-            color: "text-green-600",
-        },
-        {
-            label: "Booked",
-            value: billboards
-                .filter((b) => b.status === "Booked")
-                .length.toString(),
-            color: "text-orange-600",
-        },
-        {
-            label: "Maintenance",
-            value: billboards
-                .filter((b) => b.status === "Maintenance")
-                .length.toString(),
-            color: "text-red-600",
-        },
-    ];
+    const stats = React.useMemo(
+        () => [
+            {
+                label: "Total Billboard",
+                value: billboards.length.toString(),
+                color: "text-blue-600",
+            },
+            {
+                label: "Available",
+                value: billboards
+                    .filter((b) => b.status === "Available")
+                    .length.toString(),
+                color: "text-green-600",
+            },
+            {
+                label: "Booked",
+                value: billboards
+                    .filter((b) => b.status === "Booked")
+                    .length.toString(),
+                color: "text-orange-600",
+            },
+            {
+                label: "Maintenance",
+                value: billboards
+                    .filter((b) => b.status === "Maintenance")
+                    .length.toString(),
+                color: "text-red-600",
+            },
+        ],
+        [billboards],
+    );
 
     return (
         <DashboardLayout title="Katalog Billboard">

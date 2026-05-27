@@ -218,7 +218,7 @@ export default function AddBillboardModal({
 
             // Konversi ke tipe lokal Billboard
             const newBillboard: Billboard = {
-                id: Date.now(),
+                id: created.id,
                 name: created.name,
                 lat: created.lat,
                 lng: created.lng,
