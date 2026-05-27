@@ -8,6 +8,8 @@ use App\Http\Requests\Api\V1\User\Booking\StoreBookingRequest;
 use App\Http\Resources\Api\V1\User\BookingResource;
 use App\Models\Billboard;
 use App\Models\Booking;
+use App\Models\Payment;
+use App\Services\TriPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -15,6 +17,13 @@ use Illuminate\Support\Str;
 
 final class BookingController
 {
+    private TriPayService $triPay;
+
+    public function __construct(TriPayService $triPay)
+    {
+        $this->triPay = $triPay;
+    }
+
     /**
      * Display a listing of the authenticated user's bookings.
      */
@@ -153,9 +162,37 @@ final class BookingController
 
         $booking->load(['billboard.category']);
 
+        $checkoutUrl = null;
+        if ($request->has('payment_method')) {
+            $paymentMethod = $request->payment_method;
+            $res = $this->triPay->createTransaction($booking, $paymentMethod);
+            if ($res && isset($res['success']) && $res['success']) {
+                $checkoutUrl = $res['data']['checkout_url'];
+
+                // Create Payment record
+                Payment::create([
+                    'booking_id' => $booking->id,
+                    'tripay_reference' => $res['data']['reference'],
+                    'tripay_merchant_ref' => $res['data']['merchant_ref'],
+                    'payment_channel' => $paymentMethod,
+                    'amount' => $booking->total_price,
+                    'status' => 'UNPAID',
+                ]);
+            } else {
+                // Delete the booking to avoid orphan bookings
+                $booking->delete();
+                $errorMsg = $res['message'] ?? 'Failed to create payment transaction with TriPay.';
+
+                return response()->json([
+                    'message' => $errorMsg,
+                ], 422);
+            }
+        }
+
         return response()->json([
             'message' => 'Booking created successfully',
             'data' => new BookingResource($booking),
+            'checkout_url' => $checkoutUrl,
         ], 201);
     }
 
@@ -208,5 +245,23 @@ final class BookingController
             'message' => 'Booking cancelled successfully',
             'data' => new BookingResource($booking),
         ]);
+    }
+
+    /**
+     * Get available payment channels from TriPay.
+     */
+    public function getPaymentChannels(): JsonResponse
+    {
+        $res = $this->triPay->getPaymentChannels();
+        if ($res && isset($res['success']) && $res['success']) {
+            return response()->json([
+                'message' => 'Payment channels retrieved successfully',
+                'data' => $res['data'],
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Failed to retrieve payment channels',
+        ], 500);
     }
 }

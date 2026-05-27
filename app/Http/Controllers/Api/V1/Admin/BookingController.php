@@ -48,6 +48,80 @@ final class BookingController
         ]);
     }
 
+    /**
+     * Update the booking and payment status (Admin).
+     */
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'status' => ['nullable', 'string', 'in:pending_payment,waiting_confirmation,active,completed,cancelled,rejected'],
+            'payment_status' => ['nullable', 'string', 'in:unpaid,paid,failed,expired,refunded'],
+            'admin_note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $booking = Booking::with('payments')->findOrFail($id);
+
+        $updateData = [];
+
+        if ($request->has('status')) {
+            $updateData['status'] = $request->status;
+            if ($request->status === 'active') {
+                $updateData['confirmed_at'] = now();
+            }
+        }
+
+        if ($request->has('admin_note')) {
+            $updateData['admin_note'] = $request->admin_note;
+        }
+
+        if (! empty($updateData)) {
+            $booking->update($updateData);
+        }
+
+        if ($request->has('payment_status')) {
+            $paymentStatus = $request->payment_status;
+
+            // Get the latest payment or create one if not exists
+            $payment = $booking->payments->last();
+            if ($payment) {
+                $paymentPayload = ['status' => $paymentStatus];
+                if ($paymentStatus === 'paid') {
+                    $paymentPayload['paid_at'] = now();
+                }
+                $payment->update($paymentPayload);
+            } else {
+                // Create a payment record
+                $paymentPayload = [
+                    'booking_id' => $booking->id,
+                    'amount' => $booking->total_price,
+                    'status' => $paymentStatus,
+                ];
+                if ($paymentStatus === 'paid') {
+                    $paymentPayload['paid_at'] = now();
+                }
+                \App\Models\Payment::create($paymentPayload);
+            }
+
+            // Sync booking status to active if payment is paid
+            if ($paymentStatus === 'paid' && $booking->status === 'pending_payment') {
+                $booking->update([
+                    'status' => 'active',
+                    'confirmed_at' => now(),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Booking status updated successfully',
+            'data' => [
+                'id' => $booking->id,
+                'status' => $booking->status,
+                'payment_status' => $booking->payments()->latest()->first()?->status ?? 'unpaid',
+            ],
+        ]);
+    }
+
     private function mapStatus(string $status): string
     {
         return match ($status) {

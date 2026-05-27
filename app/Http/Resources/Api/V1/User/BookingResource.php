@@ -20,6 +20,12 @@ final class BookingResource extends JsonResource
             'rejected' => 'rejected',
         ];
 
+        $payment = $this->relationLoaded('payments') ? $this->payments->where('status', 'UNPAID')->first() : null;
+        if (! $payment && $this->status === 'pending_payment') {
+            $payment = $this->payments()->where('status', 'UNPAID')->first();
+        }
+        $checkoutUrl = $payment ? 'https://tripay.co.id/checkout/'.$payment->tripay_reference : null;
+
         return [
             'id' => $this->id,
             'invoice_no' => $this->booking_code,
@@ -32,6 +38,7 @@ final class BookingResource extends JsonResource
             'deadline_at' => $this->created_at->addDay()->toIso8601String(),
             'start_date' => $this->start_date->toDateString(),
             'end_date' => $this->end_date->toDateString(),
+            'checkout_url' => $checkoutUrl,
         ];
     }
 }

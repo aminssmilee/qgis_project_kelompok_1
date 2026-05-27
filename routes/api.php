@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\Admin\BillboardController as AdminBillboardController;
 use App\Http\Controllers\Api\V1\Admin\ClientController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
+use App\Http\Controllers\Api\V1\PaymentCallbackController;
 use App\Http\Controllers\Api\V1\User\AuthController;
 use App\Http\Controllers\Api\V1\User\BillboardController;
 use App\Http\Controllers\Api\V1\User\BookingController;
@@ -19,6 +20,9 @@ Route::get('/dashboard-data', [DashboardController::class, 'getData']);
 
 // API V1 Routes
 Route::prefix('v1')->group(function (): void {
+    // Payment Webhook (Public)
+    Route::post('/payment/callback', [PaymentCallbackController::class, 'handle']);
+
     // End User API (Mobile App)
     Route::prefix('user')->group(function (): void {
         // Public Auth Routes
@@ -39,6 +43,9 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/me', [AuthController::class, 'me']);
             Route::patch('/me', [ProfileController::class, 'update']);
             Route::post('/logout', [AuthController::class, 'logout']);
+
+            // Payment Channels
+            Route::get('/payment-channels', [BookingController::class, 'getPaymentChannels']);
 
             // Dashboard Summary
             Route::get('/dashboard/summary', [UserDashboardController::class, 'summary']);
@@ -64,6 +71,9 @@ Route::prefix('v1')->group(function (): void {
 
         Route::middleware(['auth:sanctum', 'role:admin'])->group(function (): void {
             Route::post('/logout', [App\Http\Controllers\Api\V1\Admin\AuthController::class, 'logout']);
+
+            // Dashboard Summary
+            Route::get('/dashboard/summary', [App\Http\Controllers\Api\V1\Admin\DashboardController::class, 'summary']);
 
             // Billboards CRUD (semua dilindungi — hanya admin login)
             Route::get('/billboards', [AdminBillboardController::class, 'index']);
@@ -91,6 +101,14 @@ Route::prefix('v1')->group(function (): void {
 
             // Bookings CRUD
             Route::get('/bookings', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'index']);
+            Route::patch('/bookings/{id}', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'update']);
+
+            // Categories CRUD
+            Route::apiResource('categories', App\Http\Controllers\Api\V1\Admin\CategoryController::class);
+
+            // Reports & Payment logs
+            Route::get('/reports/summary', [App\Http\Controllers\Api\V1\Admin\ReportController::class, 'summary']);
+            Route::get('/payments', [App\Http\Controllers\Api\V1\Admin\PaymentController::class, 'index']);
         });
     });
 });
