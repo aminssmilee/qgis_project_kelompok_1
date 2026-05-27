@@ -133,6 +133,17 @@ const MainMap = forwardRef<MainMapHandle, MainMapProps>(function MainMap(
 
             // Tambah marker setiap billboard
             billboards.forEach((billboard) => {
+                if (
+                    billboard.lat === null ||
+                    billboard.lat === undefined ||
+                    billboard.lng === null ||
+                    billboard.lng === undefined
+                ) {
+                    console.warn(
+                        `Billboard "${billboard.name}" has invalid coordinates: lat=${billboard.lat}, lng=${billboard.lng}`,
+                    );
+                    return;
+                }
                 const marker = L.marker([billboard.lat, billboard.lng], {
                     icon: getBillboardMarkerIcon(billboard.markerVariant),
                 }).addTo(map);
@@ -209,7 +220,13 @@ const MainMap = forwardRef<MainMapHandle, MainMapProps>(function MainMap(
             selectedCircleRef.current = null;
         }
 
-        if (selectedBillboard) {
+        if (
+            selectedBillboard &&
+            selectedBillboard.lat !== null &&
+            selectedBillboard.lat !== undefined &&
+            selectedBillboard.lng !== null &&
+            selectedBillboard.lng !== undefined
+        ) {
             const radius = getBillboardVisualRadius(selectedBillboard.size);
             // Draw a high-contrast highlighted visual range circle
             const circle = L.circle(
