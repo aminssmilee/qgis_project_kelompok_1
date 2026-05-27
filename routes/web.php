@@ -7,10 +7,27 @@ use App\Http\Controllers\Dashboard\ClientController;
 use App\Http\Controllers\Dashboard\RentalController;
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
+use App\Models\BillboardPhoto;
 use App\Models\Company;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/temp-fix-db-images', function (): string {
+    $count1 = Billboard::query()
+        ->where('thumbnail_url', 'like', 'http://localhost%')
+        ->get()
+        ->each(fn ($b) => $b->update(['thumbnail_url' => str_replace('http://localhost', 'http://178.128.104.13', $b->thumbnail_url)]))
+        ->count();
+
+    $count2 = BillboardPhoto::query()
+        ->where('photo_url', 'like', 'http://localhost%')
+        ->get()
+        ->each(fn ($p) => $p->update(['photo_url' => str_replace('http://localhost', 'http://178.128.104.13', $p->photo_url)]))
+        ->count();
+
+    return "Fixed {$count1} billboards and {$count2} photos.";
+});
 
 Route::prefix('dashboard')->name('dashboard.')->group(function (): void {
     Route::get('/clients', fn (): Factory|View => view('app'))->name('clients.index');
