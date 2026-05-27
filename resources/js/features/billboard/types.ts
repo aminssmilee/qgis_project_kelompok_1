@@ -1,7 +1,7 @@
 // ─── Types ─────────────────────────────────────────────────────────────────
 
 export interface Billboard {
-    id: number;
+    id: string | number;
     name: string;
     lat: number;
     lng: number;
