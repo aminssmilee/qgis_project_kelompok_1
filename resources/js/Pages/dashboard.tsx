@@ -12,6 +12,7 @@ import {
     X,
     CheckCircle,
     AlertCircle,
+    UserPlus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -262,30 +263,30 @@ export default function Page() {
         {
             title: "Total Billboard",
             value: "245",
-            description: "+12% dari bulan lalu",
+            description: "+12% bulan ini",
             icon: MapPin,
-            trend: "up",
+            gradient: "from-[#0b2a6b] via-[#123aa0] to-[#1a4acb]",
         },
         {
             title: "Pemesanan Aktif",
             value: "38",
-            description: "+5% dari bulan lalu",
+            description: "+5% bulan ini",
             icon: Calendar,
-            trend: "up",
+            gradient: "from-[#1f49c8] via-[#2b5ddd] to-[#3a6df0]",
         },
         {
             title: "Total Klien",
             value: "182",
-            description: "+22% dari bulan lalu",
+            description: "+22% bulan ini",
             icon: Users,
-            trend: "up",
+            gradient: "from-[#0b2a6b] via-[#143b9c] to-[#1c4fc9]",
         },
         {
             title: "Pendapatan Bulan Ini",
             value: "Rp 145.2 M",
-            description: "+8% dari bulan lalu",
+            description: "+8% bulan ini",
             icon: TrendingUp,
-            trend: "up",
+            gradient: "from-[#123aa0] via-[#1f4ed1] to-[#2e66f0]",
         },
     ];
 
@@ -300,74 +301,107 @@ export default function Page() {
         >
             <AppSidebar variant="inset" />
             <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col">
+                <SiteHeader
+                    title="Dashboard"
+                    subtitle="Selamat datang kembali, Super Admin"
+                />
+                <div className="flex flex-1 flex-col bg-transparent">
                     <div className="@container/main flex flex-1 flex-col gap-2">
-                        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
-                            {/* Stats Cards */}
+                        <div className="flex flex-col gap-5 px-4 py-6 md:gap-6 lg:px-6">
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                                 {stats.map((stat, index) => {
                                     const Icon = stat.icon;
                                     return (
-                                        <Card key={index}>
-                                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                                <CardTitle className="text-sm font-medium">
+                                        <Card
+                                            key={index}
+                                            className={`border-0 bg-gradient-to-br ${stat.gradient} text-white shadow-sm`}
+                                        >
+                                            <CardContent className="p-5">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white">
+                                                        <Icon className="h-4 w-4" />
+                                                    </div>
+                                                </div>
+                                                <p className="mt-5 text-xs font-medium text-white/80">
                                                     {stat.title}
-                                                </CardTitle>
-                                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold">
+                                                </p>
+                                                <div className="mt-1 text-2xl font-semibold">
                                                     {stat.value}
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">
+                                                <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white/80">
                                                     {stat.description}
-                                                </p>
+                                                </span>
                                             </CardContent>
                                         </Card>
                                     );
                                 })}
                             </div>
 
-                            {/* Charts */}
-                            <div className="px-0">
+                            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
                                 <ChartAreaInteractive />
-                            </div>
-
-                            {/* Quick Actions */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Aksi Cepat</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <Card className="h-full border border-slate-200/70">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                            Aksi Cepat
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-col gap-3">
                                         <button
                                             onClick={() =>
                                                 setShowClientModal(true)
                                             }
-                                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                                         >
-                                            Tambah Klien
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                <UserPlus className="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-slate-800">
+                                                    Tambah Klien
+                                                </span>
+                                                <span className="block text-xs text-slate-500">
+                                                    Daftarkan klien baru
+                                                </span>
+                                            </span>
                                         </button>
                                         <button
                                             onClick={() =>
                                                 setShowRentalModal(true)
                                             }
-                                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                                         >
-                                            Tambah Penyewaan
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                <Calendar className="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-slate-800">
+                                                    Tambah Penyewaan
+                                                </span>
+                                                <span className="block text-xs text-slate-500">
+                                                    Buat order penyewaan
+                                                </span>
+                                            </span>
                                         </button>
                                         <Link
                                             to="/dashboard/billboards"
-                                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                                         >
-                                            Tambah Billboard
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                <MapPin className="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-slate-800">
+                                                    Tambah Billboard
+                                                </span>
+                                                <span className="block text-xs text-slate-500">
+                                                    Input lokasi baru
+                                                </span>
+                                            </span>
                                         </Link>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
+                            </div>
 
-                            {/* Recent Bookings */}
                             <div className="px-0">
                                 <DataTable data={data} />
                             </div>

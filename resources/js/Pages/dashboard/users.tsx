@@ -17,6 +17,7 @@ import {
     Plus,
     Edit2,
     Trash2,
+    Users,
     Shield,
     MoreHorizontal,
     ChevronLeft,
@@ -71,6 +72,34 @@ const rolePermissions = {
     user: ["Akses dashboard", "Lihat profil", "Lakukan pemesanan"],
 };
 
+const roleMeta = [
+    {
+        role: "Super Admin",
+        description: "Akses penuh sistem",
+        badge: "bg-blue-100 text-blue-700",
+    },
+    {
+        role: "Admin",
+        description: "Kelola data & user",
+        badge: "bg-sky-100 text-sky-700",
+    },
+    {
+        role: "Manager",
+        description: "Lihat & approve",
+        badge: "bg-indigo-100 text-indigo-700",
+    },
+    {
+        role: "Staff",
+        description: "Input data saja",
+        badge: "bg-emerald-100 text-emerald-700",
+    },
+    {
+        role: "user",
+        description: "View only",
+        badge: "bg-slate-100 text-slate-700",
+    },
+];
+
 const columnHelper = createColumnHelper<any>();
 
 export default function UsersPage() {
@@ -82,6 +111,10 @@ export default function UsersPage() {
     const [deletingUser, setDeletingUser] = useState<UserData | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 300);
+    const roleCounts = users.reduce<Record<string, number>>((acc, user) => {
+        acc[user.role] = (acc[user.role] || 0) + 1;
+        return acc;
+    }, {});
 
     useEffect(() => {
         loadUsers();
@@ -115,17 +148,43 @@ export default function UsersPage() {
     const getRoleColor = (role: string) => {
         switch (role) {
             case "Super Admin":
-                return "bg-red-100 text-red-800";
+                return "bg-blue-100 text-blue-700";
             case "Admin":
-                return "bg-blue-100 text-blue-800";
+                return "bg-sky-100 text-sky-700";
             case "Manager":
-                return "bg-purple-100 text-purple-800";
+                return "bg-indigo-100 text-indigo-700";
             case "Staff":
-                return "bg-green-100 text-green-800";
+                return "bg-emerald-100 text-emerald-700";
             default:
-                return "bg-gray-100 text-gray-800";
+                return "bg-slate-100 text-slate-700";
         }
     };
+
+    const statCards = [
+        {
+            label: "Total User",
+            value: users.length,
+            hint: "Semua role",
+            gradient: "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]",
+            icon: Users,
+        },
+        {
+            label: "User Aktif",
+            value: users.filter((u) => u.status === "Active").length,
+            hint: "Online hari ini",
+            gradient: "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]",
+            icon: CheckCircle2,
+        },
+        {
+            label: "Admin",
+            value: users.filter(
+                (u) => u.role === "Super Admin" || u.role === "Admin",
+            ).length,
+            hint: "Hak akses penuh",
+            gradient: "from-[#0b2a6b] via-[#153c98] to-[#1c4ab8]",
+            icon: Shield,
+        },
+    ];
 
     const columns = [
         columnHelper.accessor("name", {
@@ -243,53 +302,37 @@ export default function UsersPage() {
     });
 
     return (
-        <DashboardLayout title="Pengaturan User">
+        <DashboardLayout
+            title="Pengaturan User"
+            subtitle="Kelola akun dan hak akses pengguna"
+        >
             <div className="grid gap-4 md:grid-cols-3 mb-6">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Total User
+                {statCards.map((stat) => {
+                    const Icon = stat.icon;
+                    return (
+                    <Card
+                        key={stat.label}
+                        className={`border-0 bg-gradient-to-br ${stat.gradient} text-white shadow-[0_18px_40px_-26px_rgba(13,42,109,0.6)]`}
+                    >
+                        <CardContent className="p-5">
+                            <div className="flex items-start justify-between">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                    <Icon className="h-4 w-4 text-white" />
+                                </span>
+                            </div>
+                            <p className="mt-4 text-sm text-white/80">
+                                {stat.label}
                             </p>
-                            <p className="text-3xl font-bold text-blue-600">
-                                {users.length}
+                            <p className="text-3xl font-semibold">
+                                {stat.value}
                             </p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                User Aktif
-                            </p>
-                            <p className="text-3xl font-bold text-green-600">
-                                {
-                                    users.filter((u) => u.status === "Active")
-                                        .length
-                                }
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Admin
-                            </p>
-                            <p className="text-3xl font-bold text-orange-600">
-                                {
-                                    users.filter(
-                                        (u) =>
-                                            u.role === "Super Admin" ||
-                                            u.role === "Admin",
-                                    ).length
-                                }
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+                            <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                                {stat.hint}
+                            </span>
+                        </CardContent>
+                    </Card>
+                );
+                })}
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6">
@@ -298,8 +341,8 @@ export default function UsersPage() {
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
                             <CardTitle>Daftar Pengguna</CardTitle>
                             <div className="flex items-center gap-3">
-                                <div className="relative w-48">
-                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                <div className="relative w-52">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                                     <input
                                         type="text"
                                         placeholder="Cari user..."
@@ -307,12 +350,12 @@ export default function UsersPage() {
                                         onChange={(e) =>
                                             setSearchTerm(e.target.value)
                                         }
-                                        className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full rounded-xl border border-slate-200 bg-white/90 px-9 py-2 text-sm shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
                                 <Button
                                     size="sm"
-                                    className="gap-2"
+                                    className="gap-2 rounded-xl border border-blue-200/60 bg-blue-600 text-white shadow-sm hover:bg-blue-700"
                                     onClick={() => setShowModal(true)}
                                 >
                                     <Plus className="h-4 w-4" />
@@ -321,9 +364,9 @@ export default function UsersPage() {
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="rounded-lg border overflow-hidden">
+                            <div className="rounded-xl border border-slate-200/70 overflow-hidden">
                                 <Table>
-                                    <TableHeader className="bg-gray-50">
+                                    <TableHeader className="bg-slate-50/80">
                                         {table
                                             .getHeaderGroups()
                                             .map((headerGroup) => (
@@ -382,7 +425,7 @@ export default function UsersPage() {
                                                 .rows.map((row) => (
                                                     <TableRow
                                                         key={row.id}
-                                                        className="hover:bg-gray-50 cursor-pointer"
+                                                        className="cursor-pointer transition hover:bg-slate-50"
                                                         onClick={() =>
                                                             setSelectedRole(
                                                                 row.original
@@ -439,7 +482,7 @@ export default function UsersPage() {
                                             htmlFor="rows-per-page"
                                             className="text-sm font-medium"
                                         >
-                                            Rows per page
+                                            Baris
                                         </Label>
                                         <Select
                                             value={`${table.getState().pagination.pageSize}`}
@@ -475,10 +518,8 @@ export default function UsersPage() {
                                         </Select>
                                     </div>
                                     <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                        Page{" "}
-                                        {table.getState().pagination.pageIndex +
-                                            1}{" "}
-                                        of {table.getPageCount()}
+                                        Hal {table.getState().pagination.pageIndex + 1} dari{" "}
+                                        {table.getPageCount()}
                                     </div>
                                     <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                         <Button
@@ -552,27 +593,32 @@ export default function UsersPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-3">
-                                {Object.entries(rolePermissions).map(
-                                    ([role, permissions]) => (
-                                        <div
-                                            key={role}
-                                            onClick={() =>
-                                                setSelectedRole(role)
-                                            }
-                                            className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                                                selectedRole === role
-                                                    ? "border-blue-500 bg-blue-50"
-                                                    : "border-gray-200 hover:border-gray-300"
-                                            }`}
-                                        >
-                                            <Badge
-                                                className={getRoleColor(role)}
-                                            >
-                                                {role}
-                                            </Badge>
+                                {roleMeta.map((meta) => (
+                                    <button
+                                        key={meta.role}
+                                        type="button"
+                                        onClick={() => setSelectedRole(meta.role)}
+                                        className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left transition ${
+                                            selectedRole === meta.role
+                                                ? "border-blue-400 bg-blue-50/60"
+                                                : "border-slate-200 hover:border-slate-300"
+                                        }`}
+                                    >
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <Badge className={meta.badge}>
+                                                    {meta.role}
+                                                </Badge>
+                                            </div>
+                                            <p className="mt-1 text-xs text-slate-500">
+                                                {meta.description}
+                                            </p>
                                         </div>
-                                    ),
-                                )}
+                                        <span className="min-w-7 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+                                            {roleCounts[meta.role] ?? 0}
+                                        </span>
+                                    </button>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
@@ -592,14 +638,10 @@ export default function UsersPage() {
                                         (permission: string, idx: number) => (
                                             <li
                                                 key={idx}
-                                                className="flex items-start gap-2"
+                                                className="flex items-start gap-2 text-sm"
                                             >
-                                                <span className="text-green-600 font-bold">
-                                                    ✓
-                                                </span>
-                                                <span className="text-sm">
-                                                    {permission}
-                                                </span>
+                                                <span className="mt-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+                                                <span>{permission}</span>
                                             </li>
                                         ),
                                     )}

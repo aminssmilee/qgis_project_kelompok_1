@@ -20,6 +20,7 @@ import {
     Trash2,
     Mail,
     Phone,
+    UserPlus,
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
@@ -234,64 +235,81 @@ export default function ClientsPage() {
     });
 
     return (
-        <DashboardLayout title="Manajemen Klien">
+        <DashboardLayout
+            title="Manajemen Klien"
+            subtitle="Kelola data klien dan status transaksi"
+        >
             <div className="grid gap-4 md:grid-cols-3 mb-6">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Total Klien
-                            </p>
-                            <p className="text-3xl font-bold text-blue-600">
-                                {isLoading ? (
-                                    <Skeleton className="h-9 w-12 mx-auto" />
-                                ) : (
-                                    clients.length
-                                )}
-                            </p>
+                <Card className="border-0 bg-gradient-to-br from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4] text-white">
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                <Users className="h-4 w-4 text-white" />
+                            </span>
                         </div>
+                        <p className="mt-4 text-sm text-white/80">Total Klien</p>
+                        <p className="text-3xl font-semibold">
+                            {isLoading ? (
+                                <Skeleton className="h-9 w-12" />
+                            ) : (
+                                clients.length
+                            )}
+                        </p>
+                        <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                            Semua klien
+                        </span>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Klien Aktif
-                            </p>
-                            <p className="text-3xl font-bold text-green-600">
-                                {isLoading ? (
-                                    <Skeleton className="h-9 w-12 mx-auto" />
-                                ) : (
-                                    clients.filter((c) => c.status === "Active")
-                                        .length
-                                )}
-                            </p>
+                <Card className="border-0 bg-gradient-to-br from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff] text-white">
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                <CheckCircle2 className="h-4 w-4 text-white" />
+                            </span>
                         </div>
+                        <p className="mt-4 text-sm text-white/80">Klien Aktif</p>
+                        <p className="text-3xl font-semibold">
+                            {isLoading ? (
+                                <Skeleton className="h-9 w-12" />
+                            ) : (
+                                clients.filter((c) => c.status === "Active")
+                                    .length
+                            )}
+                        </p>
+                        <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                            Sedang bekerja sama
+                        </span>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Klien Baru (Bulan Ini)
-                            </p>
-                            <p className="text-3xl font-bold text-orange-600">
-                                {isLoading ? (
-                                    <Skeleton className="h-9 w-12 mx-auto" />
-                                ) : (
-                                    clients.filter((c) => {
-                                        const joinDate = new Date(c.joinDate);
-                                        const now = new Date();
-                                        return (
-                                            joinDate.getMonth() ===
-                                                now.getMonth() &&
-                                            joinDate.getFullYear() ===
-                                                now.getFullYear()
-                                        );
-                                    }).length
-                                )}
-                            </p>
+                <Card className="border-0 bg-gradient-to-br from-[#0b2a6b] via-[#143b9c] to-[#1c4fc9] text-white">
+                    <CardContent className="p-5">
+                        <div className="flex items-start justify-between">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                <UserPlus className="h-4 w-4 text-white" />
+                            </span>
                         </div>
+                        <p className="mt-4 text-sm text-white/80">
+                            Klien Baru (Bulan Ini)
+                        </p>
+                        <p className="text-3xl font-semibold">
+                            {isLoading ? (
+                                <Skeleton className="h-9 w-12" />
+                            ) : (
+                                clients.filter((c) => {
+                                    const joinDate = new Date(c.joinDate);
+                                    const now = new Date();
+                                    return (
+                                        joinDate.getMonth() ===
+                                            now.getMonth() &&
+                                        joinDate.getFullYear() ===
+                                            now.getFullYear()
+                                    );
+                                }).length
+                            )}
+                        </p>
+                        <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                            Pertumbuhan bulan ini
+                        </span>
                     </CardContent>
                 </Card>
             </div>
@@ -304,18 +322,18 @@ export default function ClientsPage() {
                     </CardTitle>
                     <div className="flex items-center gap-3">
                         <div className="relative w-64">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
                                 placeholder="Cari klien..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full rounded-xl border border-slate-200 bg-white/90 py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
                             />
                         </div>
                         <Button
                             size="sm"
-                            className="gap-2"
+                            className="gap-2 rounded-xl border border-blue-200/60 bg-blue-600 text-white shadow-sm hover:bg-blue-700"
                             onClick={() => setShowAddModal(true)}
                         >
                             <Plus className="h-4 w-4" />
@@ -324,9 +342,9 @@ export default function ClientsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="rounded-lg border overflow-hidden">
+                    <div className="rounded-xl border border-slate-200/70 overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-gray-50">
+                            <TableHeader className="bg-slate-50/80">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
@@ -379,7 +397,7 @@ export default function ClientsPage() {
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow
                                             key={row.id}
-                                            className="hover:bg-gray-50"
+                                            className="hover:bg-slate-50"
                                         >
                                             {row
                                                 .getVisibleCells()
@@ -420,7 +438,7 @@ export default function ClientsPage() {
                                     htmlFor="rows-per-page"
                                     className="text-sm font-medium"
                                 >
-                                    Baris per halaman
+                                    Baris
                                 </Label>
                                 <Select
                                     value={`${table.getState().pagination.pageSize}`}
@@ -454,8 +472,7 @@ export default function ClientsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Halaman{" "}
-                                {table.getState().pagination.pageIndex + 1} dari{" "}
+                                Hal {table.getState().pagination.pageIndex + 1} dari{" "}
                                 {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
