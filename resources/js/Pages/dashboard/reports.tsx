@@ -87,7 +87,10 @@ export default function ReportsPage() {
     }, []);
 
     return (
-        <DashboardLayout title="Laporan & Analitik">
+        <DashboardLayout
+            title="Laporan & Analitik"
+            subtitle="Ringkasan performa dan maintenance"
+        >
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-2 mb-6">
                 {isLoading ? (
@@ -108,19 +111,27 @@ export default function ReportsPage() {
                 ) : (
                     stats.map((stat, index) => {
                         const Icon = index === 0 ? DollarSign : TrendingUp;
+                        const gradient = index === 0
+                            ? "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]"
+                            : "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]";
                         return (
-                            <Card key={index}>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium">
-                                        {stat.label}
-                                    </CardTitle>
-                                    <Icon className="h-5 w-5 text-muted-foreground" />
-                                </CardHeader>
-                                <CardContent>
-                                    <div
-                                        className={`text-3xl font-bold ${stat.color}`}
-                                    >
-                                        {stat.value}
+                            <Card
+                                key={index}
+                                className={`border-0 bg-gradient-to-br ${gradient} text-white`}
+                            >
+                                <CardContent className="p-5">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <p className="text-sm text-white/80">
+                                                {stat.label}
+                                            </p>
+                                            <div className="text-3xl font-semibold">
+                                                {stat.value}
+                                            </div>
+                                        </div>
+                                        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                            <Icon className="h-4 w-4 text-white" />
+                                        </span>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -178,7 +189,7 @@ export default function ReportsPage() {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div className="w-full bg-slate-200 rounded-full h-2">
                                                 <div
                                                     className="bg-green-600 h-2 rounded-full transition-all duration-500"
                                                     style={{
@@ -235,7 +246,7 @@ export default function ReportsPage() {
                                                 {bb.utilization}%
                                             </Badge>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2">
+                                        <div className="w-full bg-slate-200 rounded-full h-2">
                                             <div
                                                 className="bg-blue-600 h-2 rounded-full transition-all duration-500"
                                                 style={{
@@ -263,9 +274,9 @@ export default function ReportsPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="rounded-lg border overflow-hidden">
+                    <div className="rounded-xl border border-slate-200/70 overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-gray-50">
+                            <TableHeader className="bg-slate-50/80">
                                 <TableRow>
                                     <TableHead className="font-semibold">
                                         Billboard
@@ -311,7 +322,7 @@ export default function ReportsPage() {
                                     maintenanceLogs.map((log) => (
                                         <TableRow
                                             key={log.id}
-                                            className="hover:bg-gray-50"
+                                            className="hover:bg-slate-50"
                                         >
                                             <TableCell className="font-medium text-gray-900">
                                                 {log.billboard}

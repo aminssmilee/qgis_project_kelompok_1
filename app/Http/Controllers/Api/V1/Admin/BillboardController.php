@@ -7,7 +7,6 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
 use App\Models\BillboardPhoto;
-use App\Models\BillboardPricing;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -23,11 +22,19 @@ final class BillboardController
      */
     public function index(): JsonResponse
     {
-        $billboards = Billboard::query()
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
+        $query = Billboard::query()
             ->with(['category', 'activePricing', 'photos'])
-            ->select('*')
-            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+            ->select('*');
+
+        if ($isPostgres) {
+            $query
+                ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+        }
+
+        $billboards = $query
             ->latest()
             ->get()
             ->map(fn (Billboard $b): array => $this->format($b));
@@ -43,6 +50,8 @@ final class BillboardController
      */
     public function store(Request $request): JsonResponse
     {
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'code' => ['nullable', 'string', 'max:30', 'unique:billboards,code'],
@@ -90,11 +99,13 @@ final class BillboardController
             $data['description'] = "Ukuran: {$size}".($priceLabel ? " | Harga: {$priceLabel}" : '');
         }
 
+        $locationValue = $isPostgres
+            ? DB::raw("ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography")
+            : $this->encodeLocation($lat, $lng);
+
         $billboard = Billboard::query()->create([
             ...$data,
-            'location' => DB::raw(
-                "ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography"
-            ),
+            'location' => $locationValue,
         ]);
 
         if ($priceMonth > 0) {
@@ -111,8 +122,11 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+                    ->when($isPostgres, function ($query): void {
+                        $query
+                            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+                    })
                     ->findOrFail($billboard->id)
             ),
         ], 201);
@@ -123,11 +137,16 @@ final class BillboardController
      */
     public function show(string $id): JsonResponse
     {
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
         $billboard = Billboard::query()
             ->with(['category', 'activePricing', 'photos'])
             ->select('*')
-            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+            ->when($isPostgres, function ($query): void {
+                $query
+                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+            })
             ->findOrFail($id);
 
         return response()->json([
@@ -141,6 +160,8 @@ final class BillboardController
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
         $billboard = Billboard::query()->findOrFail($id);
 
         $data = $request->validate([
@@ -176,9 +197,9 @@ final class BillboardController
             $lng = (float) $data['lng'];
             unset($data['lat'], $data['lng']);
 
-            $data['location'] = DB::raw(
-                "ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography"
-            );
+            $data['location'] = $isPostgres
+                ? DB::raw("ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography")
+                : $this->encodeLocation($lat, $lng);
         } else {
             unset($data['lat'], $data['lng']);
         }
@@ -205,8 +226,11 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+                    ->when($isPostgres, function ($query): void {
+                        $query
+                            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+                    })
                     ->findOrFail($billboard->id)
             ),
         ]);
@@ -297,6 +321,16 @@ final class BillboardController
             $price = isset($priceMatch[1]) ? mb_trim($priceMatch[1]) : null;
         }
 
+        $lat = $billboard->lat !== null ? (float) $billboard->lat : null;
+        $lng = $billboard->lng !== null ? (float) $billboard->lng : null;
+        if ($lat === null || $lng === null) {
+            [$lat, $lng] = $this->parseLocation(
+                is_string($billboard->location) ? $billboard->location : null,
+                $lat,
+                $lng
+            );
+        }
+
         return [
             'id' => $billboard->id,
             'name' => $billboard->name,
@@ -310,8 +344,8 @@ final class BillboardController
             'address' => $billboard->address,
             'district' => $billboard->district,
             'city' => $billboard->city,
-            'lat' => $billboard->lat !== null ? (float) $billboard->lat : null,
-            'lng' => $billboard->lng !== null ? (float) $billboard->lng : null,
+            'lat' => $lat,
+            'lng' => $lng,
             'facing_direction' => $billboard->facing_direction,
             'traffic_density' => $billboard->traffic_density,
             'is_illuminated' => $billboard->is_illuminated,
@@ -322,82 +356,38 @@ final class BillboardController
         ];
     }
 
-    private function parsePriceLabel(string $priceLabel): float
+    private function encodeLocation(float $lat, float $lng): ?string
     {
-        $normalized = mb_strtolower($priceLabel);
-        $number = 0.0;
+        $location = json_encode(['lat' => $lat, 'lng' => $lng]);
 
-        if (preg_match('/(\d+([\.,]\d+)?)/', $normalized, $matches) === 1) {
-            $raw = str_replace(['.', ','], ['', '.'], $matches[1]);
-            $number = (float) $raw;
-        }
-
-        if ($number <= 0) {
-            return 0.0;
-        }
-
-        if (str_contains($normalized, 'miliar')) {
-            $number *= 1000000000;
-        } elseif (str_contains($normalized, 'juta')) {
-            $number *= 1000000;
-        }
-
-        if (preg_match('/(\d+)\s*bulan/', $normalized, $periodMatches) === 1) {
-            $months = (int) $periodMatches[1];
-            if ($months > 0) {
-                $number /= $months;
-            }
-        }
-
-        return $number;
+        return $location === false ? null : $location;
     }
 
-    private function upsertBillboardPricing(string $billboardId, float $pricePerMonth): void
+    /**
+     * @return array{0: ?float, 1: ?float}
+     */
+    private function parseLocation(?string $location, ?float $lat, ?float $lng): array
     {
-        BillboardPricing::query()->updateOrCreate(
-            ['billboard_id' => $billboardId, 'is_active' => true],
-            [
-                'price_per_month' => $pricePerMonth,
-                'price_per_day' => round($pricePerMonth / 30, 2),
-                'price_per_week' => round($pricePerMonth / 4, 2),
-                'price_per_year' => round($pricePerMonth * 12, 2),
-            ]
-        );
-    }
-
-    private function upsertBillboardSize(string $billboardId, string $sizeLabel): void
-    {
-        $sizeParts = explode('x', $sizeLabel);
-        $width = isset($sizeParts[0]) ? (float) $sizeParts[0] : 0.0;
-        $height = isset($sizeParts[1]) ? (float) $sizeParts[1] : 0.0;
-
-        $existingSize = DB::table('billboard_sizes')
-            ->where('billboard_id', $billboardId)
-            ->where('is_primary', true)
-            ->first();
-
-        $payload = [
-            'label' => $sizeLabel.'m',
-            'width_m' => $width,
-            'height_m' => $height,
-            'area_m2' => round($width * $height, 2),
-            'updated_at' => now(),
-        ];
-
-        if ($existingSize === null) {
-            DB::table('billboard_sizes')->insert([
-                'id' => (string) Str::uuid(),
-                'billboard_id' => $billboardId,
-                'is_primary' => true,
-                'created_at' => now(),
-                ...$payload,
-            ]);
-
-            return;
+        if ($location === null || $location === '') {
+            return [$lat, $lng];
         }
 
-        DB::table('billboard_sizes')
-            ->where('id', $existingSize->id)
-            ->update($payload);
+        $decoded = json_decode($location, true);
+        if (is_array($decoded) && isset($decoded['lat'], $decoded['lng'])) {
+            $parsedLat = is_numeric($decoded['lat']) ? (float) $decoded['lat'] : $lat;
+            $parsedLng = is_numeric($decoded['lng']) ? (float) $decoded['lng'] : $lng;
+
+            return [$parsedLat, $parsedLng];
+        }
+
+        if (str_contains($location, ',')) {
+            [$latString, $lngString] = array_map('trim', explode(',', $location, 2));
+            $parsedLat = is_numeric($latString) ? (float) $latString : $lat;
+            $parsedLng = is_numeric($lngString) ? (float) $lngString : $lng;
+
+            return [$parsedLat, $parsedLng];
+        }
+
+        return [$lat, $lng];
     }
 }

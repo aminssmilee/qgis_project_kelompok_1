@@ -258,54 +258,64 @@ export default function UsersPage() {
         },
     });
 
+    const statCards = React.useMemo(
+        () => [
+            {
+                label: "Total User",
+                value: users.length,
+                hint: "Semua role",
+                gradient: "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]",
+                icon: Users,
+            },
+            {
+                label: "User Aktif",
+                value: users.filter((u) => u.status === "Active").length,
+                hint: "Online hari ini",
+                gradient: "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]",
+                icon: CheckCircle2,
+            },
+            {
+                label: "Admin",
+                value: users.filter(
+                    (u) => u.role === "Super Admin" || u.role === "Admin",
+                ).length,
+                hint: "Hak akses penuh",
+                gradient: "from-[#0b2a6b] via-[#153c98] to-[#1c4ab8]",
+                icon: Shield,
+            },
+        ],
+        [users],
+    );
+
     return (
         <DashboardLayout title="Pengaturan User">
             <div className="grid gap-4 md:grid-cols-3 mb-6">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Total User
-                            </p>
-                            <p className="text-3xl font-bold text-blue-600">
-                                {users.length}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                User Aktif
-                            </p>
-                            <p className="text-3xl font-bold text-green-600">
-                                {
-                                    users.filter((u) => u.status === "Active")
-                                        .length
-                                }
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-center">
-                            <p className="text-sm font-medium text-gray-600">
-                                Admin
-                            </p>
-                            <p className="text-3xl font-bold text-orange-600">
-                                {
-                                    users.filter(
-                                        (u) =>
-                                            u.role === "Super Admin" ||
-                                            u.role === "Admin",
-                                    ).length
-                                }
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
+                {statCards.map((stat) => {
+                    const Icon = stat.icon;
+                    return (
+                        <Card
+                            key={stat.label}
+                            className={`border-0 bg-gradient-to-br ${stat.gradient} text-white shadow-[0_18px_40px_-26px_rgba(13,42,109,0.6)]`}
+                        >
+                            <CardContent className="p-5">
+                                <div className="flex items-start justify-between">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                        <Icon className="h-4 w-4 text-white" />
+                                    </span>
+                                </div>
+                                <p className="mt-4 text-sm text-white/80">
+                                    {stat.label}
+                                </p>
+                                <p className="text-3xl font-semibold">
+                                    {stat.value}
+                                </p>
+                                <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                                    {stat.hint}
+                                </span>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
             </div>
 
             <div className="grid lg:grid-cols-3 gap-6">

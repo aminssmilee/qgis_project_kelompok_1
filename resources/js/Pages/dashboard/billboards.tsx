@@ -19,6 +19,7 @@ import {
     Eye,
     Search,
     MoreHorizontal,
+    MapPin,
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
@@ -323,66 +324,92 @@ export default function BillboardsPage() {
             {
                 label: "Total Billboard",
                 value: billboards.length.toString(),
-                color: "text-blue-600",
+                hint: "Semua lokasi",
+                gradient: "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]",
+                icon: MapPin,
             },
             {
                 label: "Available",
                 value: billboards
                     .filter((b) => b.status === "Available")
                     .length.toString(),
-                color: "text-green-600",
+                hint: "Siap sewa",
+                gradient: "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]",
+                icon: CheckCircle2,
             },
             {
                 label: "Booked",
                 value: billboards
                     .filter((b) => b.status === "Booked")
                     .length.toString(),
-                color: "text-orange-600",
+                hint: "Sedang terpakai",
+                gradient: "from-[#0b2a6b] via-[#143b9c] to-[#1c4fc9]",
+                icon: Clock,
             },
             {
                 label: "Maintenance",
                 value: billboards
                     .filter((b) => b.status === "Maintenance")
                     .length.toString(),
-                color: "text-red-600",
+                hint: "Perlu perhatian",
+                gradient: "from-[#e14b47] via-[#e4524d] to-[#f06a60]",
+                icon: AlertCircle,
             },
         ],
         [billboards],
     );
 
     return (
-        <DashboardLayout title="Katalog Billboard">
+        <DashboardLayout
+            title="Katalog Billboard"
+            subtitle="Daftar seluruh aset billboard yang terdaftar"
+        >
             <div className="grid gap-4 md:grid-cols-4 mb-6">
-                {stats.map((stat, index) => (
-                    <Card key={index}>
-                        <CardContent className="pt-6">
-                            <div className="text-center">
-                                <p className="text-sm font-medium text-gray-600">
-                                    {stat.label}
-                                </p>
-                                <p
-                                    className={`text-3xl font-bold ${stat.color}`}
-                                >
-                                    {stat.value}
-                                </p>
+                {stats.map((stat) => {
+                    const Icon = stat.icon;
+                    return (
+                    <Card
+                        key={stat.label}
+                        className={`border-0 bg-gradient-to-br ${stat.gradient} text-white`}
+                    >
+                        <CardContent className="p-5">
+                            <div className="flex items-start justify-between">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                    <Icon className="h-4 w-4 text-white" />
+                                </span>
                             </div>
+                            <p className="mt-4 text-sm text-white/80">
+                                {stat.label}
+                            </p>
+                            <p className="text-3xl font-semibold">
+                                {stat.value}
+                            </p>
+                            <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                                {stat.hint}
+                            </span>
                         </CardContent>
                     </Card>
-                ))}
+                );
+                })}
             </div>
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle>Daftar Billboard</CardTitle>
+                    <div>
+                        <CardTitle>Daftar Billboard</CardTitle>
+                        <p className="text-xs text-slate-500">
+                            Pantau status, lokasi, dan harga billboard
+                        </p>
+                    </div>
                     <div className="flex items-center gap-3">
                         <div className="relative w-64">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                             <input
                                 type="text"
                                 placeholder="Cari billboard..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full rounded-xl border border-slate-200 bg-white/90 py-2 pl-9 pr-3 text-sm shadow-sm transition focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
                             />
                         </div>
                         {/* <Button size="sm" className="gap-2">
@@ -392,9 +419,9 @@ export default function BillboardsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="rounded-lg border overflow-hidden">
+                    <div className="rounded-xl border border-slate-200/70 overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-gray-50">
+                            <TableHeader className="bg-slate-50/80">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
@@ -450,7 +477,7 @@ export default function BillboardsPage() {
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow
                                             key={row.id}
-                                            className="hover:bg-gray-50"
+                                            className="hover:bg-slate-50"
                                         >
                                             {row
                                                 .getVisibleCells()
@@ -492,7 +519,7 @@ export default function BillboardsPage() {
                                     htmlFor="rows-per-page"
                                     className="text-sm font-medium"
                                 >
-                                    Rows per page
+                                    Baris
                                 </Label>
                                 <Select
                                     value={`${table.getState().pagination.pageSize}`}
@@ -526,8 +553,8 @@ export default function BillboardsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Page {table.getState().pagination.pageIndex + 1}{" "}
-                                of {table.getPageCount()}
+                                Hal {table.getState().pagination.pageIndex + 1} dari{" "}
+                                {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button

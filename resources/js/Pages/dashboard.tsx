@@ -21,6 +21,7 @@ import {
     X,
     CheckCircle,
     AlertCircle,
+    UserPlus,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -285,36 +286,31 @@ export default function Page() {
     const stats = [
         {
             title: "Total Billboard",
-            value: isSummaryLoading
-                ? "..."
-                : (summary?.total_billboards?.toString() ?? "0"),
-            description: "Semua titik reklame terdaftar",
+            value: "245",
+            description: "+12% bulan ini",
             icon: MapPin,
+            gradient: "from-[#0b2a6b] via-[#123aa0] to-[#1a4acb]",
         },
         {
             title: "Pemesanan Aktif",
-            value: isSummaryLoading
-                ? "..."
-                : (summary?.active_rentals?.toString() ?? "0"),
-            description: "Kontrak sewa sedang berjalan",
+            value: "38",
+            description: "+5% bulan ini",
             icon: Calendar,
+            gradient: "from-[#1f49c8] via-[#2b5ddd] to-[#3a6df0]",
         },
         {
             title: "Total Klien",
-            value: isSummaryLoading
-                ? "..."
-                : (summary?.total_clients?.toString() ?? "0"),
-            description: "Mitra/klien terdaftar",
+            value: "182",
+            description: "+22% bulan ini",
             icon: Users,
+            gradient: "from-[#0b2a6b] via-[#143b9c] to-[#1c4fc9]",
         },
         {
-            title: "Total Pendapatan",
-            value: isSummaryLoading
-                ? "..."
-                : "Rp " +
-                  Number(summary?.total_revenue ?? 0).toLocaleString("id-ID"),
-            description: "Akumulasi pembayaran lunas",
+            title: "Pendapatan Bulan Ini",
+            value: "Rp 145.2 M",
+            description: "+8% bulan ini",
             icon: TrendingUp,
+            gradient: "from-[#123aa0] via-[#1f4ed1] to-[#2e66f0]",
         },
     ];
 
@@ -329,212 +325,110 @@ export default function Page() {
         >
             <AppSidebar variant="inset" />
             <SidebarInset>
-                <SiteHeader />
-                <div className="flex flex-1 flex-col">
+                <SiteHeader
+                    title="Dashboard"
+                    subtitle="Selamat datang kembali, Super Admin"
+                />
+                <div className="flex flex-1 flex-col bg-transparent">
                     <div className="@container/main flex flex-1 flex-col gap-2">
-                        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
-                            {/* Stats Cards */}
+                        <div className="flex flex-col gap-5 px-4 py-6 md:gap-6 lg:px-6">
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                                 {stats.map((stat, index) => {
                                     const Icon = stat.icon;
                                     return (
-                                        <Card key={index}>
-                                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                                <CardTitle className="text-sm font-medium">
+                                        <Card
+                                            key={index}
+                                            className={`border-0 bg-gradient-to-br ${stat.gradient} text-white shadow-sm`}
+                                        >
+                                            <CardContent className="p-5">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white">
+                                                        <Icon className="h-4 w-4" />
+                                                    </div>
+                                                </div>
+                                                <p className="mt-5 text-xs font-medium text-white/80">
                                                     {stat.title}
-                                                </CardTitle>
-                                                <Icon className="h-4 w-4 text-muted-foreground" />
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="text-2xl font-bold">
+                                                </p>
+                                                <div className="mt-1 text-2xl font-semibold">
                                                     {stat.value}
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">
+                                                <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-white/80">
                                                     {stat.description}
-                                                </p>
+                                                </span>
                                             </CardContent>
                                         </Card>
                                     );
                                 })}
                             </div>
 
-                            {/* Charts */}
-                            <div className="px-0">
+                            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
                                 <ChartAreaInteractive />
-                            </div>
-
-                            {/* Quick Actions */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Aksi Cepat</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                <Card className="h-full border border-slate-200/70">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                            Aksi Cepat
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-col gap-3">
                                         <button
                                             onClick={() =>
                                                 setShowClientModal(true)
                                             }
-                                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                                         >
-                                            Tambah Klien
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                <UserPlus className="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-slate-800">
+                                                    Tambah Klien
+                                                </span>
+                                                <span className="block text-xs text-slate-500">
+                                                    Daftarkan klien baru
+                                                </span>
+                                            </span>
                                         </button>
                                         <button
                                             onClick={() =>
                                                 setShowRentalModal(true)
                                             }
-                                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                                         >
-                                            Tambah Penyewaan
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                <Calendar className="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-slate-800">
+                                                    Tambah Penyewaan
+                                                </span>
+                                                <span className="block text-xs text-slate-500">
+                                                    Buat order penyewaan
+                                                </span>
+                                            </span>
                                         </button>
                                         <Link
                                             to="/dashboard/billboards"
-                                            className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50"
                                         >
-                                            Tambah Billboard
+                                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                                <MapPin className="h-4 w-4" />
+                                            </span>
+                                            <span>
+                                                <span className="block text-sm font-semibold text-slate-800">
+                                                    Tambah Billboard
+                                                </span>
+                                                <span className="block text-xs text-slate-500">
+                                                    Input lokasi baru
+                                                </span>
+                                            </span>
                                         </Link>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                    </CardContent>
+                                </Card>
+                            </div>
 
-                            {/* Recent Bookings */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Pemesanan Terbaru</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="rounded-lg border overflow-hidden">
-                                        <Table>
-                                            <TableHeader className="bg-gray-50">
-                                                <TableRow>
-                                                    <TableHead className="font-semibold">
-                                                        ID Booking
-                                                    </TableHead>
-                                                    <TableHead className="font-semibold">
-                                                        Klien
-                                                    </TableHead>
-                                                    <TableHead className="font-semibold">
-                                                        Billboard
-                                                    </TableHead>
-                                                    <TableHead className="font-semibold">
-                                                        Durasi
-                                                    </TableHead>
-                                                    <TableHead className="font-semibold">
-                                                        Total Harga
-                                                    </TableHead>
-                                                    <TableHead className="font-semibold">
-                                                        Status Sewa
-                                                    </TableHead>
-                                                    <TableHead className="font-semibold">
-                                                        Pembayaran
-                                                    </TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {isSummaryLoading ? (
-                                                    <TableRow>
-                                                        <TableCell
-                                                            colSpan={7}
-                                                            className="h-24 text-center"
-                                                        >
-                                                            Memuat data...
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ) : summary?.recent_bookings
-                                                      ?.length > 0 ? (
-                                                    summary.recent_bookings.map(
-                                                        (booking: any) => (
-                                                            <TableRow
-                                                                key={booking.id}
-                                                                className="hover:bg-gray-50"
-                                                            >
-                                                                <TableCell className="font-medium text-blue-600">
-                                                                    {
-                                                                        booking.booking_code
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell className="text-sm">
-                                                                    {
-                                                                        booking.client
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell className="text-sm">
-                                                                    {
-                                                                        booking.billboard
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell className="text-sm">
-                                                                    {
-                                                                        booking.duration
-                                                                    }
-                                                                    <br />
-                                                                    <span className="text-xs text-gray-500">
-                                                                        {
-                                                                            booking.start_date
-                                                                        }{" "}
-                                                                        s/d{" "}
-                                                                        {
-                                                                            booking.end_date
-                                                                        }
-                                                                    </span>
-                                                                </TableCell>
-                                                                <TableCell className="font-semibold">
-                                                                    {
-                                                                        booking.amount
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Badge
-                                                                        className={cn(
-                                                                            "gap-1 px-2 py-0.5 font-medium",
-                                                                            booking.status ===
-                                                                                "active"
-                                                                                ? "bg-blue-100 text-blue-800 hover:bg-blue-100/80"
-                                                                                : booking.status ===
-                                                                                    "completed"
-                                                                                  ? "bg-gray-100 text-gray-800 hover:bg-gray-100/80"
-                                                                                  : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
-                                                                        )}
-                                                                    >
-                                                                        {booking.status
-                                                                            .toUpperCase()
-                                                                            .replaceAll(
-                                                                                "_",
-                                                                                " ",
-                                                                            )}
-                                                                    </Badge>
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Badge
-                                                                        className={cn(
-                                                                            "gap-1 px-2 py-0.5 font-medium",
-                                                                            booking.payment ===
-                                                                                "paid"
-                                                                                ? "bg-green-100 text-green-800 hover:bg-green-100/80"
-                                                                                : "bg-red-100 text-red-800 hover:bg-red-100/80",
-                                                                        )}
-                                                                    >
-                                                                        {booking.payment.toUpperCase()}
-                                                                    </Badge>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ),
-                                                    )
-                                                ) : (
-                                                    <TableRow>
-                                                        <TableCell
-                                                            colSpan={7}
-                                                            className="h-24 text-center"
-                                                        >
-                                                            Tidak ada booking
-                                                            terbaru.
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <div className="px-0">
+                                <DataTable data={data} />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -562,11 +456,10 @@ export default function Page() {
                                 <CardContent className="pt-6">
                                     {submitStatus && (
                                         <div
-                                            className={`mb-4 p-3 rounded-lg flex items-gap-2 ${
-                                                submitStatus.type === "success"
-                                                    ? "bg-green-50 border border-green-200"
-                                                    : "bg-red-50 border border-red-200"
-                                            }`}
+                                            className={`mb-4 p-3 rounded-lg flex items-gap-2 ${submitStatus.type === "success"
+                                                ? "bg-green-50 border border-green-200"
+                                                : "bg-red-50 border border-red-200"
+                                                }`}
                                         >
                                             {submitStatus.type === "success" ? (
                                                 <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
@@ -574,12 +467,11 @@ export default function Page() {
                                                 <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0" />
                                             )}
                                             <p
-                                                className={`text-sm ${
-                                                    submitStatus.type ===
+                                                className={`text-sm ${submitStatus.type ===
                                                     "success"
-                                                        ? "text-green-700"
-                                                        : "text-red-700"
-                                                }`}
+                                                    ? "text-green-700"
+                                                    : "text-red-700"
+                                                    }`}
                                             >
                                                 {submitStatus.message}
                                             </p>
@@ -605,11 +497,10 @@ export default function Page() {
                                                         name: e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    clientErrors.name
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${clientErrors.name
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                                 placeholder="PT Maju Jaya"
                                             />
                                             {clientErrors.name && (
@@ -633,11 +524,10 @@ export default function Page() {
                                                         email: e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    clientErrors.email
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${clientErrors.email
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                                 placeholder="email@perusahaan.com"
                                             />
                                             {clientErrors.email && (
@@ -661,11 +551,10 @@ export default function Page() {
                                                         phone: e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    clientErrors.phone
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${clientErrors.phone
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                                 placeholder="08xxxxxxxxxx"
                                             />
                                             {clientErrors.phone && (
@@ -689,11 +578,10 @@ export default function Page() {
                                                         city: e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    clientErrors.city
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${clientErrors.city
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                                 placeholder="Lamongan"
                                             />
                                             {clientErrors.city && (
@@ -750,11 +638,10 @@ export default function Page() {
                                 <CardContent className="pt-6">
                                     {submitStatus && (
                                         <div
-                                            className={`mb-4 p-3 rounded-lg flex items-gap-2 ${
-                                                submitStatus.type === "success"
-                                                    ? "bg-green-50 border border-green-200"
-                                                    : "bg-red-50 border border-red-200"
-                                            }`}
+                                            className={`mb-4 p-3 rounded-lg flex items-gap-2 ${submitStatus.type === "success"
+                                                ? "bg-green-50 border border-green-200"
+                                                : "bg-red-50 border border-red-200"
+                                                }`}
                                         >
                                             {submitStatus.type === "success" ? (
                                                 <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
@@ -762,12 +649,11 @@ export default function Page() {
                                                 <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0" />
                                             )}
                                             <p
-                                                className={`text-sm ${
-                                                    submitStatus.type ===
+                                                className={`text-sm ${submitStatus.type ===
                                                     "success"
-                                                        ? "text-green-700"
-                                                        : "text-red-700"
-                                                }`}
+                                                    ? "text-green-700"
+                                                    : "text-red-700"
+                                                    }`}
                                             >
                                                 {submitStatus.message}
                                             </p>
@@ -792,11 +678,10 @@ export default function Page() {
                                                             e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    rentalErrors.client_id
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${rentalErrors.client_id
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                             >
                                                 <option value="">
                                                     Pilih klien
@@ -835,11 +720,10 @@ export default function Page() {
                                                             e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    rentalErrors.billboard_id
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${rentalErrors.billboard_id
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                             >
                                                 <option value="">
                                                     Pilih billboard
@@ -879,11 +763,10 @@ export default function Page() {
                                                             e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    rentalErrors.rental_date
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${rentalErrors.rental_date
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                             />
                                             {rentalErrors.rental_date && (
                                                 <p className="text-xs text-red-600 mt-1">
@@ -909,11 +792,10 @@ export default function Page() {
                                                             e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    rentalErrors.duration_days
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${rentalErrors.duration_days
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                                 placeholder="30"
                                             />
                                             {rentalErrors.duration_days && (
@@ -940,11 +822,10 @@ export default function Page() {
                                                             e.target.value,
                                                     })
                                                 }
-                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
-                                                    rentalErrors.total_price
-                                                        ? "border-red-500 focus:ring-red-500"
-                                                        : "border-gray-300 focus:ring-blue-500"
-                                                }`}
+                                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${rentalErrors.total_price
+                                                    ? "border-red-500 focus:ring-red-500"
+                                                    : "border-gray-300 focus:ring-blue-500"
+                                                    }`}
                                                 placeholder="50000000"
                                             />
                                             {rentalErrors.total_price && (
