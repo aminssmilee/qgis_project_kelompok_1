@@ -368,28 +368,28 @@ export default function BillboardsPage() {
                 {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                    <Card
-                        key={stat.label}
-                        className={`border-0 bg-gradient-to-br ${stat.gradient} text-white`}
-                    >
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
-                                    <Icon className="h-4 w-4 text-white" />
+                        <Card
+                            key={stat.label}
+                            className={`border-0 bg-gradient-to-br ${stat.gradient} text-white`}
+                        >
+                            <CardContent className="p-5">
+                                <div className="flex items-start justify-between">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                        <Icon className="h-4 w-4 text-white" />
+                                    </span>
+                                </div>
+                                <p className="mt-4 text-sm text-white/80">
+                                    {stat.label}
+                                </p>
+                                <p className="text-3xl font-semibold">
+                                    {stat.value}
+                                </p>
+                                <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                                    {stat.hint}
                                 </span>
-                            </div>
-                            <p className="mt-4 text-sm text-white/80">
-                                {stat.label}
-                            </p>
-                            <p className="text-3xl font-semibold">
-                                {stat.value}
-                            </p>
-                            <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
-                                {stat.hint}
-                            </span>
-                        </CardContent>
-                    </Card>
-                );
+                            </CardContent>
+                        </Card>
+                    );
                 })}
             </div>
 
@@ -553,8 +553,8 @@ export default function BillboardsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Hal {table.getState().pagination.pageIndex + 1} dari{" "}
-                                {table.getPageCount()}
+                                Hal {table.getState().pagination.pageIndex + 1}{" "}
+                                dari {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button

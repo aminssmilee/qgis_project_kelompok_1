@@ -111,9 +111,10 @@ export default function ReportsPage() {
                 ) : (
                     stats.map((stat, index) => {
                         const Icon = index === 0 ? DollarSign : TrendingUp;
-                        const gradient = index === 0
-                            ? "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]"
-                            : "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]";
+                        const gradient =
+                            index === 0
+                                ? "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]"
+                                : "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]";
                         return (
                             <Card
                                 key={index}

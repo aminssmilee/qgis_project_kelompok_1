@@ -9,6 +9,7 @@ use App\Models\BillboardCategory;
 use App\Models\BillboardPhoto;
 use App\Models\BillboardPricing;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -123,7 +124,7 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->when($isPostgres, function (\Illuminate\Database\Eloquent\Builder $query): void {
+                    ->when($isPostgres, function (Builder $query): void {
                         $query
                             ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
@@ -143,7 +144,7 @@ final class BillboardController
         $billboard = Billboard::query()
             ->with(['category', 'activePricing', 'photos'])
             ->select('*')
-            ->when($isPostgres, function (\Illuminate\Database\Eloquent\Builder $query): void {
+            ->when($isPostgres, function (Builder $query): void {
                 $query
                     ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                     ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
@@ -227,7 +228,7 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->when($isPostgres, function (\Illuminate\Database\Eloquent\Builder $query): void {
+                    ->when($isPostgres, function (Builder $query): void {
                         $query
                             ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
@@ -382,7 +383,7 @@ final class BillboardController
         }
 
         if (str_contains($location, ',')) {
-            [$latString, $lngString] = array_map('trim', explode(',', $location, 2));
+            [$latString, $lngString] = array_map(trim(...), explode(',', $location, 2));
             $parsedLat = is_numeric($latString) ? (float) $latString : $lat;
             $parsedLng = is_numeric($lngString) ? (float) $lngString : $lng;
 

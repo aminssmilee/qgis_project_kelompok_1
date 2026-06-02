@@ -263,7 +263,9 @@ export default function ClientsPage() {
                                 <Users className="h-4 w-4 text-white" />
                             </span>
                         </div>
-                        <p className="mt-4 text-sm text-white/80">Total Klien</p>
+                        <p className="mt-4 text-sm text-white/80">
+                            Total Klien
+                        </p>
                         <p className="text-3xl font-semibold">
                             {isLoading ? (
                                 <Skeleton className="h-9 w-12" />
@@ -283,7 +285,9 @@ export default function ClientsPage() {
                                 <CheckCircle2 className="h-4 w-4 text-white" />
                             </span>
                         </div>
-                        <p className="mt-4 text-sm text-white/80">Klien Aktif</p>
+                        <p className="mt-4 text-sm text-white/80">
+                            Klien Aktif
+                        </p>
                         <p className="text-3xl font-semibold">
                             {isLoading ? (
                                 <Skeleton className="h-9 w-12" />
@@ -488,8 +492,8 @@ export default function ClientsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Hal {table.getState().pagination.pageIndex + 1} dari{" "}
-                                {table.getPageCount()}
+                                Hal {table.getState().pagination.pageIndex + 1}{" "}
+                                dari {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button

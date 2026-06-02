@@ -558,28 +558,28 @@ export default function RentalsPage() {
                 {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                    <Card
-                        key={stat.label}
-                        className={`border-0 bg-gradient-to-br ${stat.gradient} text-white`}
-                    >
-                        <CardContent className="p-5">
-                            <div className="flex items-start justify-between">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
-                                    <Icon className="h-4 w-4 text-white" />
+                        <Card
+                            key={stat.label}
+                            className={`border-0 bg-gradient-to-br ${stat.gradient} text-white`}
+                        >
+                            <CardContent className="p-5">
+                                <div className="flex items-start justify-between">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                        <Icon className="h-4 w-4 text-white" />
+                                    </span>
+                                </div>
+                                <p className="mt-4 text-sm text-white/80">
+                                    {stat.label}
+                                </p>
+                                <p className="text-3xl font-semibold">
+                                    {stat.value}
+                                </p>
+                                <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                                    {stat.hint}
                                 </span>
-                            </div>
-                            <p className="mt-4 text-sm text-white/80">
-                                {stat.label}
-                            </p>
-                            <p className="text-3xl font-semibold">
-                                {stat.value}
-                            </p>
-                            <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
-                                {stat.hint}
-                            </span>
-                        </CardContent>
-                    </Card>
-                );
+                            </CardContent>
+                        </Card>
+                    );
                 })}
             </div>
 
@@ -735,8 +735,8 @@ export default function RentalsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Hal {table.getState().pagination.pageIndex + 1} dari{" "}
-                                {table.getPageCount()}
+                                Hal {table.getState().pagination.pageIndex + 1}{" "}
+                                dari {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button
@@ -836,7 +836,8 @@ export default function RentalsPage() {
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        client_id: e.target.value,
+                                                        client_id:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
@@ -870,11 +871,14 @@ export default function RentalsPage() {
                                                 Billboard *
                                             </label>
                                             <select
-                                                value={rentalFormData.billboard_id}
+                                                value={
+                                                    rentalFormData.billboard_id
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        billboard_id: e.target.value,
+                                                        billboard_id:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
@@ -911,11 +915,14 @@ export default function RentalsPage() {
                                             </label>
                                             <input
                                                 type="date"
-                                                value={rentalFormData.rental_date}
+                                                value={
+                                                    rentalFormData.rental_date
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        rental_date: e.target.value,
+                                                        rental_date:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
@@ -937,11 +944,14 @@ export default function RentalsPage() {
                                             <input
                                                 type="number"
                                                 min={1}
-                                                value={rentalFormData.duration_days}
+                                                value={
+                                                    rentalFormData.duration_days
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        duration_days: e.target.value,
+                                                        duration_days:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
@@ -963,11 +973,14 @@ export default function RentalsPage() {
                                             <input
                                                 type="number"
                                                 min={0}
-                                                value={rentalFormData.total_price}
+                                                value={
+                                                    rentalFormData.total_price
+                                                }
                                                 onChange={(e) =>
                                                     setRentalFormData({
                                                         ...rentalFormData,
-                                                        total_price: e.target.value,
+                                                        total_price:
+                                                            e.target.value,
                                                     })
                                                 }
                                                 className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
