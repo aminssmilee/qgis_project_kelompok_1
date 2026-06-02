@@ -121,7 +121,10 @@ export default function MapPage() {
     };
 
     return (
-        <DashboardLayout title="Peta Billboard">
+        <DashboardLayout
+            title="Peta Billboard"
+            subtitle="Pantau lokasi billboard secara real-time"
+        >
             {/* Loading */}
             {isLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -182,13 +185,18 @@ export default function MapPage() {
                     <div className="lg:col-span-3">
                         <Card>
                             <div className="flex flex-row items-center justify-between p-6 pb-0">
-                                <h2 className="text-lg font-semibold flex items-center gap-2">
-                                    <MapPin className="h-5 w-5" />
-                                    Peta Lokasi Billboard (GIS)
-                                </h2>
+                                <div>
+                                    <h2 className="text-lg font-semibold flex items-center gap-2">
+                                        <MapPin className="h-5 w-5" />
+                                        Peta Lokasi Billboard (GIS)
+                                    </h2>
+                                    <p className="text-xs text-slate-500">
+                                        Klik marker untuk melihat detail
+                                    </p>
+                                </div>
                                 <Button
                                     size="sm"
-                                    className="flex items-center gap-2"
+                                    className="flex items-center gap-2 rounded-xl border border-blue-200/60 bg-blue-600 text-white shadow-sm hover:bg-blue-700"
                                     onClick={() => setShowModal(true)}
                                 >
                                     <Plus className="h-4 w-4" />

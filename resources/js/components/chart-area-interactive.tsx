@@ -128,12 +128,12 @@ const chartConfig = {
         label: "Visitors",
     },
     desktop: {
-        label: "Desktop",
-        color: "var(--primary)",
+        label: "Utama",
+        color: "#2563eb",
     },
     mobile: {
-        label: "Mobile",
-        color: "var(--primary)",
+        label: "Sekunder",
+        color: "#94a3b8",
     },
 } satisfies ChartConfig;
 
@@ -162,59 +162,69 @@ export function ChartAreaInteractive() {
     });
 
     return (
-        <Card className="@container/card">
-            <CardHeader>
-                <CardTitle>Total Visitors</CardTitle>
-                <CardDescription>
-                    <span className="hidden @[540px]/card:block">
-                        Total for the last 3 months
-                    </span>
-                    <span className="@[540px]/card:hidden">Last 3 months</span>
-                </CardDescription>
+        <Card className="@container/card border border-slate-200/70 shadow-sm">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <CardTitle className="text-base font-semibold text-slate-900">
+                        Total Visitors
+                    </CardTitle>
+                    <CardDescription className="text-xs text-slate-500">
+                        Total 3 bulan terakhir
+                    </CardDescription>
+                </div>
                 <CardAction>
                     <ToggleGroup
                         type="single"
                         value={timeRange}
                         onValueChange={setTimeRange}
                         variant="outline"
-                        className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
+                        className="hidden rounded-full bg-slate-100 p-1 text-xs font-semibold text-slate-500 *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
                     >
-                        <ToggleGroupItem value="90d">
-                            Last 3 months
+                        <ToggleGroupItem
+                            value="90d"
+                            className="rounded-full data-[state=on]:bg-white data-[state=on]:text-blue-600"
+                        >
+                            3 Bulan
                         </ToggleGroupItem>
-                        <ToggleGroupItem value="30d">
-                            Last 30 days
+                        <ToggleGroupItem
+                            value="30d"
+                            className="rounded-full data-[state=on]:bg-white data-[state=on]:text-blue-600"
+                        >
+                            30 Hari
                         </ToggleGroupItem>
-                        <ToggleGroupItem value="7d">
-                            Last 7 days
+                        <ToggleGroupItem
+                            value="7d"
+                            className="rounded-full data-[state=on]:bg-white data-[state=on]:text-blue-600"
+                        >
+                            7 Hari
                         </ToggleGroupItem>
                     </ToggleGroup>
                     <Select value={timeRange} onValueChange={setTimeRange}>
                         <SelectTrigger
-                            className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
+                            className="flex w-28 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
                             size="sm"
-                            aria-label="Select a value"
+                            aria-label="Pilih rentang"
                         >
-                            <SelectValue placeholder="Last 3 months" />
+                            <SelectValue placeholder="3 Bulan" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
                             <SelectItem value="90d" className="rounded-lg">
-                                Last 3 months
+                                3 Bulan
                             </SelectItem>
                             <SelectItem value="30d" className="rounded-lg">
-                                Last 30 days
+                                30 Hari
                             </SelectItem>
                             <SelectItem value="7d" className="rounded-lg">
-                                Last 7 days
+                                7 Hari
                             </SelectItem>
                         </SelectContent>
                     </Select>
                 </CardAction>
             </CardHeader>
-            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-2">
                 <ChartContainer
                     config={chartConfig}
-                    className="aspect-auto h-[250px] w-full"
+                    className="aspect-auto h-[260px] w-full"
                 >
                     <AreaChart data={filteredData}>
                         <defs>
@@ -228,12 +238,12 @@ export function ChartAreaInteractive() {
                                 <stop
                                     offset="5%"
                                     stopColor="var(--color-desktop)"
-                                    stopOpacity={1.0}
+                                    stopOpacity={0.9}
                                 />
                                 <stop
                                     offset="95%"
                                     stopColor="var(--color-desktop)"
-                                    stopOpacity={0.1}
+                                    stopOpacity={0.08}
                                 />
                             </linearGradient>
                             <linearGradient
@@ -246,29 +256,28 @@ export function ChartAreaInteractive() {
                                 <stop
                                     offset="5%"
                                     stopColor="var(--color-mobile)"
-                                    stopOpacity={0.8}
+                                    stopOpacity={0.6}
                                 />
                                 <stop
                                     offset="95%"
                                     stopColor="var(--color-mobile)"
-                                    stopOpacity={0.1}
+                                    stopOpacity={0.06}
                                 />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid vertical={false} />
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
                         <XAxis
                             dataKey="date"
                             tickLine={false}
                             axisLine={false}
                             tickMargin={8}
                             minTickGap={32}
-                            tickFormatter={(value) => {
-                                const date = new Date(value);
-                                return date.toLocaleDateString("en-US", {
+                            tickFormatter={(value) =>
+                                new Date(value).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
-                                });
-                            }}
+                                })
+                            }
                         />
                         <ChartTooltip
                             cursor={false}
@@ -291,14 +300,14 @@ export function ChartAreaInteractive() {
                             type="natural"
                             fill="url(#fillMobile)"
                             stroke="var(--color-mobile)"
-                            stackId="a"
+                            strokeWidth={2}
                         />
                         <Area
                             dataKey="desktop"
                             type="natural"
                             fill="url(#fillDesktop)"
                             stroke="var(--color-desktop)"
-                            stackId="a"
+                            strokeWidth={2.5}
                         />
                     </AreaChart>
                 </ChartContainer>

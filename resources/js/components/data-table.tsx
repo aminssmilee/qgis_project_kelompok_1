@@ -87,8 +87,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     GripVerticalIcon,
-    CircleCheckIcon,
-    LoaderIcon,
     EllipsisVerticalIcon,
     Columns3Icon,
     ChevronDownIcon,
@@ -109,6 +107,12 @@ export const schema = z.object({
     limit: z.string(),
     reviewer: z.string(),
 });
+
+const statusStyles: Record<string, string> = {
+    "In Process": "bg-amber-100 text-amber-700",
+    Done: "bg-emerald-100 text-emerald-700",
+    Review: "bg-blue-100 text-blue-700",
+};
 
 // Create a separate component for the drag handle
 function DragHandle({ id }: { id: number }) {
@@ -166,7 +170,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         accessorKey: "header",
-        header: "Header",
+        header: () => (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Header
+            </span>
+        ),
         cell: ({ row }) => {
             return <TableCellViewer item={row.original} />;
         },
@@ -174,13 +182,14 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         accessorKey: "type",
-        header: "Section Type",
+        header: () => (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Section Type
+            </span>
+        ),
         cell: ({ row }) => (
             <div className="w-32">
-                <Badge
-                    variant="outline"
-                    className="px-1.5 text-muted-foreground"
-                >
+                <Badge className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
                     {row.original.type}
                 </Badge>
             </div>
@@ -188,21 +197,29 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         accessorKey: "status",
-        header: "Status",
+        header: () => (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Status
+            </span>
+        ),
         cell: ({ row }) => (
-            <Badge variant="outline" className="px-1.5 text-muted-foreground">
-                {row.original.status === "Done" ? (
-                    <CircleCheckIcon className="fill-green-500 dark:fill-green-400" />
-                ) : (
-                    <LoaderIcon />
-                )}
+            <span
+                className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    statusStyles[row.original.status] ??
+                    "bg-slate-100 text-slate-600"
+                }`}
+            >
                 {row.original.status}
-            </Badge>
+            </span>
         ),
     },
     {
         accessorKey: "target",
-        header: () => <div className="w-full text-right">Target</div>,
+        header: () => (
+            <div className="w-full text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Target
+            </div>
+        ),
         cell: ({ row }) => (
             <form
                 onSubmit={(e) => {
@@ -233,7 +250,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         accessorKey: "limit",
-        header: () => <div className="w-full text-right">Limit</div>,
+        header: () => (
+            <div className="w-full text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Limit
+            </div>
+        ),
         cell: ({ row }) => (
             <form
                 onSubmit={(e) => {
@@ -261,12 +282,20 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     },
     {
         accessorKey: "reviewer",
-        header: "Reviewer",
+        header: () => (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Reviewer
+            </span>
+        ),
         cell: ({ row }) => {
             const isAssigned = row.original.reviewer !== "Assign reviewer";
 
             if (isAssigned) {
-                return row.original.reviewer;
+                return (
+                    <span className="text-sm font-medium text-blue-600">
+                        {row.original.reviewer}
+                    </span>
+                );
             }
 
             return (
@@ -338,7 +367,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
             data-state={row.getIsSelected() && "selected"}
             data-dragging={isDragging}
             ref={setNodeRef}
-            className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+            className="relative z-0 transition hover:bg-slate-50/70 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
             style={{
                 transform: CSS.Transform.toString(transform),
                 transition: transition,
@@ -449,22 +478,36 @@ export function DataTable({
                         </SelectGroup>
                     </SelectContent>
                 </Select>
-                <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-                    <TabsTrigger value="outline">Outline</TabsTrigger>
-                    <TabsTrigger value="past-performance">
+                <TabsList className="hidden gap-6 bg-transparent p-0 text-sm font-semibold text-slate-500 @4xl/main:flex">
+                    <TabsTrigger
+                        value="outline"
+                        className="rounded-none border-b-2 border-transparent pb-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                    >
+                        Outline
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="past-performance"
+                        className="rounded-none border-b-2 border-transparent pb-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                    >
                         Past Performance <Badge variant="secondary">3</Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="key-personnel">
+                    <TabsTrigger
+                        value="key-personnel"
+                        className="rounded-none border-b-2 border-transparent pb-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                    >
                         Key Personnel <Badge variant="secondary">2</Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="focus-documents">
+                    <TabsTrigger
+                        value="focus-documents"
+                        className="rounded-none border-b-2 border-transparent pb-2 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                    >
                         Focus Documents
                     </TabsTrigger>
                 </TabsList>
                 <div className="flex items-center gap-2">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="rounded-full">
                                 <Columns3Icon data-icon="inline-start" />
                                 Columns
                                 <ChevronDownIcon data-icon="inline-end" />
@@ -494,7 +537,7 @@ export function DataTable({
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="rounded-full">
                         <PlusIcon />
                         <span className="hidden lg:inline">Add Section</span>
                     </Button>
@@ -504,7 +547,7 @@ export function DataTable({
                 value="outline"
                 className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
             >
-                <div className="overflow-hidden rounded-lg border">
+                <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-white">
                     <DndContext
                         collisionDetection={closestCenter}
                         modifiers={[restrictToVerticalAxis]}
@@ -513,7 +556,7 @@ export function DataTable({
                         id={sortableId}
                     >
                         <Table>
-                            <TableHeader className="sticky top-0 z-10 bg-muted">
+                            <TableHeader className="sticky top-0 z-10 bg-slate-50">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => {
@@ -521,6 +564,7 @@ export function DataTable({
                                                 <TableHead
                                                     key={header.id}
                                                     colSpan={header.colSpan}
+                                                    className="py-3"
                                                 >
                                                     {header.isPlaceholder
                                                         ? null
@@ -803,29 +847,14 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectGroup>
-                                            <SelectItem value="Table of Contents">
-                                                Table of Contents
+                                            <SelectItem value="Cover page">
+                                                Cover page
                                             </SelectItem>
-                                            <SelectItem value="Executive Summary">
-                                                Executive Summary
+                                            <SelectItem value="Summary">
+                                                Summary
                                             </SelectItem>
-                                            <SelectItem value="Technical Approach">
-                                                Technical Approach
-                                            </SelectItem>
-                                            <SelectItem value="Design">
-                                                Design
-                                            </SelectItem>
-                                            <SelectItem value="Capabilities">
-                                                Capabilities
-                                            </SelectItem>
-                                            <SelectItem value="Focus Documents">
-                                                Focus Documents
-                                            </SelectItem>
-                                            <SelectItem value="Narrative">
-                                                Narrative
-                                            </SelectItem>
-                                            <SelectItem value="Cover Page">
-                                                Cover Page
+                                            <SelectItem value="Profile">
+                                                Profile
                                             </SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
@@ -845,11 +874,11 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                                             <SelectItem value="Done">
                                                 Done
                                             </SelectItem>
-                                            <SelectItem value="In Progress">
-                                                In Progress
+                                            <SelectItem value="In Process">
+                                                In Process
                                             </SelectItem>
-                                            <SelectItem value="Not Started">
-                                                Not Started
+                                            <SelectItem value="Review">
+                                                Review
                                             </SelectItem>
                                         </SelectGroup>
                                     </SelectContent>
