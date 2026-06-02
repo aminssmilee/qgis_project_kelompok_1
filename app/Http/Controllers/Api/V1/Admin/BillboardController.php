@@ -9,6 +9,7 @@ use App\Models\BillboardCategory;
 use App\Models\BillboardPhoto;
 use App\Models\BillboardPricing;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,11 +24,19 @@ final class BillboardController
      */
     public function index(): JsonResponse
     {
-        $billboards = Billboard::query()
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
+        $query = Billboard::query()
             ->with(['category', 'activePricing', 'photos'])
-            ->select('*')
-            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+            ->select('*');
+
+        if ($isPostgres) {
+            $query
+                ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+        }
+
+        $billboards = $query
             ->latest()
             ->get()
             ->map(fn (Billboard $b): array => $this->format($b));
@@ -43,6 +52,8 @@ final class BillboardController
      */
     public function store(Request $request): JsonResponse
     {
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'code' => ['nullable', 'string', 'max:30', 'unique:billboards,code'],
@@ -90,11 +101,13 @@ final class BillboardController
             $data['description'] = "Ukuran: {$size}".($priceLabel ? " | Harga: {$priceLabel}" : '');
         }
 
+        $locationValue = $isPostgres
+            ? DB::raw("ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography")
+            : $this->encodeLocation($lat, $lng);
+
         $billboard = Billboard::query()->create([
             ...$data,
-            'location' => DB::raw(
-                "ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography"
-            ),
+            'location' => $locationValue,
         ]);
 
         if ($priceMonth > 0) {
@@ -111,8 +124,11 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+                    ->when($isPostgres, function (Builder $query): void {
+                        $query
+                            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+                    })
                     ->findOrFail($billboard->id)
             ),
         ], 201);
@@ -123,11 +139,16 @@ final class BillboardController
      */
     public function show(string $id): JsonResponse
     {
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
         $billboard = Billboard::query()
             ->with(['category', 'activePricing', 'photos'])
             ->select('*')
-            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+            ->when($isPostgres, function (Builder $query): void {
+                $query
+                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+            })
             ->findOrFail($id);
 
         return response()->json([
@@ -141,6 +162,8 @@ final class BillboardController
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        $isPostgres = DB::getDriverName() === 'pgsql';
+
         $billboard = Billboard::query()->findOrFail($id);
 
         $data = $request->validate([
@@ -176,9 +199,9 @@ final class BillboardController
             $lng = (float) $data['lng'];
             unset($data['lat'], $data['lng']);
 
-            $data['location'] = DB::raw(
-                "ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography"
-            );
+            $data['location'] = $isPostgres
+                ? DB::raw("ST_SetSRID(ST_MakePoint({$lng}, {$lat}), 4326)::geography")
+                : $this->encodeLocation($lat, $lng);
         } else {
             unset($data['lat'], $data['lng']);
         }
@@ -205,8 +228,11 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
-                    ->addSelect(DB::raw('ST_Y(location::geometry) as lat'))
+                    ->when($isPostgres, function (Builder $query): void {
+                        $query
+                            ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
+                            ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
+                    })
                     ->findOrFail($billboard->id)
             ),
         ]);
@@ -297,6 +323,16 @@ final class BillboardController
             $price = isset($priceMatch[1]) ? mb_trim($priceMatch[1]) : null;
         }
 
+        $lat = $billboard->lat !== null ? (float) $billboard->lat : null;
+        $lng = $billboard->lng !== null ? (float) $billboard->lng : null;
+        if ($lat === null || $lng === null) {
+            [$lat, $lng] = $this->parseLocation(
+                is_string($billboard->location) ? $billboard->location : null,
+                $lat,
+                $lng
+            );
+        }
+
         return [
             'id' => $billboard->id,
             'name' => $billboard->name,
@@ -310,8 +346,8 @@ final class BillboardController
             'address' => $billboard->address,
             'district' => $billboard->district,
             'city' => $billboard->city,
-            'lat' => $billboard->lat !== null ? (float) $billboard->lat : null,
-            'lng' => $billboard->lng !== null ? (float) $billboard->lng : null,
+            'lat' => $lat,
+            'lng' => $lng,
             'facing_direction' => $billboard->facing_direction,
             'traffic_density' => $billboard->traffic_density,
             'is_illuminated' => $billboard->is_illuminated,
@@ -320,6 +356,41 @@ final class BillboardController
             'photo_url' => $primaryPhoto ? $primaryPhoto->photo_url : null,
             'created_at' => $billboard->created_at,
         ];
+    }
+
+    private function encodeLocation(float $lat, float $lng): ?string
+    {
+        $location = json_encode(['lat' => $lat, 'lng' => $lng]);
+
+        return $location === false ? null : $location;
+    }
+
+    /**
+     * @return array{0: ?float, 1: ?float}
+     */
+    private function parseLocation(?string $location, ?float $lat, ?float $lng): array
+    {
+        if ($location === null || $location === '') {
+            return [$lat, $lng];
+        }
+
+        $decoded = json_decode($location, true);
+        if (is_array($decoded) && isset($decoded['lat'], $decoded['lng'])) {
+            $parsedLat = is_numeric($decoded['lat']) ? (float) $decoded['lat'] : $lat;
+            $parsedLng = is_numeric($decoded['lng']) ? (float) $decoded['lng'] : $lng;
+
+            return [$parsedLat, $parsedLng];
+        }
+
+        if (str_contains($location, ',')) {
+            [$latString, $lngString] = array_map(trim(...), explode(',', $location, 2));
+            $parsedLat = is_numeric($latString) ? (float) $latString : $lat;
+            $parsedLng = is_numeric($lngString) ? (float) $lngString : $lng;
+
+            return [$parsedLat, $parsedLng];
+        }
+
+        return [$lat, $lng];
     }
 
     private function parsePriceLabel(string $priceLabel): float

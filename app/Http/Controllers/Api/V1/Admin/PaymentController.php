@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\Payment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -28,10 +29,10 @@ final class PaymentController
         // Search by reference, merchant ref, or booking code
         if ($request->has('search') && ! empty($request->input('search'))) {
             $search = '%'.$request->input('search').'%';
-            $query->where(function ($q) use ($search): void {
+            $query->where(function (Builder $q) use ($search): void {
                 $q->where('tripay_reference', 'ILIKE', $search)
                     ->orWhere('tripay_merchant_ref', 'ILIKE', $search)
-                    ->orWhereHas('booking', function ($bq) use ($search): void {
+                    ->orWhereHas('booking', function (Builder $bq) use ($search): void {
                         $bq->where('booking_code', 'ILIKE', $search);
                     });
             });

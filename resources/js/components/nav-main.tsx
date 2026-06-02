@@ -1,9 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
     SidebarGroup,
     SidebarGroupContent,
+    SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
@@ -11,10 +11,11 @@ import {
     SidebarMenuSubItem,
     SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
-import { CirclePlusIcon, MailIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 
 export function NavMain({
     items,
+    label,
 }: {
     items: {
         title: string;
@@ -25,6 +26,7 @@ export function NavMain({
             url: string;
         }[];
     }[];
+    label?: string;
 }) {
     const location = useLocation();
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
@@ -78,10 +80,24 @@ export function NavMain({
         }
     };
 
+    const isItemActive = (itemUrl: string, childItems?: { url: string }[]) => {
+        if (location.pathname === itemUrl) {
+            return true;
+        }
+
+        if (childItems?.length) {
+            return childItems.some((child) =>
+                location.pathname.startsWith(child.url),
+            );
+        }
+
+        return location.pathname.startsWith(itemUrl);
+    };
+
     return (
         <SidebarGroup>
+            {label ? <SidebarGroupLabel>{label}</SidebarGroupLabel> : null}
             <SidebarGroupContent className="flex flex-col gap-2">
-                <SidebarMenu>{/* ... (commented items) */}</SidebarMenu>
                 <SidebarMenu>
                     {items.map((item) => {
                         const expanded = isItemExpanded(item);
@@ -91,7 +107,11 @@ export function NavMain({
                                     <SidebarMenuButton
                                         asChild
                                         tooltip={item.title}
-                                        isActive={isParentActive(item)}
+                                        isActive={isItemActive(
+                                            item.url,
+                                            item.items,
+                                        )}
+                                        className="flex-1 rounded-xl px-2 py-2 data-[active=true]:bg-blue-600/10 data-[active=true]:text-blue-800"
                                     >
                                         <Link
                                             to={item.url}
@@ -99,7 +119,11 @@ export function NavMain({
                                                 handleParentClick(item)
                                             }
                                         >
-                                            {item.icon}
+                                            {item.icon ? (
+                                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 shadow-sm group-data-[active=true]/menu-button:bg-blue-600 group-data-[active=true]/menu-button:text-white">
+                                                    {item.icon}
+                                                </span>
+                                            ) : null}
                                             <span>{item.title}</span>
                                             {item.items &&
                                                 item.items.length > 0 && (
@@ -130,9 +154,10 @@ export function NavMain({
                                                     >
                                                         <SidebarMenuSubButton
                                                             asChild
-                                                            isActive={isSubActive(
-                                                                subItem,
+                                                            isActive={isItemActive(
+                                                                subItem.url,
                                                             )}
+                                                            className="rounded-lg data-[active=true]:bg-blue-600/10 data-[active=true]:text-blue-800"
                                                         >
                                                             <Link
                                                                 to={subItem.url}

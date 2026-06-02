@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 final class PaymentCallbackController extends Controller
 {
-    public function handle(Request $request, TriPayService $triPay)
+    public function handle(Request $request, TriPayService $triPay): JsonResponse
     {
         if (! $triPay->validateCallback($request)) {
             Log::error('TriPay Callback: Invalid Signature');

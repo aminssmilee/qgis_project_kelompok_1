@@ -10,6 +10,7 @@ use App\Models\Billboard;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\TriPayService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -86,8 +87,8 @@ final readonly class BookingController
         $hasConflict = Booking::query()
             ->where('billboard_id', $billboard->id)
             ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->where(function ($q) use ($startDate, $endDate): void {
+            ->where(function (Builder $query) use ($startDate, $endDate): void {
+                $query->where(function (Builder $q) use ($startDate, $endDate): void {
                     $q->where('start_date', '<=', $endDate)
                         ->where('end_date', '>=', $startDate);
                 });
