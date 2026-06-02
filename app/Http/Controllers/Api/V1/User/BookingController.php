@@ -86,8 +86,8 @@ final readonly class BookingController
         $hasConflict = Booking::query()
             ->where('billboard_id', $billboard->id)
             ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->where(function ($q) use ($startDate, $endDate): void {
+            ->where(function (\Illuminate\Database\Eloquent\Builder $query) use ($startDate, $endDate): void {
+                $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($startDate, $endDate): void {
                     $q->where('start_date', '<=', $endDate)
                         ->where('end_date', '>=', $startDate);
                 });

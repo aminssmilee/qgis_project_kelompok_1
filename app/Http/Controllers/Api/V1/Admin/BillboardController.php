@@ -123,7 +123,7 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->when($isPostgres, function ($query): void {
+                    ->when($isPostgres, function (\Illuminate\Database\Eloquent\Builder $query): void {
                         $query
                             ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
@@ -143,7 +143,7 @@ final class BillboardController
         $billboard = Billboard::query()
             ->with(['category', 'activePricing', 'photos'])
             ->select('*')
-            ->when($isPostgres, function ($query): void {
+            ->when($isPostgres, function (\Illuminate\Database\Eloquent\Builder $query): void {
                 $query
                     ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                     ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));
@@ -227,7 +227,7 @@ final class BillboardController
                 Billboard::query()
                     ->with(['category', 'activePricing', 'photos'])
                     ->select('*')
-                    ->when($isPostgres, function ($query): void {
+                    ->when($isPostgres, function (\Illuminate\Database\Eloquent\Builder $query): void {
                         $query
                             ->addSelect(DB::raw('ST_X(location::geometry) as lng'))
                             ->addSelect(DB::raw('ST_Y(location::geometry) as lat'));

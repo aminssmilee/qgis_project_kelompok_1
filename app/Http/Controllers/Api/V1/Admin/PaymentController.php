@@ -28,10 +28,10 @@ final class PaymentController
         // Search by reference, merchant ref, or booking code
         if ($request->has('search') && ! empty($request->input('search'))) {
             $search = '%'.$request->input('search').'%';
-            $query->where(function ($q) use ($search): void {
+            $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($search): void {
                 $q->where('tripay_reference', 'ILIKE', $search)
                     ->orWhere('tripay_merchant_ref', 'ILIKE', $search)
-                    ->orWhereHas('booking', function ($bq) use ($search): void {
+                    ->orWhereHas('booking', function (\Illuminate\Database\Eloquent\Builder $bq) use ($search): void {
                         $bq->where('booking_code', 'ILIKE', $search);
                     });
             });
