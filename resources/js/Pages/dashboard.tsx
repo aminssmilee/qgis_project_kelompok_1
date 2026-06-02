@@ -26,6 +26,8 @@ import {
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import data from "./data.json";
+import { DataTable } from "@/components/data-table";
 
 type DashboardOption = {
     id: string;
