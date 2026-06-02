@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
 use App\Models\BillboardPhoto;
+use App\Models\BillboardPricing;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -389,5 +390,84 @@ final class BillboardController
         }
 
         return [$lat, $lng];
+    }
+
+    private function parsePriceLabel(string $priceLabel): float
+    {
+        $normalized = mb_strtolower($priceLabel);
+        $number = 0.0;
+
+        if (preg_match('/(\d+([\.,]\d+)?)/', $normalized, $matches) === 1) {
+            $raw = str_replace(['.', ','], ['', '.'], $matches[1]);
+            $number = (float) $raw;
+        }
+
+        if ($number <= 0) {
+            return 0.0;
+        }
+
+        if (str_contains($normalized, 'miliar')) {
+            $number *= 1000000000;
+        } elseif (str_contains($normalized, 'juta')) {
+            $number *= 1000000;
+        }
+
+        if (preg_match('/(\d+)\s*bulan/', $normalized, $periodMatches) === 1) {
+            $months = (int) $periodMatches[1];
+            if ($months > 0) {
+                $number /= $months;
+            }
+        }
+
+        return $number;
+    }
+
+    private function upsertBillboardPricing(string $billboardId, float $pricePerMonth): void
+    {
+        BillboardPricing::query()->updateOrCreate(
+            ['billboard_id' => $billboardId, 'is_active' => true],
+            [
+                'price_per_month' => $pricePerMonth,
+                'price_per_day' => round($pricePerMonth / 30, 2),
+                'price_per_week' => round($pricePerMonth / 4, 2),
+                'price_per_year' => round($pricePerMonth * 12, 2),
+            ]
+        );
+    }
+
+    private function upsertBillboardSize(string $billboardId, string $sizeLabel): void
+    {
+        $sizeParts = explode('x', $sizeLabel);
+        $width = isset($sizeParts[0]) ? (float) $sizeParts[0] : 0.0;
+        $height = isset($sizeParts[1]) ? (float) $sizeParts[1] : 0.0;
+
+        $existingSize = DB::table('billboard_sizes')
+            ->where('billboard_id', $billboardId)
+            ->where('is_primary', true)
+            ->first();
+
+        $payload = [
+            'label' => $sizeLabel.'m',
+            'width_m' => $width,
+            'height_m' => $height,
+            'area_m2' => round($width * $height, 2),
+            'updated_at' => now(),
+        ];
+
+        if ($existingSize === null) {
+            DB::table('billboard_sizes')->insert([
+                'id' => (string) Str::uuid(),
+                'billboard_id' => $billboardId,
+                'is_primary' => true,
+                'created_at' => now(),
+                ...$payload,
+            ]);
+
+            return;
+        }
+
+        DB::table('billboard_sizes')
+            ->where('id', $existingSize->id)
+            ->update($payload);
     }
 }

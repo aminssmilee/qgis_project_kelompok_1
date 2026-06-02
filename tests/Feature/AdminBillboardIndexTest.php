@@ -5,8 +5,9 @@ declare(strict_types=1);
 use App\Models\Billboard;
 use App\Models\BillboardCategory;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
-it('returns admin billboards with coordinates on non-postgres drivers', function (): void {
+it('returns admin billboards with coordinates', function (): void {
     $admin = User::factory()->create([
         'role' => 'admin',
     ]);
@@ -15,10 +16,15 @@ it('returns admin billboards with coordinates on non-postgres drivers', function
 
     $category = BillboardCategory::factory()->create();
 
+    $isPostgres = DB::getDriverName() === 'pgsql';
+    $locationValue = $isPostgres
+        ? DB::raw('ST_SetSRID(ST_MakePoint(116.85, -1.25), 4326)::geography')
+        : json_encode(['lat' => -1.25, 'lng' => 116.85]);
+
     Billboard::factory()
         ->for($category, 'category')
         ->create([
-            'location' => json_encode(['lat' => -1.25, 'lng' => 116.85]),
+            'location' => $locationValue,
         ]);
 
     $response = $this->withToken($token)

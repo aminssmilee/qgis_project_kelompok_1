@@ -17,6 +17,7 @@ import {
     Plus,
     Edit2,
     Trash2,
+    Users,
     Shield,
     MoreHorizontal,
     ChevronLeft,
