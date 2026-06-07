@@ -57,6 +57,16 @@ import {
 import { toast } from "sonner";
 import api from "@/lib/api";
 
+type DashboardOption = {
+    id: string;
+    name: string;
+};
+
+type DashboardOptionsState = {
+    clients: DashboardOption[];
+    billboards: DashboardOption[];
+};
+
 // This will handle the API request with authentication token
 const fetchBookings = async () => {
     try {
@@ -86,6 +96,58 @@ const columnHelper = createColumnHelper<RentalData>();
 export default function RentalsPage() {
     const [rentals, setRentals] = useState<RentalData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [dashboardOptions, setDashboardOptions] =
+        useState<DashboardOptionsState>({
+            clients: [],
+            billboards: [],
+        });
+    const [showRentalModal, setShowRentalModal] = useState(false);
+    const [rentalFormData, setRentalFormData] = useState({
+        client_id: "",
+        billboard_id: "",
+        rental_date: "",
+        duration_days: "",
+        total_price: "",
+        payment_status: "Pending",
+    });
+    const [rentalErrors, setRentalErrors] = useState<{ [key: string]: string }>(
+        {},
+    );
+    const [submitStatus, setSubmitStatus] = useState<{
+        type: "success" | "error";
+        message: string;
+    } | null>(null);
+
+    useEffect(() => {
+        const loadDashboardOptions = async () => {
+            try {
+                const response = await fetch("/dashboard/options", {
+                    headers: {
+                        Accept: "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+
+                setDashboardOptions({
+                    clients: Array.isArray(payload.clients)
+                        ? payload.clients
+                        : [],
+                    billboards: Array.isArray(payload.billboards)
+                        ? payload.billboards
+                        : [],
+                });
+            } catch {
+                setDashboardOptions({ clients: [], billboards: [] });
+            }
+        };
+
+        loadDashboardOptions();
+    }, []);
 
     const loadRentals = useCallback(async (isMounted = true) => {
         setIsLoading(true);
@@ -146,6 +208,105 @@ export default function RentalsPage() {
         },
         [loadRentals],
     );
+
+    const getErrorMessage = (payload: unknown, fallbackMessage: string) => {
+        if (!payload || typeof payload !== "object") {
+            return fallbackMessage;
+        }
+
+        const responsePayload = payload as {
+            message?: string;
+            errors?: Record<string, string[]>;
+        };
+
+        const firstError = Object.values(responsePayload.errors ?? {})
+            .flat()
+            .find((message) => Boolean(message));
+
+        return firstError ?? responsePayload.message ?? fallbackMessage;
+    };
+
+    const validateRentalForm = () => {
+        const newErrors: { [key: string]: string } = {};
+        if (!rentalFormData.client_id) {
+            newErrors.client_id = "Klien wajib dipilih";
+        }
+        if (!rentalFormData.billboard_id) {
+            newErrors.billboard_id = "Billboard wajib dipilih";
+        }
+        if (!rentalFormData.rental_date) {
+            newErrors.rental_date = "Tanggal sewa wajib diisi";
+        }
+        if (!rentalFormData.duration_days) {
+            newErrors.duration_days = "Durasi wajib diisi";
+        }
+        if (!rentalFormData.total_price) {
+            newErrors.total_price = "Harga wajib diisi";
+        }
+        setRentalErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleAddRental = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitStatus(null);
+
+        if (!validateRentalForm()) {
+            setSubmitStatus({
+                type: "error",
+                message: "Mohon isi semua field yang wajib",
+            });
+            return;
+        }
+
+        try {
+            const response = await fetch("/dashboard/rentals", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN":
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content") || "",
+                },
+                body: JSON.stringify(rentalFormData),
+            });
+
+            const payload = await response.json().catch(() => null);
+
+            if (response.ok) {
+                setSubmitStatus({
+                    type: "success",
+                    message: "Penyewaan berhasil ditambahkan!",
+                });
+                setTimeout(() => {
+                    setRentalFormData({
+                        client_id: "",
+                        billboard_id: "",
+                        rental_date: "",
+                        duration_days: "",
+                        total_price: "",
+                        payment_status: "Pending",
+                    });
+                    setShowRentalModal(false);
+                    setSubmitStatus(null);
+                    loadRentals();
+                }, 1200);
+            } else {
+                setSubmitStatus({
+                    type: "error",
+                    message: getErrorMessage(
+                        payload,
+                        "Gagal menambahkan penyewaan",
+                    ),
+                });
+            }
+        } catch (error) {
+            setSubmitStatus({ type: "error", message: "Terjadi kesalahan" });
+        }
+    };
 
     const getStatusConfig = (status: string) => {
         switch (status) {
@@ -366,44 +527,56 @@ export default function RentalsPage() {
             {
                 label: "Penyewaan Aktif",
                 value: String(activeCount),
+                hint: "Berjalan lancar",
+                gradient: "from-[#0b2a6b] via-[#123c9a] to-[#1b4cc4]",
                 icon: Calendar,
-                color: "text-blue-600",
             },
             {
                 label: "Pending Pembayaran",
                 value: String(pendingPaymentCount),
+                hint: "Perlu tindak lanjut",
+                gradient: "from-[#1f4fd2] via-[#2a63e6] to-[#2f6cff]",
                 icon: DollarSign,
-                color: "text-orange-600",
             },
             {
                 label: "Selesai",
                 value: String(completedCount),
+                hint: "Kontrak selesai",
+                gradient: "from-[#0b2a6b] via-[#143b9c] to-[#1c4fc9]",
                 icon: CheckCircle,
-                color: "text-green-600",
             },
         ],
         [activeCount, pendingPaymentCount, completedCount],
     );
 
     return (
-        <DashboardLayout title="Penyewaan & Kontrak">
+        <DashboardLayout
+            title="Penyewaan & Kontrak"
+            subtitle="Kelola semua data penyewaan billboard"
+        >
             <div className="grid gap-4 md:grid-cols-3 mb-6">
-                {stats.map((stat, index) => {
+                {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                        <Card key={index}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">
-                                    {stat.label}
-                                </CardTitle>
-                                <Icon className="h-5 w-5 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div
-                                    className={`text-3xl font-bold ${stat.color}`}
-                                >
-                                    {stat.value}
+                        <Card
+                            key={stat.label}
+                            className={`border-0 bg-gradient-to-br ${stat.gradient} text-white`}
+                        >
+                            <CardContent className="p-5">
+                                <div className="flex items-start justify-between">
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/40 bg-white/10">
+                                        <Icon className="h-4 w-4 text-white" />
+                                    </span>
                                 </div>
+                                <p className="mt-4 text-sm text-white/80">
+                                    {stat.label}
+                                </p>
+                                <p className="text-3xl font-semibold">
+                                    {stat.value}
+                                </p>
+                                <span className="mt-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white/80">
+                                    {stat.hint}
+                                </span>
                             </CardContent>
                         </Card>
                     );
@@ -412,16 +585,25 @@ export default function RentalsPage() {
 
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Daftar Penyewaan</CardTitle>
-                    <Button size="sm" className="gap-2">
+                    <div>
+                        <CardTitle>Daftar Penyewaan</CardTitle>
+                        <p className="text-xs text-slate-500">
+                            Kelola kontrak aktif dan status pembayaran
+                        </p>
+                    </div>
+                    <Button
+                        size="sm"
+                        className="gap-2 rounded-xl border border-blue-200/60 bg-blue-600 text-white shadow-sm hover:bg-blue-700"
+                        onClick={() => setShowRentalModal(true)}
+                    >
                         <Plus className="h-4 w-4" />
                         Tambah Penyewaan
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="rounded-lg border overflow-hidden">
+                    <div className="rounded-xl border border-slate-200/70 overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-gray-50">
+                            <TableHeader className="bg-slate-50/80">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
@@ -477,7 +659,7 @@ export default function RentalsPage() {
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow
                                             key={row.id}
-                                            className="hover:bg-gray-50"
+                                            className="hover:bg-slate-50"
                                         >
                                             {row
                                                 .getVisibleCells()
@@ -519,7 +701,7 @@ export default function RentalsPage() {
                                     htmlFor="rows-per-page"
                                     className="text-sm font-medium"
                                 >
-                                    Rows per page
+                                    Baris
                                 </Label>
                                 <Select
                                     value={`${table.getState().pagination.pageSize}`}
@@ -553,8 +735,8 @@ export default function RentalsPage() {
                                 </Select>
                             </div>
                             <div className="flex w-fit items-center justify-center text-sm font-medium">
-                                Page {table.getState().pagination.pageIndex + 1}{" "}
-                                of {table.getPageCount()}
+                                Hal {table.getState().pagination.pageIndex + 1}{" "}
+                                dari {table.getPageCount()}
                             </div>
                             <div className="ml-auto flex items-center gap-2 lg:ml-0">
                                 <Button
@@ -610,6 +792,233 @@ export default function RentalsPage() {
                     </div>
                 </CardContent>
             </Card>
+            {showRentalModal && (
+                <>
+                    <div
+                        className="fixed inset-0 z-40 bg-black/50"
+                        onClick={() => setShowRentalModal(false)}
+                    />
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <Card className="w-full max-w-xl">
+                            <CardHeader className="flex flex-row items-center justify-between border-b">
+                                <CardTitle>Tambah Penyewaan Baru</CardTitle>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowRentalModal(false)}
+                                    className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+                                >
+                                    <XCircle className="h-4 w-4" />
+                                </button>
+                            </CardHeader>
+                            <CardContent className="pt-6">
+                                {submitStatus && (
+                                    <div
+                                        className={`mb-4 rounded-lg border p-3 text-sm ${
+                                            submitStatus.type === "success"
+                                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                : "border-red-200 bg-red-50 text-red-700"
+                                        }`}
+                                    >
+                                        {submitStatus.message}
+                                    </div>
+                                )}
+                                <form
+                                    onSubmit={handleAddRental}
+                                    className="space-y-4"
+                                >
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
+                                                Klien *
+                                            </label>
+                                            <select
+                                                value={rentalFormData.client_id}
+                                                onChange={(e) =>
+                                                    setRentalFormData({
+                                                        ...rentalFormData,
+                                                        client_id:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
+                                                    rentalErrors.client_id
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-slate-200 focus:ring-blue-200"
+                                                }`}
+                                            >
+                                                <option value="">
+                                                    Pilih klien
+                                                </option>
+                                                {dashboardOptions.clients.map(
+                                                    (client) => (
+                                                        <option
+                                                            key={client.id}
+                                                            value={client.id}
+                                                        >
+                                                            {client.name}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </select>
+                                            {rentalErrors.client_id && (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {rentalErrors.client_id}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
+                                                Billboard *
+                                            </label>
+                                            <select
+                                                value={
+                                                    rentalFormData.billboard_id
+                                                }
+                                                onChange={(e) =>
+                                                    setRentalFormData({
+                                                        ...rentalFormData,
+                                                        billboard_id:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
+                                                    rentalErrors.billboard_id
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-slate-200 focus:ring-blue-200"
+                                                }`}
+                                            >
+                                                <option value="">
+                                                    Pilih billboard
+                                                </option>
+                                                {dashboardOptions.billboards.map(
+                                                    (billboard) => (
+                                                        <option
+                                                            key={billboard.id}
+                                                            value={billboard.id}
+                                                        >
+                                                            {billboard.name}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </select>
+                                            {rentalErrors.billboard_id && (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {rentalErrors.billboard_id}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-4 md:grid-cols-3">
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
+                                                Tanggal Sewa *
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={
+                                                    rentalFormData.rental_date
+                                                }
+                                                onChange={(e) =>
+                                                    setRentalFormData({
+                                                        ...rentalFormData,
+                                                        rental_date:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
+                                                    rentalErrors.rental_date
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-slate-200 focus:ring-blue-200"
+                                                }`}
+                                            />
+                                            {rentalErrors.rental_date && (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {rentalErrors.rental_date}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
+                                                Durasi (hari) *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={
+                                                    rentalFormData.duration_days
+                                                }
+                                                onChange={(e) =>
+                                                    setRentalFormData({
+                                                        ...rentalFormData,
+                                                        duration_days:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
+                                                    rentalErrors.duration_days
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-slate-200 focus:ring-blue-200"
+                                                }`}
+                                            />
+                                            {rentalErrors.duration_days && (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {rentalErrors.duration_days}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
+                                                Total Harga *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={
+                                                    rentalFormData.total_price
+                                                }
+                                                onChange={(e) =>
+                                                    setRentalFormData({
+                                                        ...rentalFormData,
+                                                        total_price:
+                                                            e.target.value,
+                                                    })
+                                                }
+                                                className={`w-full rounded-xl border px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 ${
+                                                    rentalErrors.total_price
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-slate-200 focus:ring-blue-200"
+                                                }`}
+                                            />
+                                            {rentalErrors.total_price && (
+                                                <p className="mt-1 text-xs text-red-600">
+                                                    {rentalErrors.total_price}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-end gap-3 pt-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() =>
+                                                setShowRentalModal(false)
+                                            }
+                                        >
+                                            Batal
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            className="rounded-xl bg-blue-600 px-6 text-white hover:bg-blue-700"
+                                        >
+                                            Simpan Penyewaan
+                                        </Button>
+                                    </div>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </>
+            )}
         </DashboardLayout>
     );
 }

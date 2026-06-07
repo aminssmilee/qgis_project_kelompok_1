@@ -13,7 +13,7 @@ use Throwable;
 
 final class PaymentCallbackController
 {
-    public function handle(Request $request, TriPayService $triPay)
+    public function handle(Request $request, TriPayService $triPay): JsonResponse
     {
         if (! $triPay->validateCallback($request)) {
             Log::error('TriPay Callback: Invalid Signature');

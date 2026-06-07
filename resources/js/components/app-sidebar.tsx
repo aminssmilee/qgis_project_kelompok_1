@@ -2,7 +2,6 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
     Sidebar,
@@ -14,15 +13,12 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-    UsersIcon,
-    FileTextIcon,
-    Settings2Icon,
-    CircleHelpIcon,
-    SearchIcon,
-    MapIcon,
     CalendarCheckIcon,
-    SettingsIcon,
+    FileTextIcon,
+    MapIcon,
     PackageIcon,
+    SettingsIcon,
+    UsersIcon,
 } from "lucide-react";
 
 const data = {
@@ -42,6 +38,8 @@ const data = {
                 // { title: "Legalitas/Izin", url: "/dashboard/permits" },
             ],
         },
+    ],
+    navTransactions: [
         {
             title: "Penyewaan",
             url: "/dashboard/rentals",
@@ -73,27 +71,12 @@ const data = {
                 },
             ],
         },
+    ],
+    navSystem: [
         {
             title: "Manajemen User",
             url: "/dashboard/users",
             icon: <SettingsIcon />,
-        },
-    ],
-    navSecondary: [
-        {
-            title: "Settings",
-            url: "#",
-            icon: <Settings2Icon />,
-        },
-        {
-            title: "Get Help",
-            url: "#",
-            icon: <CircleHelpIcon />,
-        },
-        {
-            title: "Search",
-            url: "#",
-            icon: <SearchIcon />,
         },
     ],
 };
@@ -111,7 +94,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     };
 
     return (
-        <Sidebar collapsible="offcanvas" {...props}>
+        <Sidebar
+            collapsible="offcanvas"
+            className="border-r border-slate-200/60 bg-white/85 backdrop-blur-xl"
+            {...props}
+        >
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
@@ -125,7 +112,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <img
                                         src="/assets/images/logobil.jpeg"
                                         alt="Logo"
-                                        className="size-full object-cover"
+                                        className="size-full object-cover rounded-lg"
                                     />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -142,8 +129,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <NavMain items={data.navMain} />
-                <NavSecondary items={data.navSecondary} className="mt-auto" />
+                <NavMain label="MAIN" items={data.navMain} />
+                <NavMain label="TRANSAKSI" items={data.navTransactions} />
+                <NavMain label="SISTEM" items={data.navSystem} />
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={activeUser} />
