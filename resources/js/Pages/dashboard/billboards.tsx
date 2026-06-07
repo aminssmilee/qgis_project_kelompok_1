@@ -122,6 +122,7 @@ export default function BillboardsPage() {
                               ? "Sangat Tinggi"
                               : "Sedang",
                     price: b.price_label ?? "—",
+                    pricePerMonth: b.price_per_month ?? null,
                     status: b.is_active ? "Available" : "Maintenance",
                 }));
                 setBillboards(mapped);
@@ -597,6 +598,9 @@ export default function BillboardsPage() {
                                           location: updatedBB.address,
                                           size: updatedBB.size,
                                           price: updatedBB.price,
+                                          pricePerMonth:
+                                              updatedBB.pricePerMonth ??
+                                              bb.pricePerMonth,
                                       }
                                     : bb,
                             ),

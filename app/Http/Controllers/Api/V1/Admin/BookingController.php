@@ -55,7 +55,7 @@ final class BookingController
     public function update(Request $request, string $id): JsonResponse
     {
         $request->validate([
-            'status' => ['nullable', 'string', 'in:pending_payment,waiting_confirmation,active,completed,cancelled,rejected'],
+            'status' => ['nullable', 'string', 'in:pending_payment,waiting_confirmation,waiting_pelunasan,approved,active,completed,cancelled,rejected'],
             'payment_status' => ['nullable', 'string', 'in:unpaid,paid,failed,expired,refunded'],
             'admin_note' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -126,8 +126,8 @@ final class BookingController
     private function mapStatus(string $status): string
     {
         return match ($status) {
-            'pending_payment', 'waiting_confirmation' => 'Pending',
-            'active' => 'Active',
+            'pending_payment', 'waiting_confirmation', 'waiting_pelunasan' => 'Pending',
+            'approved', 'active' => 'Active',
             'completed' => 'Completed',
             'cancelled', 'rejected' => 'Cancelled',
             default => 'Unknown',

@@ -13,10 +13,15 @@ use App\Services\TriPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Log;
+use Throwable;
 
 final readonly class BookingController
 {
+    private const DP_PERCENTAGE = 50;
+
     public function __construct(private TriPayService $triPay) {}
 
     /**
@@ -29,7 +34,7 @@ final readonly class BookingController
 
         $query = Booking::query()
             ->where('user_id', $user->id)
-            ->with(['billboard.category']);
+            ->with(['billboard.category', 'payments']);
 
         if ($status) {
             $mappedStatuses = match ($status) {
@@ -135,54 +140,129 @@ final readonly class BookingController
         $taxAmount = $priceAfterDiscount * 0.11; // PPN 11%
         $totalPrice = $priceAfterDiscount + $taxAmount;
 
-        $booking = Booking::query()->create([
-            'booking_code' => 'ORD-'.now()->format('Ymd').'-'.mb_strtoupper(Str::random(6)),
-            'user_id' => $user->id,
-            'billboard_id' => $billboard->id,
-            'pricing_id' => $pricing->id,
-            'duration_type' => $durationType,
-            'duration_value' => $durationValue,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'total_days' => $totalDays,
-            'base_price' => $basePrice,
-            'discount_amount' => $discountAmount,
-            'discount_percent' => $discountPercent,
-            'tax_percent' => 11,
-            'tax_amount' => $taxAmount,
-            'total_price' => $totalPrice,
-            'status' => 'pending_payment',
-            'notes' => $request->notes,
-        ]);
-
-        $booking->load(['billboard.category']);
-
         $checkoutUrl = null;
-        if ($request->has('payment_method')) {
-            $paymentMethod = $request->payment_method;
-            $res = $this->triPay->createTransaction($booking, $paymentMethod);
-            if ($res && isset($res['success']) && $res['success']) {
-                $checkoutUrl = $res['data']['checkout_url'];
+        $booking = null;
 
-                // Create Payment record
+        DB::beginTransaction();
+        try {
+            $booking = Booking::query()->create([
+                'booking_code' => 'ORD-'.now()->format('Ymd').'-'.mb_strtoupper(Str::random(6)),
+                'user_id' => $user->id,
+                'billboard_id' => $billboard->id,
+                'pricing_id' => $pricing->id,
+                'duration_type' => $durationType,
+                'duration_value' => $durationValue,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'total_days' => $totalDays,
+                'base_price' => $basePrice,
+                'discount_amount' => $discountAmount,
+                'discount_percent' => $discountPercent,
+                'tax_percent' => 11,
+                'tax_amount' => $taxAmount,
+                'total_price' => $totalPrice,
+                'status' => 'pending_payment',
+                'notes' => $request->notes,
+            ]);
+
+            $paymentMethod = $this->resolvePaymentMethod($request);
+
+            if (filled($paymentMethod)) {
+                $paymentMethod = (string) $paymentMethod;
+                $dpAmount = round((float) $booking->total_price * (self::DP_PERCENTAGE / 100), 2);
+                $remainingAmount = max(0, round((float) $booking->total_price - $dpAmount, 2));
+
+                $dpMerchantRef = $booking->booking_code.'-T1';
+
+                $res = $this->triPay->createTransaction(
+                    $booking,
+                    $paymentMethod,
+                    merchantRef: $dpMerchantRef,
+                    amountOverride: (int) round($dpAmount),
+                );
+
+                if (! $res || ! isset($res['success']) || ! $res['success']) {
+                    $errorMsg = $res['message'] ?? 'Failed to create DP payment transaction with TriPay.';
+
+                    DB::rollBack();
+
+                    return response()->json([
+                        'message' => $errorMsg,
+                    ], 422);
+                }
+
+                $checkoutUrl = $res['data']['checkout_url'] ?? null;
+
                 Payment::query()->create([
                     'booking_id' => $booking->id,
+                    'payment_type' => 'DP',
+                    'sequence' => 1,
+                    'is_final' => false,
                     'tripay_reference' => $res['data']['reference'],
                     'tripay_merchant_ref' => $res['data']['merchant_ref'],
                     'payment_channel' => $paymentMethod,
-                    'amount' => $booking->total_price,
+                    'payment_method_type' => $paymentMethod,
+                    'amount' => $dpAmount,
                     'status' => 'UNPAID',
+                    
+                    // UBAH BAGIAN INI:
+                    // Mengambil nilai 1 menit dari config agar sinkron dengan Tripay
+                    'due_at' => now()->addMinutes(config('services.tripay.expired_minutes', 1)), 
+                    // Jika Anda pakai kolom expired_at, gunakan 'expired_at' => ...
                 ]);
-            } else {
-                // Delete the booking to avoid orphan bookings
-                $booking->delete();
-                $errorMsg = $res['message'] ?? 'Failed to create payment transaction with TriPay.';
 
-                return response()->json([
-                    'message' => $errorMsg,
-                ], 422);
+                if ($remainingAmount > 0) {
+                    Payment::query()->create([
+                        'booking_id' => $booking->id,
+                        'payment_type' => 'PELUNASAN',
+                        'sequence' => 2,
+                        'is_final' => true,
+                        'amount' => $remainingAmount,
+                        'status' => 'UNPAID',
+                    ]);
+                }
             }
+
+            DB::commit();
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            Log::error('BookingController@store error', [
+                'user_id' => $user->id ?? null,
+                'billboard_id' => $billboard->id ?? null,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($booking !== null) {
+                try {
+                    $booking->load(['billboard.category', 'payments']);
+
+                    return response()->json([
+                        'message' => 'Booking created but post-creation step failed',
+                        'data' => new BookingResource($booking),
+                        'warning' => $e->getMessage(),
+                        'checkout_url' => $checkoutUrl,
+                    ], 201);
+                } catch (Throwable $inner) {
+                    Log::error('BookingController@store - resource build failed', [
+                        'exception' => $inner->getMessage(),
+                    ]);
+
+                    return response()->json([
+                        'message' => 'Booking created but could not generate resource',
+                        'warning' => $e->getMessage(),
+                    ], 500);
+                }
+            }
+
+            return response()->json([
+                'message' => 'Failed to create booking',
+                'error' => $e->getMessage(),
+            ], 500);
         }
+
+        $booking->load(['billboard.category', 'payments']);
 
         return response()->json([
             'message' => 'Booking created successfully',
@@ -234,6 +314,18 @@ final readonly class BookingController
             'cancel_reason' => $request->cancel_reason ?? 'Cancelled by user',
         ]);
 
+        $reminders = \App\Models\BillboardReminder::query()
+            ->where('billboard_id', $booking->billboard_id)
+            ->where('requested_start_date', $booking->start_date)
+            ->where('requested_end_date', $booking->end_date)
+            ->where('is_notified', false)
+            ->get();
+
+        foreach ($reminders as $reminder) {
+            // Logika pengiriman notifikasi (FCM/Email) Anda di sini
+            $reminder->update(['is_notified' => true]);
+        }
+
         $booking->load(['billboard.category']);
 
         return response()->json([
@@ -258,5 +350,25 @@ final readonly class BookingController
         return response()->json([
             'message' => 'Failed to retrieve payment channels',
         ], 500);
+    }
+
+    private function resolvePaymentMethod(Request $request): ?string
+    {
+        $paymentMethod = $request->input('payment_method')
+            ?? $request->input('paymentMethod')
+            ?? $request->input('payment_method_type')
+            ?? $request->input('paymentMethodType');
+
+        if (! filled($paymentMethod)) {
+            return null;
+        }
+
+        $normalizedPaymentMethod = mb_strtoupper(trim((string) $paymentMethod));
+
+        if (in_array($normalizedPaymentMethod, ['TRIPAY', 'PAYMENT_GATEWAY', 'GATEWAY'], true)) {
+            return mb_strtoupper((string) config('services.tripay.default_method', 'QRIS'));
+        }
+
+        return $normalizedPaymentMethod;
     }
 }
