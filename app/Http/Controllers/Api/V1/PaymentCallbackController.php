@@ -27,12 +27,18 @@ final class PaymentCallbackController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid payload'], 400);
         }
 
-        $booking = Booking::query()->where('booking_code', $data->merchant_ref)->first();
+        $merchantRef = $data->merchant_ref;
+        $bookingCode = mb_substr($merchantRef, 0, mb_strrpos($merchantRef, '-'));
+        if (! $bookingCode) {
+            $bookingCode = $merchantRef;
+        }
+
+        $booking = Booking::query()->where('booking_code', $bookingCode)->first();
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
         }
 
-        $payment = Payment::query()->where('tripay_merchant_ref', $data->merchant_ref)->first();
+        $payment = Payment::query()->where('tripay_merchant_ref', $merchantRef)->first();
         if ($payment) {
             $payment->update([
                 'status' => $data->status,
@@ -42,11 +48,20 @@ final class PaymentCallbackController extends Controller
         }
 
         if ($data->status === 'PAID') {
-            $booking->update([
-                'status' => 'waiting_confirmation',
-            ]);
             if ($payment) {
                 $payment->update(['paid_at' => now()]);
+            }
+
+            if ($payment && $payment->type === 'final') {
+                $booking->update([
+                    'status' => 'active',
+                    'confirmed_at' => now(),
+                ]);
+            } else {
+                // Default or DP payment paid
+                $booking->update([
+                    'status' => 'waiting_confirmation',
+                ]);
             }
         } elseif (in_array($data->status, ['EXPIRED', 'FAILED', 'REFUND'])) {
             $booking->update([

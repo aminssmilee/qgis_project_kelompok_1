@@ -89,6 +89,11 @@ interface RentalData {
     amount: string;
     status: string;
     payment: string;
+    raw_status: string;
+    dp_amount: string;
+    dp_status: string;
+    final_amount: string;
+    final_status: string;
 }
 
 const columnHelper = createColumnHelper<RentalData>();
@@ -165,6 +170,11 @@ export default function RentalsPage() {
                 amount: booking.amount,
                 status: booking.status,
                 payment: booking.payment,
+                raw_status: booking.raw_status,
+                dp_amount: booking.dp_amount,
+                dp_status: booking.dp_status,
+                final_amount: booking.final_amount,
+                final_status: booking.final_status,
             }));
             if (isMounted) {
                 setRentals(formattedData);
@@ -190,13 +200,14 @@ export default function RentalsPage() {
     }, [loadRentals]);
 
     const handleUpdateStatus = useCallback(
-        async (bookingId: string, status: string, paymentStatus: string) => {
+        async (bookingId: string, status?: string, paymentStatus?: string) => {
             const loadingToast = toast.loading("Memperbarui status...");
             try {
-                await api.patch(`/admin/bookings/${bookingId}`, {
-                    status,
-                    payment_status: paymentStatus,
-                });
+                const payload: Record<string, string> = {};
+                if (status !== undefined) payload.status = status;
+                if (paymentStatus !== undefined) payload.payment_status = paymentStatus;
+
+                await api.patch(`/admin/bookings/${bookingId}`, payload);
                 toast.success("Status berhasil diperbarui!", {
                     id: loadingToast,
                 });
@@ -312,18 +323,38 @@ export default function RentalsPage() {
         switch (status) {
             case "Active":
                 return {
+                    color: "bg-emerald-100 text-emerald-800 hover:bg-emerald-100/80",
+                    icon: <CheckCircle2 className="h-3 w-3" />,
+                };
+            case "Pending DP":
+                return {
+                    color: "bg-amber-100 text-amber-800 hover:bg-amber-100/80",
+                    icon: <Clock className="h-3 w-3" />,
+                };
+            case "DP Paid":
+                return {
                     color: "bg-blue-100 text-blue-800 hover:bg-blue-100/80",
                     icon: <CheckCircle2 className="h-3 w-3" />,
                 };
-            case "Pending":
+            case "Waiting Approval":
                 return {
-                    color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
+                    color: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100/80",
+                    icon: <Clock className="h-3 w-3" />,
+                };
+            case "Pending Pelunasan":
+                return {
+                    color: "bg-purple-100 text-purple-800 hover:bg-purple-100/80",
                     icon: <Clock className="h-3 w-3" />,
                 };
             case "Completed":
                 return {
                     color: "bg-gray-100 text-gray-800 hover:bg-gray-100/80",
                     icon: <History className="h-3 w-3" />,
+                };
+            case "Cancelled":
+                return {
+                    color: "bg-rose-100 text-rose-800 hover:bg-rose-100/80",
+                    icon: <XCircle className="h-3 w-3" />,
                 };
             default:
                 return {
@@ -334,15 +365,24 @@ export default function RentalsPage() {
     };
 
     const getPaymentConfig = (payment: string) => {
-        return payment === "Paid"
-            ? {
-                  color: "bg-green-100 text-green-800 hover:bg-green-100/80",
-                  icon: <CheckCircle2 className="h-3 w-3" />,
-              }
-            : {
-                  color: "bg-red-100 text-red-800 hover:bg-red-100/80",
-                  icon: <XCircle className="h-3 w-3" />,
-              };
+        switch (payment) {
+            case "Paid":
+                return {
+                    color: "bg-green-100 text-green-800 hover:bg-green-100/80",
+                    icon: <CheckCircle2 className="h-3 w-3" />,
+                };
+            case "DP Paid":
+                return {
+                    color: "bg-blue-100 text-blue-800 hover:bg-blue-100/80",
+                    icon: <CheckCircle2 className="h-3 w-3" />,
+                };
+            case "Pending":
+            default:
+                return {
+                    color: "bg-red-100 text-red-800 hover:bg-red-100/80",
+                    icon: <XCircle className="h-3 w-3" />,
+                };
+        }
     };
 
     const columns = useMemo(
@@ -403,6 +443,80 @@ export default function RentalsPage() {
                     );
                 },
             }),
+            columnHelper.accessor("dp_status", {
+                header: "DP (30%)",
+                cell: (info) => {
+                    const status = info.getValue();
+                    const amount = info.row.original.dp_amount;
+                    const config = status === "paid"
+                        ? {
+                              color: "bg-green-100 text-green-800 hover:bg-green-100/80",
+                              icon: <CheckCircle2 className="h-3 w-3" />,
+                              label: "Lunas"
+                          }
+                        : {
+                              color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
+                              icon: <Clock className="h-3 w-3" />,
+                              label: "Belum Lunas"
+                          };
+                    return (
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-500 font-medium">{amount}</span>
+                            <Badge
+                                className={cn(
+                                    "w-fit gap-1 px-1.5 py-0.5 text-[10px] font-semibold",
+                                    config.color,
+                                )}
+                            >
+                                {config.icon}
+                                {config.label}
+                            </Badge>
+                        </div>
+                    );
+                },
+            }),
+            columnHelper.accessor("final_status", {
+                header: "Pelunasan (70%)",
+                cell: (info) => {
+                    const status = info.getValue();
+                    const amount = info.row.original.final_amount;
+                    const rawStatus = info.row.original.raw_status;
+                    
+                    const isNotGenerated = ["pending_payment", "waiting_confirmation", "waiting_approval"].includes(rawStatus);
+                    
+                    const config = isNotGenerated
+                        ? {
+                              color: "bg-slate-100 text-slate-400 hover:bg-slate-100/80",
+                              icon: <Clock className="h-3 w-3" />,
+                              label: "Belum Dibuat"
+                          }
+                        : status === "paid"
+                        ? {
+                              color: "bg-green-100 text-green-800 hover:bg-green-100/80",
+                              icon: <CheckCircle2 className="h-3 w-3" />,
+                              label: "Lunas"
+                          }
+                        : {
+                              color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
+                              icon: <Clock className="h-3 w-3" />,
+                              label: "Belum Lunas"
+                          };
+                    return (
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-500 font-medium">{amount}</span>
+                            <Badge
+                                className={cn(
+                                    "w-fit gap-1 px-1.5 py-0.5 text-[10px] font-semibold",
+                                    config.color,
+                                )}
+                            >
+                                {config.icon}
+                                {config.label}
+                            </Badge>
+                        </div>
+                    );
+                },
+            }),
             columnHelper.accessor("payment", {
                 header: "Pembayaran",
                 cell: (info) => {
@@ -441,30 +555,63 @@ export default function RentalsPage() {
                                     Aksi Status
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                {info.row.original.payment !== "Paid" && (
+                                
+                                {/* 1. DP Payment Action */}
+                                {info.row.original.raw_status === "pending_payment" && info.row.original.dp_status !== "paid" && (
                                     <DropdownMenuItem
                                         onClick={() =>
                                             handleUpdateStatus(
                                                 info.row.original.id,
-                                                "active",
+                                                undefined,
                                                 "paid",
                                             )
                                         }
                                     >
-                                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
-                                        <span>Tandai Lunas & Aktifkan</span>
+                                        <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+                                        <span>Tandai DP Lunas</span>
                                     </DropdownMenuItem>
                                 )}
-                                {info.row.original.status !== "Completed" && (
+
+                                {/* 2. Approve & Trigger Pelunasan Action */}
+                                {(info.row.original.raw_status === "waiting_approval" || info.row.original.raw_status === "waiting_confirmation") && (
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                info.row.original.id,
+                                                "pending_pelunasan",
+                                                undefined,
+                                            )
+                                        }
+                                    >
+                                        <CheckCircle className="mr-2 h-4 w-4 text-indigo-600" />
+                                        <span>Setujui & Picu Pelunasan</span>
+                                    </DropdownMenuItem>
+                                )}
+
+                                {/* 3. Final Payment Action */}
+                                {info.row.original.raw_status === "pending_pelunasan" && info.row.original.final_status !== "paid" && (
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                info.row.original.id,
+                                                undefined,
+                                                "paid",
+                                            )
+                                        }
+                                    >
+                                        <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+                                        <span>Tandai Lunas Pelunasan</span>
+                                    </DropdownMenuItem>
+                                )}
+
+                                {/* Selesaikan Kontrak */}
+                                {info.row.original.raw_status === "active" && (
                                     <DropdownMenuItem
                                         onClick={() =>
                                             handleUpdateStatus(
                                                 info.row.original.id,
                                                 "completed",
-                                                info.row.original.payment ===
-                                                    "Paid"
-                                                    ? "paid"
-                                                    : "unpaid",
+                                                undefined,
                                             )
                                         }
                                     >
@@ -472,14 +619,16 @@ export default function RentalsPage() {
                                         <span>Selesaikan Kontrak</span>
                                     </DropdownMenuItem>
                                 )}
-                                {info.row.original.status !== "Cancelled" && (
+
+                                {/* Batalkan Kontrak */}
+                                {!["completed", "cancelled", "rejected"].includes(info.row.original.raw_status) && (
                                     <DropdownMenuItem
                                         variant="destructive"
                                         onClick={() =>
                                             handleUpdateStatus(
                                                 info.row.original.id,
                                                 "cancelled",
-                                                "unpaid",
+                                                undefined,
                                             )
                                         }
                                     >
@@ -643,6 +792,14 @@ export default function RentalsPage() {
                                                 <TableCell>
                                                     <Skeleton className="h-4 w-24" />
                                                 </TableCell>
+                                                <TableCell>
+                                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                                </TableCell>
+                                                {/* DP Column */}
+                                                <TableCell>
+                                                    <Skeleton className="h-6 w-20 rounded-full" />
+                                                </TableCell>
+                                                {/* Pelunasan Column */}
                                                 <TableCell>
                                                     <Skeleton className="h-6 w-20 rounded-full" />
                                                 </TableCell>
