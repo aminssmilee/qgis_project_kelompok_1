@@ -10,7 +10,7 @@ use App\Services\TriPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final class BookingController
+final readonly class BookingController
 {
     public function __construct(private TriPayService $triPay) {}
 
@@ -40,8 +40,8 @@ final class BookingController
             $dpAmount = 'Rp '.number_format((float) $dpAmountVal, 0, ',', '.');
             $finalAmount = 'Rp '.number_format((float) $finalAmountVal, 0, ',', '.');
 
-            $dpStatus = $dpPayment ? mb_strtolower($dpPayment->status) : 'unpaid';
-            $finalStatus = $finalPayment ? mb_strtolower($finalPayment->status) : 'unpaid';
+            $dpStatus = $dpPayment ? mb_strtolower((string) $dpPayment->status) : 'unpaid';
+            $finalStatus = $finalPayment ? mb_strtolower((string) $finalPayment->status) : 'unpaid';
 
             // Map overall payment status for the dashboard: 'Pending', 'DP Paid', 'Paid'
             $overallPayment = 'Pending';
@@ -192,15 +192,6 @@ final class BookingController
             'completed' => 'Completed',
             'cancelled', 'rejected' => 'Cancelled',
             default => ucfirst(str_replace('_', ' ', $status)),
-        };
-    }
-
-    private function mapPaymentStatus(string $status): string
-    {
-        return match ($status) {
-            'paid' => 'Paid',
-            'unpaid', 'expired', 'failed' => 'Unpaid',
-            default => 'Unpaid',
         };
     }
 }

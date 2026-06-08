@@ -205,7 +205,8 @@ export default function RentalsPage() {
             try {
                 const payload: Record<string, string> = {};
                 if (status !== undefined) payload.status = status;
-                if (paymentStatus !== undefined) payload.payment_status = paymentStatus;
+                if (paymentStatus !== undefined)
+                    payload.payment_status = paymentStatus;
 
                 await api.patch(`/admin/bookings/${bookingId}`, payload);
                 toast.success("Status berhasil diperbarui!", {
@@ -448,20 +449,23 @@ export default function RentalsPage() {
                 cell: (info) => {
                     const status = info.getValue();
                     const amount = info.row.original.dp_amount;
-                    const config = status === "paid"
-                        ? {
-                              color: "bg-green-100 text-green-800 hover:bg-green-100/80",
-                              icon: <CheckCircle2 className="h-3 w-3" />,
-                              label: "Lunas"
-                          }
-                        : {
-                              color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
-                              icon: <Clock className="h-3 w-3" />,
-                              label: "Belum Lunas"
-                          };
+                    const config =
+                        status === "paid"
+                            ? {
+                                  color: "bg-green-100 text-green-800 hover:bg-green-100/80",
+                                  icon: <CheckCircle2 className="h-3 w-3" />,
+                                  label: "Lunas",
+                              }
+                            : {
+                                  color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
+                                  icon: <Clock className="h-3 w-3" />,
+                                  label: "Belum Lunas",
+                              };
                     return (
                         <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-500 font-medium">{amount}</span>
+                            <span className="text-xs text-gray-500 font-medium">
+                                {amount}
+                            </span>
                             <Badge
                                 className={cn(
                                     "w-fit gap-1 px-1.5 py-0.5 text-[10px] font-semibold",
@@ -481,29 +485,35 @@ export default function RentalsPage() {
                     const status = info.getValue();
                     const amount = info.row.original.final_amount;
                     const rawStatus = info.row.original.raw_status;
-                    
-                    const isNotGenerated = ["pending_payment", "waiting_confirmation", "waiting_approval"].includes(rawStatus);
-                    
+
+                    const isNotGenerated = [
+                        "pending_payment",
+                        "waiting_confirmation",
+                        "waiting_approval",
+                    ].includes(rawStatus);
+
                     const config = isNotGenerated
                         ? {
                               color: "bg-slate-100 text-slate-400 hover:bg-slate-100/80",
                               icon: <Clock className="h-3 w-3" />,
-                              label: "Belum Dibuat"
+                              label: "Belum Dibuat",
                           }
                         : status === "paid"
-                        ? {
-                              color: "bg-green-100 text-green-800 hover:bg-green-100/80",
-                              icon: <CheckCircle2 className="h-3 w-3" />,
-                              label: "Lunas"
-                          }
-                        : {
-                              color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
-                              icon: <Clock className="h-3 w-3" />,
-                              label: "Belum Lunas"
-                          };
+                          ? {
+                                color: "bg-green-100 text-green-800 hover:bg-green-100/80",
+                                icon: <CheckCircle2 className="h-3 w-3" />,
+                                label: "Lunas",
+                            }
+                          : {
+                                color: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80",
+                                icon: <Clock className="h-3 w-3" />,
+                                label: "Belum Lunas",
+                            };
                     return (
                         <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-500 font-medium">{amount}</span>
+                            <span className="text-xs text-gray-500 font-medium">
+                                {amount}
+                            </span>
                             <Badge
                                 className={cn(
                                     "w-fit gap-1 px-1.5 py-0.5 text-[10px] font-semibold",
@@ -555,25 +565,30 @@ export default function RentalsPage() {
                                     Aksi Status
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                
+
                                 {/* 1. DP Payment Action */}
-                                {info.row.original.raw_status === "pending_payment" && info.row.original.dp_status !== "paid" && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            handleUpdateStatus(
-                                                info.row.original.id,
-                                                undefined,
-                                                "paid",
-                                            )
-                                        }
-                                    >
-                                        <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
-                                        <span>Tandai DP Lunas</span>
-                                    </DropdownMenuItem>
-                                )}
+                                {info.row.original.raw_status ===
+                                    "pending_payment" &&
+                                    info.row.original.dp_status !== "paid" && (
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleUpdateStatus(
+                                                    info.row.original.id,
+                                                    undefined,
+                                                    "paid",
+                                                )
+                                            }
+                                        >
+                                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+                                            <span>Tandai DP Lunas</span>
+                                        </DropdownMenuItem>
+                                    )}
 
                                 {/* 2. Approve & Trigger Pelunasan Action */}
-                                {(info.row.original.raw_status === "waiting_approval" || info.row.original.raw_status === "waiting_confirmation") && (
+                                {(info.row.original.raw_status ===
+                                    "waiting_approval" ||
+                                    info.row.original.raw_status ===
+                                        "waiting_confirmation") && (
                                     <DropdownMenuItem
                                         onClick={() =>
                                             handleUpdateStatus(
@@ -589,20 +604,23 @@ export default function RentalsPage() {
                                 )}
 
                                 {/* 3. Final Payment Action */}
-                                {info.row.original.raw_status === "pending_pelunasan" && info.row.original.final_status !== "paid" && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            handleUpdateStatus(
-                                                info.row.original.id,
-                                                undefined,
-                                                "paid",
-                                            )
-                                        }
-                                    >
-                                        <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
-                                        <span>Tandai Lunas Pelunasan</span>
-                                    </DropdownMenuItem>
-                                )}
+                                {info.row.original.raw_status ===
+                                    "pending_pelunasan" &&
+                                    info.row.original.final_status !==
+                                        "paid" && (
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                handleUpdateStatus(
+                                                    info.row.original.id,
+                                                    undefined,
+                                                    "paid",
+                                                )
+                                            }
+                                        >
+                                            <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-600" />
+                                            <span>Tandai Lunas Pelunasan</span>
+                                        </DropdownMenuItem>
+                                    )}
 
                                 {/* Selesaikan Kontrak */}
                                 {info.row.original.raw_status === "active" && (
@@ -621,7 +639,11 @@ export default function RentalsPage() {
                                 )}
 
                                 {/* Batalkan Kontrak */}
-                                {!["completed", "cancelled", "rejected"].includes(info.row.original.raw_status) && (
+                                {![
+                                    "completed",
+                                    "cancelled",
+                                    "rejected",
+                                ].includes(info.row.original.raw_status) && (
                                     <DropdownMenuItem
                                         variant="destructive"
                                         onClick={() =>

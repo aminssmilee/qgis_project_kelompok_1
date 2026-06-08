@@ -29,7 +29,7 @@ final class PaymentCallbackController extends Controller
 
         $merchantRef = $data->merchant_ref;
         $bookingCode = mb_substr($merchantRef, 0, mb_strrpos($merchantRef, '-'));
-        if (! $bookingCode) {
+        if ($bookingCode === '' || $bookingCode === '0') {
             $bookingCode = $merchantRef;
         }
 
