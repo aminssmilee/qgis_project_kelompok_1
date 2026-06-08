@@ -63,16 +63,16 @@ final class SweepExpiredBookings extends Command
                 ]);
 
                 $reminders = \App\Models\BillboardReminder::query()
-                        ->where('billboard_id', $booking->billboard_id)
-                        ->where('requested_start_date', $booking->start_date)
-                        ->where('requested_end_date', $booking->end_date)
-                        ->where('is_notified', false)
-                        ->get();
+                    ->where('billboard_id', $booking->billboard_id)
+                    ->where('requested_start_date', $booking->start_date)
+                    ->where('requested_end_date', $booking->end_date)
+                    ->where('is_notified', false)
+                    ->get();
 
-                    foreach ($reminders as $reminder) {
-                        // Logika pengiriman notifikasi (FCM/Email) Anda di sini
-                        $reminder->update(['is_notified' => true]);
-                    }
+                foreach ($reminders as $reminder) {
+                    // Logika pengiriman notifikasi (FCM/Email) Anda di sini
+                    $reminder->update(['is_notified' => true]);
+                }
 
                 DB::commit();
 

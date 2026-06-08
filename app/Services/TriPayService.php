@@ -120,7 +120,7 @@ final class TriPayService
             'callback_url' => url('/api/v1/payment/callback'),
             'return_url' => url('/payment/return'),
             // Konversi menit ke detik dengan time()
-            'expired_time' => time() + ($expiredMinutes * 60), 
+            'expired_time' => time() + ($expiredMinutes * 60),
             'signature' => $signature,
         ];
 

@@ -22,7 +22,7 @@ final class StoreBookingRequest extends FormRequest
      */
     public function prepareForValidation(): void
     {
-        if ($this->has('paymentMethod') && !$this->has('payment_method')) {
+        if ($this->has('paymentMethod') && ! $this->has('payment_method')) {
             $this->merge([
                 'payment_method' => $this->input('paymentMethod'),
             ]);

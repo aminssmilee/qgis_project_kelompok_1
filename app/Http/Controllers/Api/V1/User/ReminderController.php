@@ -31,7 +31,7 @@ final class ReminderController
 
         if ($exists) {
             return response()->json([
-                'message' => 'Anda sudah terdaftar untuk pengingat ini.'
+                'message' => 'Anda sudah terdaftar untuk pengingat ini.',
             ], 409);
         }
 
@@ -43,7 +43,7 @@ final class ReminderController
         ]);
 
         return response()->json([
-            'message' => 'Pengingat disetel! Kami akan mengabari Anda jika titik ini tersedia kembali.'
+            'message' => 'Pengingat disetel! Kami akan mengabari Anda jika titik ini tersedia kembali.',
         ], 201);
     }
 }

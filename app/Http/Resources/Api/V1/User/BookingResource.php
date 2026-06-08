@@ -7,7 +7,6 @@ namespace App\Http\Resources\Api\V1\User;
 use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Collection;
 
 final class BookingResource extends JsonResource
 {
