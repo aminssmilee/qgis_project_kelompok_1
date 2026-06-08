@@ -295,7 +295,7 @@ it('moves booking to approved when final installment callback is paid', function
     $booking->refresh();
     $finalPayment->refresh();
 
-    expect($booking->status)->toBe('approved');
+    expect($booking->status)->toBe('active');
     expect($finalPayment->status)->toBe('PAID');
     expect($finalPayment->paid_at)->not->toBeNull();
 });

@@ -18,6 +18,18 @@ final class StoreBookingRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    public function prepareForValidation(): void
+    {
+        if ($this->has('paymentMethod') && !$this->has('payment_method')) {
+            $this->merge([
+                'payment_method' => $this->input('paymentMethod'),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>

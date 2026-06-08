@@ -161,27 +161,51 @@ final readonly class BookingController
         $checkoutUrl = null;
         if ($request->has('payment_method') && $request->payment_method) {
             $paymentMethod = $request->payment_method;
+            if (mb_strtolower($paymentMethod) === 'tripay') {
+                $paymentMethod = config('services.tripay.default_method', 'QRIS');
+            }
+
             $dpAmount = (int) ($booking->total_price * 0.30);
+            $finalAmount = $booking->total_price - $dpAmount;
 
             // Create DP Payment record first
-            $payment = Payment::query()->create([
+            $dpPayment = Payment::query()->create([
                 'booking_id' => $booking->id,
                 'type' => 'dp',
+                'payment_type' => 'DP',
+                'sequence' => 1,
+                'is_final' => false,
                 'tripay_merchant_ref' => $booking->booking_code.'-DP',
                 'payment_channel' => $paymentMethod,
+                'payment_method_type' => $paymentMethod,
                 'amount' => $dpAmount,
                 'status' => 'UNPAID',
             ]);
 
-            $res = $this->triPay->createTransaction($payment, $paymentMethod);
+            // Create Final/PELUNASAN Payment record
+            $finalPayment = Payment::query()->create([
+                'booking_id' => $booking->id,
+                'type' => 'final',
+                'payment_type' => 'PELUNASAN',
+                'sequence' => 2,
+                'is_final' => true,
+                'tripay_merchant_ref' => $booking->booking_code.'-FINAL',
+                'payment_channel' => $paymentMethod,
+                'payment_method_type' => $paymentMethod,
+                'amount' => $finalAmount,
+                'status' => 'UNPAID',
+            ]);
+
+            $res = $this->triPay->createTransaction($dpPayment, $paymentMethod);
             if ($res && isset($res['success']) && $res['success']) {
                 $checkoutUrl = $res['data']['checkout_url'];
-                $payment->update([
+                $dpPayment->update([
                     'tripay_reference' => $res['data']['reference'],
                 ]);
             } else {
-                // Delete the payment and booking to avoid orphan records
-                $payment->delete();
+                // Delete the payments and booking to avoid orphan records
+                $dpPayment->delete();
+                $finalPayment->delete();
                 $booking->delete();
                 $errorMsg = $res['message'] ?? 'Failed to create payment transaction with TriPay.';
 
