@@ -30,9 +30,14 @@ final class BookingResource extends JsonResource
 
         // Get the active unpaid payment
         $activePayment = $payments->filter(fn ($p): bool => mb_strtoupper((string) $p->status) === 'UNPAID')->first();
-        $checkoutUrl = $activePayment ? 'https://tripay.co.id/checkout/'.$activePayment->tripay_reference : null;
+
+        $tripayUrl = config('services.tripay.mode') === 'sandbox'
+            ? 'https://sandbox.tripay.co.id/checkout/'
+            : 'https://tripay.co.id/checkout/';
+
+        $checkoutUrl = $activePayment ? $tripayUrl.$activePayment->tripay_reference : null;
         $finalCheckoutUrl = $finalPayment && mb_strtoupper((string) $finalPayment->status) === 'UNPAID' && $finalPayment->tripay_reference
-            ? 'https://tripay.co.id/checkout/'.$finalPayment->tripay_reference
+            ? $tripayUrl.$finalPayment->tripay_reference
             : null;
 
         // Map payment status for the app: 'pending', 'dp_paid', 'paid'
@@ -59,6 +64,9 @@ final class BookingResource extends JsonResource
                 'id' => $this->billboard_id,
                 'title' => $this->billboard->name,
                 'type' => $this->billboard->category->name ?? 'Billboard',
+                'thumbnail_url' => $this->billboard->thumbnail_url
+                    ?? $this->billboard->photos?->firstWhere('is_primary', true)?->photo_url
+                    ?? $this->billboard->photos?->first()?->photo_url,
             ],
             'status' => $statusMap[$this->status] ?? $this->status,
             'raw_status' => $this->status,
@@ -80,13 +88,13 @@ final class BookingResource extends JsonResource
                 'type' => $activePayment->type,
                 'status' => mb_strtolower((string) $activePayment->status),
                 'amount' => (float) $activePayment->amount,
-                'checkout_url' => 'https://tripay.co.id/checkout/'.$activePayment->tripay_reference,
+                'checkout_url' => $tripayUrl.$activePayment->tripay_reference,
             ] : null,
             'payments' => $payments->map(fn ($p): array => [
                 'type' => $p->type,
                 'status' => mb_strtolower((string) $p->status),
                 'amount' => (float) $p->amount,
-                'checkout_url' => $p->tripay_reference ? 'https://tripay.co.id/checkout/'.$p->tripay_reference : null,
+                'checkout_url' => $p->tripay_reference ? $tripayUrl.$p->tripay_reference : null,
             ])->toArray(),
             'creative_url' => $this->creatives->last()?->file_url,
             'creative_status' => $this->creatives->last()?->status,

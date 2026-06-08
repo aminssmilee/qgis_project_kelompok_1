@@ -30,7 +30,7 @@ final readonly class BookingController
 
         $query = Booking::query()
             ->where('user_id', $user->id)
-            ->with(['billboard.category']);
+            ->with(['billboard.category', 'billboard.photos']);
 
         if ($status) {
             $mappedStatuses = match ($status) {
@@ -206,7 +206,7 @@ final readonly class BookingController
         $booking = Booking::query()
             ->where('id', $id)
             ->where('user_id', $request->user()->id)
-            ->with(['billboard.category', 'payments', 'creatives'])
+            ->with(['billboard.category', 'billboard.photos', 'payments', 'creatives'])
             ->firstOrFail();
 
         return response()->json([
