@@ -159,23 +159,29 @@ final readonly class BookingController
         $booking->load(['billboard.category']);
 
         $checkoutUrl = null;
-        if ($request->has('payment_method')) {
+        if ($request->has('payment_method') && $request->payment_method) {
             $paymentMethod = $request->payment_method;
-            $res = $this->triPay->createTransaction($booking, $paymentMethod);
+            $dpAmount = (int) ($booking->total_price * 0.30);
+
+            // Create DP Payment record first
+            $payment = Payment::query()->create([
+                'booking_id' => $booking->id,
+                'type' => 'dp',
+                'tripay_merchant_ref' => $booking->booking_code.'-DP',
+                'payment_channel' => $paymentMethod,
+                'amount' => $dpAmount,
+                'status' => 'UNPAID',
+            ]);
+
+            $res = $this->triPay->createTransaction($payment, $paymentMethod);
             if ($res && isset($res['success']) && $res['success']) {
                 $checkoutUrl = $res['data']['checkout_url'];
-
-                // Create Payment record
-                Payment::query()->create([
-                    'booking_id' => $booking->id,
+                $payment->update([
                     'tripay_reference' => $res['data']['reference'],
-                    'tripay_merchant_ref' => $res['data']['merchant_ref'],
-                    'payment_channel' => $paymentMethod,
-                    'amount' => $booking->total_price,
-                    'status' => 'UNPAID',
                 ]);
             } else {
-                // Delete the booking to avoid orphan bookings
+                // Delete the payment and booking to avoid orphan records
+                $payment->delete();
                 $booking->delete();
                 $errorMsg = $res['message'] ?? 'Failed to create payment transaction with TriPay.';
 
@@ -256,8 +262,65 @@ final readonly class BookingController
             ]);
         }
 
+    }
+
+    /**
+     * Upload creative design for a booking.
+     */
+    public function uploadDesign(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'design' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5120'], // max 5MB
+        ]);
+
+        $booking = Booking::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        // Check if booking is in a state where design can be uploaded
+        if (! in_array($booking->status, ['waiting_confirmation', 'waiting_approval', 'pending_payment'])) {
+            return response()->json([
+                'message' => 'Cannot upload design for this booking status.',
+            ], 422);
+        }
+
+        if ($request->hasFile('design')) {
+            $file = $request->file('design');
+            $fileName = time().'_'.$file->getClientOriginalName();
+            $path = $file->storeAs('creatives', $fileName, 'public');
+            $fileUrl = asset('storage/'.$path);
+            $fileSizeKb = (int) ($file->getSize() / 1024);
+            $fileExtension = $file->getClientOriginalExtension();
+
+            // Create BookingCreative record
+            $creative = $booking->creatives()->create([
+                'file_url' => $fileUrl,
+                'file_name' => $file->getClientOriginalName(),
+                'file_size_kb' => $fileSizeKb,
+                'file_type' => $fileExtension,
+                'status' => 'pending_review',
+            ]);
+
+            // Transition status to waiting_approval if it was waiting_confirmation or pending_payment
+            if ($booking->status === 'waiting_confirmation' || $booking->status === 'pending_payment') {
+                $booking->update([
+                    'status' => 'waiting_approval',
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Design uploaded successfully',
+                'data' => [
+                    'id' => $creative->id,
+                    'file_url' => $creative->file_url,
+                    'status' => $creative->status,
+                ],
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Failed to retrieve payment channels',
-        ], 500);
+            'message' => 'No design file uploaded.',
+        ], 400);
     }
 }

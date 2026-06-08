@@ -31,6 +31,7 @@ Route::prefix('v1')->group(function (): void {
         Route::prefix('auth')->group(function (): void {
             Route::post('/register', [AuthController::class, 'register']);
             Route::post('/login', [AuthController::class, 'login']);
+            Route::post('/google', [AuthController::class, 'googleLogin']);
         });
 
         // Public Spot Routes (Explore)
@@ -59,6 +60,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/spots/{id}/book', [BookingController::class, 'store']);
             Route::get('/activities', [BookingController::class, 'index']);
             Route::get('/activities/{id}', [BookingController::class, 'show']);
+            Route::post('/activities/{id}/upload-design', [BookingController::class, 'uploadDesign']);
             Route::patch('/activities/{id}/cancel', [BookingController::class, 'cancel']);
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
