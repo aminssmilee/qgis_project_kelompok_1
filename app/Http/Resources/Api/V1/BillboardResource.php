@@ -30,7 +30,11 @@ final class BillboardResource extends JsonResource
             'price_per_month' => (int) ($this->activePricing?->price_per_month ?? 0),
             'is_available' => (bool) $this->is_active,
             'impressions_per_day' => (int) $this->impressions_per_day,
-            'thumbnail_url' => $this->thumbnail_url ?? $this->photos->firstWhere('is_primary', true)?->photo_url ?? $this->photos->first()?->photo_url,
+            'thumbnail_url' => $this->resolveImageUrl(
+                $this->thumbnail_url
+                ?? $this->photos->firstWhere('is_primary', true)?->photo_url
+                ?? $this->photos->first()?->photo_url
+            ),
             'category' => $this->category?->name,
             'size' => $size,
             'address' => $this->address,
@@ -45,5 +49,24 @@ final class BillboardResource extends JsonResource
             'is_featured' => $this->when($request->routeIs('*.show'), $this->is_featured),
             'created_at' => $this->when($request->routeIs('*.show'), $this->created_at?->toIso8601String()),
         ];
+    }
+
+    /**
+     * Konversi path relatif ke URL lengkap.
+     * Contoh: "storage/photos/abc.jpg" → "http://178.128.104.13/storage/photos/abc.jpg"
+     */
+    private function resolveImageUrl(?string $path): ?string
+    {
+        if (empty($path)) {
+            return null;
+        }
+
+        // Sudah berupa URL lengkap (http:// atau https://)
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        // Path relatif → jadikan URL lengkap
+        return url($path);
     }
 }
