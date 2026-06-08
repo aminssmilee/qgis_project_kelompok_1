@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Admin\BillboardController as AdminBillboardController;
+use App\Http\Controllers\Api\V1\Admin\BookingModerationController;
 use App\Http\Controllers\Api\V1\Admin\ClientController;
 use App\Http\Controllers\Api\V1\Admin\PaymentController;
 use App\Http\Controllers\Api\V1\Admin\ReportController;
@@ -65,7 +66,7 @@ Route::prefix('v1')->group(function (): void {
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
             Route::patch('/companies/{id}', [CompanyController::class, 'update']);
-            // Profil, Booking, dll akan ditambahkan di sini
+            Route::post('/reminders', [ReminderController::class, 'store']);
         });
     });
     // Admin API (Web Dashboard)
@@ -106,6 +107,7 @@ Route::prefix('v1')->group(function (): void {
             // Bookings CRUD
             Route::get('/bookings', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'index']);
             Route::patch('/bookings/{id}', [App\Http\Controllers\Api\V1\Admin\BookingController::class, 'update']);
+            Route::patch('/bookings/{id}/approve-design', [BookingModerationController::class, 'approveDesign']);
 
             // Categories CRUD
             Route::apiResource('categories', App\Http\Controllers\Api\V1\Admin\CategoryController::class);
