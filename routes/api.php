@@ -62,6 +62,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/activities', [BookingController::class, 'index']);
             Route::get('/activities/{id}', [BookingController::class, 'show']);
             Route::post('/activities/{id}/upload-design', [BookingController::class, 'uploadDesign']);
+            Route::post('/activities/{id}/pay-final', [BookingController::class, 'payFinal']);
             Route::patch('/activities/{id}/cancel', [BookingController::class, 'cancel']);
             // Company Routes
             Route::get('/companies/{id}', [CompanyController::class, 'show']);
