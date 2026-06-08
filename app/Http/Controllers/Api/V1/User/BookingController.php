@@ -166,89 +166,34 @@ final readonly class BookingController
                 'notes' => $request->notes,
             ]);
 
-            $paymentMethod = $this->resolvePaymentMethod($request);
+        $booking->load(['billboard.category']);
 
-            if (filled($paymentMethod)) {
-                $paymentMethod = (string) $paymentMethod;
-                $dpAmount = round((float) $booking->total_price * (self::DP_PERCENTAGE / 100), 2);
-                $remainingAmount = max(0, round((float) $booking->total_price - $dpAmount, 2));
+        $checkoutUrl = null;
+        if ($request->has('payment_method') && $request->payment_method) {
+            $paymentMethod = $request->payment_method;
+            $dpAmount = (int) ($booking->total_price * 0.30);
 
-                $dpMerchantRef = $booking->booking_code.'-T1';
-
-                $res = $this->triPay->createTransaction(
-                    $booking,
-                    $paymentMethod,
-                    merchantRef: $dpMerchantRef,
-                    amountOverride: (int) round($dpAmount),
-                );
-
-                if (! $res || ! isset($res['success']) || ! $res['success']) {
-                    $errorMsg = $res['message'] ?? 'Failed to create DP payment transaction with TriPay.';
-
-                    DB::rollBack();
-
-                    return response()->json([
-                        'message' => $errorMsg,
-                    ], 422);
-                }
-
-                $checkoutUrl = $res['data']['checkout_url'] ?? null;
-
-                Payment::query()->create([
-                    'booking_id' => $booking->id,
-                    'payment_type' => 'DP',
-                    'sequence' => 1,
-                    'is_final' => false,
-                    'tripay_reference' => $res['data']['reference'],
-                    'tripay_merchant_ref' => $res['data']['merchant_ref'],
-                    'payment_channel' => $paymentMethod,
-                    'payment_method_type' => $paymentMethod,
-                    'amount' => $dpAmount,
-                    'status' => 'UNPAID',
-                    
-                    // UBAH BAGIAN INI:
-                    // Mengambil nilai 1 menit dari config agar sinkron dengan Tripay
-                    'due_at' => now()->addMinutes(config('services.tripay.expired_minutes', 1)), 
-                    // Jika Anda pakai kolom expired_at, gunakan 'expired_at' => ...
-                ]);
-
-                if ($remainingAmount > 0) {
-                    Payment::query()->create([
-                        'booking_id' => $booking->id,
-                        'payment_type' => 'PELUNASAN',
-                        'sequence' => 2,
-                        'is_final' => true,
-                        'amount' => $remainingAmount,
-                        'status' => 'UNPAID',
-                    ]);
-                }
-            }
-
-            DB::commit();
-        } catch (Throwable $e) {
-            DB::rollBack();
-
-            Log::error('BookingController@store error', [
-                'user_id' => $user->id ?? null,
-                'billboard_id' => $billboard->id ?? null,
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+            // Create DP Payment record first
+            $payment = Payment::query()->create([
+                'booking_id' => $booking->id,
+                'type' => 'dp',
+                'tripay_merchant_ref' => $booking->booking_code.'-DP',
+                'payment_channel' => $paymentMethod,
+                'amount' => $dpAmount,
+                'status' => 'UNPAID',
             ]);
 
-            if ($booking !== null) {
-                try {
-                    $booking->load(['billboard.category', 'payments']);
-
-                    return response()->json([
-                        'message' => 'Booking created but post-creation step failed',
-                        'data' => new BookingResource($booking),
-                        'warning' => $e->getMessage(),
-                        'checkout_url' => $checkoutUrl,
-                    ], 201);
-                } catch (Throwable $inner) {
-                    Log::error('BookingController@store - resource build failed', [
-                        'exception' => $inner->getMessage(),
-                    ]);
+            $res = $this->triPay->createTransaction($payment, $paymentMethod);
+            if ($res && isset($res['success']) && $res['success']) {
+                $checkoutUrl = $res['data']['checkout_url'];
+                $payment->update([
+                    'tripay_reference' => $res['data']['reference'],
+                ]);
+            } else {
+                // Delete the payment and booking to avoid orphan records
+                $payment->delete();
+                $booking->delete();
+                $errorMsg = $res['message'] ?? 'Failed to create payment transaction with TriPay.';
 
                     return response()->json([
                         'message' => 'Booking created but could not generate resource',
@@ -348,9 +293,66 @@ final readonly class BookingController
             ]);
         }
 
+    }
+
+    /**
+     * Upload creative design for a booking.
+     */
+    public function uploadDesign(Request $request, string $id): JsonResponse
+    {
+        $request->validate([
+            'design' => ['required', 'image', 'mimes:jpeg,png,jpg', 'max:5120'], // max 5MB
+        ]);
+
+        $booking = Booking::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        // Check if booking is in a state where design can be uploaded
+        if (! in_array($booking->status, ['waiting_confirmation', 'waiting_approval', 'pending_payment'])) {
+            return response()->json([
+                'message' => 'Cannot upload design for this booking status.',
+            ], 422);
+        }
+
+        if ($request->hasFile('design')) {
+            $file = $request->file('design');
+            $fileName = time().'_'.$file->getClientOriginalName();
+            $path = $file->storeAs('creatives', $fileName, 'public');
+            $fileUrl = asset('storage/'.$path);
+            $fileSizeKb = (int) ($file->getSize() / 1024);
+            $fileExtension = $file->getClientOriginalExtension();
+
+            // Create BookingCreative record
+            $creative = $booking->creatives()->create([
+                'file_url' => $fileUrl,
+                'file_name' => $file->getClientOriginalName(),
+                'file_size_kb' => $fileSizeKb,
+                'file_type' => $fileExtension,
+                'status' => 'pending_review',
+            ]);
+
+            // Transition status to waiting_approval if it was waiting_confirmation or pending_payment
+            if ($booking->status === 'waiting_confirmation' || $booking->status === 'pending_payment') {
+                $booking->update([
+                    'status' => 'waiting_approval',
+                ]);
+            }
+
+            return response()->json([
+                'message' => 'Design uploaded successfully',
+                'data' => [
+                    'id' => $creative->id,
+                    'file_url' => $creative->file_url,
+                    'status' => $creative->status,
+                ],
+            ]);
+        }
+
         return response()->json([
-            'message' => 'Failed to retrieve payment channels',
-        ], 500);
+            'message' => 'No design file uploaded.',
+        ], 400);
     }
 
     private function resolvePaymentMethod(Request $request): ?string

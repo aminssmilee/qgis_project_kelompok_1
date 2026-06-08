@@ -17,9 +17,7 @@ final class Payment extends Model
 
     protected $fillable = [
         'booking_id',
-        'payment_type',
-        'sequence',
-        'is_final',
+        'type',
         'tripay_reference',
         'tripay_merchant_ref',
         'payment_channel',

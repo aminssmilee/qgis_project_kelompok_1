@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Booking;
+use App\Models\Payment;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -75,15 +75,11 @@ final class TriPayService
     /**
      * Create a payment transaction
      */
-    public function createTransaction(
-        Booking $booking,
-        string $methodCode,
-        ?string $merchantRef = null,
-        ?int $amountOverride = null,
-    ): ?array {
-        // Amount needs to be integer
-        $amount = $amountOverride ?? (int) $booking->total_price;
-        $merchantRef ??= $booking->booking_code;
+    public function createTransaction(Payment $payment, string $methodCode): ?array
+    {
+        $booking = $payment->booking;
+        $amount = (int) $payment->amount;
+        $merchantRef = $payment->tripay_merchant_ref;
 
         if ($this->isMock()) {
             return [
@@ -116,7 +112,7 @@ final class TriPayService
             'order_items' => [
                 [
                     'sku' => $booking->billboard_id,
-                    'name' => 'Rental: '.($booking->billboard->name ?? 'Billboard'),
+                    'name' => 'Rental: '.($booking->billboard->name ?? 'Billboard').' ('.Str::upper($payment->type).')',
                     'price' => $amount,
                     'quantity' => 1,
                 ],

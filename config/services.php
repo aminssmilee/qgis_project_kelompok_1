@@ -46,4 +46,10 @@ return [
         'expired_minutes' => env('TRIPAY_EXPIRED_MINUTES', 1),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URL'),
+    ],
+
 ];

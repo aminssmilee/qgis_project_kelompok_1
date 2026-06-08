@@ -6,11 +6,14 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Services\TriPayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-final class BookingController
+final readonly class BookingController
 {
+    public function __construct(private TriPayService $triPay) {}
+
     /**
      * Display a listing of all bookings for the admin dashboard.
      */
@@ -26,8 +29,25 @@ final class BookingController
         }
 
         $bookings = $query->latest()->get()->map(function (Booking $booking): array {
-            $paymentStatus = $booking->payments->last()?->status ?? 'unpaid';
             $clientName = $booking->user->company?->name ?? $booking->user->name;
+
+            $dpPayment = $booking->payments->where('type', 'dp')->first();
+            $finalPayment = $booking->payments->where('type', 'final')->first();
+
+            $dpAmountVal = $dpPayment ? $dpPayment->amount : ($booking->total_price * 0.3);
+            $finalAmountVal = $finalPayment ? $finalPayment->amount : ($booking->total_price * 0.7);
+
+            $dpAmount = 'Rp '.number_format((float) $dpAmountVal, 0, ',', '.');
+            $finalAmount = 'Rp '.number_format((float) $finalAmountVal, 0, ',', '.');
+
+            $dpStatus = $dpPayment ? mb_strtolower((string) $dpPayment->status) : 'unpaid';
+            $finalStatus = $finalPayment ? mb_strtolower((string) $finalPayment->status) : 'unpaid';
+
+            // Map overall payment status for the dashboard: 'Pending', 'DP Paid', 'Paid'
+            $overallPayment = 'Pending';
+            if ($dpStatus === 'paid') {
+                $overallPayment = ($finalStatus === 'paid') ? 'Paid' : 'DP Paid';
+            }
 
             return [
                 'id' => $booking->id,
@@ -39,7 +59,12 @@ final class BookingController
                 'duration' => $booking->duration_value.' '.$booking->duration_type,
                 'amount' => 'Rp '.number_format((float) $booking->total_price, 0, ',', '.'),
                 'status' => $this->mapStatus($booking->status),
-                'payment' => $this->mapPaymentStatus($paymentStatus),
+                'payment' => $overallPayment,
+                'raw_status' => $booking->status,
+                'dp_amount' => $dpAmount,
+                'dp_status' => $dpStatus,
+                'final_amount' => $finalAmount,
+                'final_status' => $finalStatus,
             ];
         });
 
@@ -55,7 +80,7 @@ final class BookingController
     public function update(Request $request, string $id): JsonResponse
     {
         $request->validate([
-            'status' => ['nullable', 'string', 'in:pending_payment,waiting_confirmation,waiting_pelunasan,approved,active,completed,cancelled,rejected'],
+            'status' => ['nullable', 'string', 'in:pending_payment,waiting_confirmation,waiting_approval,pending_pelunasan,active,completed,cancelled,rejected'],
             'payment_status' => ['nullable', 'string', 'in:unpaid,paid,failed,expired,refunded'],
             'admin_note' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -79,6 +104,32 @@ final class BookingController
             $booking->update($updateData);
         }
 
+        // DP System: Generate final payment if status changed to pending_pelunasan
+        if ($request->status === 'pending_pelunasan') {
+            $dpPayment = $booking->payments()->where('type', 'dp')->first();
+            $paymentChannel = $dpPayment ? $dpPayment->payment_channel : 'QRIS';
+            $finalAmount = $booking->total_price - ($dpPayment ? $dpPayment->amount : ($booking->total_price * 0.3));
+
+            $finalPayment = $booking->payments()->where('type', 'final')->first();
+            if (! $finalPayment) {
+                $finalPayment = Payment::query()->create([
+                    'booking_id' => $booking->id,
+                    'type' => 'final',
+                    'tripay_merchant_ref' => $booking->booking_code.'-FINAL',
+                    'payment_channel' => $paymentChannel,
+                    'amount' => $finalAmount,
+                    'status' => 'UNPAID',
+                ]);
+
+                $res = $this->triPay->createTransaction($finalPayment, $paymentChannel);
+                if ($res && isset($res['success']) && $res['success']) {
+                    $finalPayment->update([
+                        'tripay_reference' => $res['data']['reference'],
+                    ]);
+                }
+            }
+        }
+
         if ($request->has('payment_status')) {
             $paymentStatus = $request->payment_status;
 
@@ -91,10 +142,11 @@ final class BookingController
                 }
                 $payment->update($paymentPayload);
             } else {
-                // Create a payment record
+                // Create a payment record (default to DP)
                 $paymentPayload = [
                     'booking_id' => $booking->id,
-                    'amount' => $booking->total_price,
+                    'type' => 'dp',
+                    'amount' => $booking->total_price * 0.3,
                     'status' => $paymentStatus,
                 ];
                 if ($paymentStatus === 'paid') {
@@ -103,12 +155,18 @@ final class BookingController
                 Payment::query()->create($paymentPayload);
             }
 
-            // Sync booking status to active if payment is paid
-            if ($paymentStatus === 'paid' && $booking->status === 'pending_payment') {
-                $booking->update([
-                    'status' => 'active',
-                    'confirmed_at' => now(),
-                ]);
+            // Sync booking status
+            if ($paymentStatus === 'paid') {
+                if ($payment && $payment->type === 'dp') {
+                    $booking->update([
+                        'status' => 'waiting_confirmation',
+                    ]);
+                } elseif ($payment && $payment->type === 'final') {
+                    $booking->update([
+                        'status' => 'active',
+                        'confirmed_at' => now(),
+                    ]);
+                }
             }
         }
 
@@ -126,20 +184,14 @@ final class BookingController
     private function mapStatus(string $status): string
     {
         return match ($status) {
-            'pending_payment', 'waiting_confirmation', 'waiting_pelunasan' => 'Pending',
-            'approved', 'active' => 'Active',
+            'pending_payment' => 'Pending DP',
+            'waiting_confirmation' => 'DP Paid',
+            'waiting_approval' => 'Waiting Approval',
+            'pending_pelunasan' => 'Pending Pelunasan',
+            'active' => 'Active',
             'completed' => 'Completed',
             'cancelled', 'rejected' => 'Cancelled',
-            default => 'Unknown',
-        };
-    }
-
-    private function mapPaymentStatus(string $status): string
-    {
-        return match ($status) {
-            'paid' => 'Paid',
-            'unpaid', 'expired', 'failed' => 'Unpaid',
-            default => 'Unpaid',
+            default => ucfirst(str_replace('_', ' ', $status)),
         };
     }
 }
