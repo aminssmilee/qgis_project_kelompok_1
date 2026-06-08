@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\TriPayService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
-final class PaymentCallbackController
+final class PaymentCallbackController extends Controller
 {
     public function handle(Request $request, TriPayService $triPay): JsonResponse
     {
@@ -41,13 +41,11 @@ final class PaymentCallbackController
         $payment = Payment::query()->where('tripay_merchant_ref', $merchantRef)->first();
         if ($payment) {
             $payment->update([
-                'status' => $status,
+                'status' => $data->status,
                 'tripay_callback_at' => now(),
                 'callback_payload' => json_decode($request->getContent(), true),
-                'paid_at' => $status === 'PAID' ? now() : $payment->paid_at,
-                'payment_channel' => $data->payment_channel ?? $payment->payment_channel,
-                'payment_method_type' => $data->payment_method ?? $payment->payment_method_type,
             ]);
+        }
 
         if ($data->status === 'PAID') {
             if ($payment) {
