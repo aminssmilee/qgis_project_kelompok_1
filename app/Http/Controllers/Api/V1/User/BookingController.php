@@ -347,4 +347,61 @@ final readonly class BookingController
             'message' => 'No design file uploaded.',
         ], 400);
     }
+
+    /**
+     * Pay the final installment (Pelunasan) for a booking.
+     */
+    public function payFinal(Request $request, string $id): JsonResponse
+    {
+        $booking = Booking::query()
+            ->where('id', $id)
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        // Find the final payment
+        $finalPayment = Payment::query()
+            ->where('booking_id', $booking->id)
+            ->where(function ($query) {
+                $query->where('type', 'final')->orWhere('is_final', true)->orWhere('payment_type', 'PELUNASAN');
+            })
+            ->where('status', 'UNPAID')
+            ->first();
+
+        if (! $finalPayment) {
+            return response()->json([
+                'message' => 'No unpaid final payment found for this booking.',
+            ], 404);
+        }
+
+        $paymentMethod = $request->input('payment_method', config('services.tripay.default_method', 'QRIS'));
+        if (mb_strtolower($paymentMethod) === 'tripay') {
+            $paymentMethod = config('services.tripay.default_method', 'QRIS');
+        }
+
+        // Update payment method if different
+        if ($finalPayment->payment_method_type !== $paymentMethod) {
+            $finalPayment->update([
+                'payment_channel' => $paymentMethod,
+                'payment_method_type' => $paymentMethod,
+            ]);
+        }
+
+        $res = $this->triPay->createTransaction($finalPayment, $paymentMethod);
+        if ($res && isset($res['success']) && $res['success']) {
+            $checkoutUrl = $res['data']['checkout_url'];
+            $finalPayment->update([
+                'tripay_reference' => $res['data']['reference'],
+            ]);
+
+            return response()->json([
+                'message' => 'Final payment transaction created successfully.',
+                'checkout_url' => $checkoutUrl,
+                'data' => $finalPayment,
+            ]);
+        }
+
+        return response()->json([
+            'message' => $res['message'] ?? 'Failed to create payment transaction with TriPay.',
+        ], 422);
+    }
 }
