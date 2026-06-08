@@ -151,6 +151,14 @@ export default function AddBillboardModal({
             newErrors.name = "Nama billboard wajib diisi";
         if (!formData.address.trim()) newErrors.address = "Alamat wajib diisi";
         if (!formData.size.trim()) newErrors.size = "Ukuran wajib diisi";
+        if (!formData.price.trim()) newErrors.price = "Harga wajib diisi";
+        if (
+            formData.price.trim() &&
+            (Number.isNaN(Number(formData.price)) ||
+                Number(formData.price) <= 0)
+        ) {
+            newErrors.price = "Harga harus berupa angka lebih dari 0";
+        }
         if (!formData.lat)
             newErrors.lat = "Pilih lokasi di map terlebih dahulu";
         if (!formData.lng)
@@ -197,7 +205,7 @@ export default function AddBillboardModal({
                 traffic_density: "medium",
                 facing_direction: null,
                 size: formData.size || undefined,
-                price_label: formData.price || undefined,
+                price_per_month: Number(formData.price),
             });
 
             let uploadedPhotoUrl = null;
@@ -224,6 +232,8 @@ export default function AddBillboardModal({
                 lng: created.lng,
                 address: created.address,
                 price: created.price_label ?? formData.price,
+                pricePerMonth:
+                    created.price_per_month ?? Number(formData.price),
                 size: created.size ?? formData.size,
                 photo_url: uploadedPhotoUrl ?? created.photo_url,
                 markerVariant: billboards.length % 5,
@@ -404,16 +414,12 @@ export default function AddBillboardModal({
                             <select
                                 required
                                 value={formData.size}
-                                onChange={(e) => {
-                                    const pkg = BILLBOARD_PACKAGES.find(
-                                        (p) => p.size === e.target.value,
-                                    );
+                                onChange={(e) =>
                                     setFormData({
                                         ...formData,
                                         size: e.target.value,
-                                        price: pkg?.price ?? "",
-                                    });
-                                }}
+                                    })
+                                }
                                 className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
                                     errors.size
                                         ? "border-red-500 focus:ring-red-500"
@@ -423,10 +429,14 @@ export default function AddBillboardModal({
                                 <option value="">Pilih ukuran...</option>
                                 {BILLBOARD_PACKAGES.map((pkg) => (
                                     <option key={pkg.size} value={pkg.size}>
-                                        {pkg.size} — {pkg.price}
+                                        {pkg.size}
                                     </option>
                                 ))}
                             </select>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Harga diisi manual agar bisa berbeda untuk titik
+                                billboard dengan ukuran yang sama.
+                            </p>
                             {errors.size && (
                                 <p className="text-xs text-red-600 mt-1">
                                     {errors.size}
@@ -435,11 +445,31 @@ export default function AddBillboardModal({
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Harga
+                                Harga per bulan *
                             </label>
-                            <div className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-gray-100 text-gray-600 font-semibold">
-                                {formData.price || "—"}
-                            </div>
+                            <input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={formData.price}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        price: e.target.value,
+                                    })
+                                }
+                                className={`w-full rounded-lg border px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 ${
+                                    errors.price
+                                        ? "border-red-500 focus:ring-red-500"
+                                        : "border-gray-300 focus:ring-blue-500"
+                                }`}
+                                placeholder="Contoh: 75000000"
+                            />
+                            {errors.price && (
+                                <p className="text-xs text-red-600 mt-1">
+                                    {errors.price}
+                                </p>
+                            )}
                         </div>
                     </div>
 

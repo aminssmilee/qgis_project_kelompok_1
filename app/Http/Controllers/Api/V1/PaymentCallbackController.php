@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\TriPayService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-final class PaymentCallbackController extends Controller
+final class PaymentCallbackController
 {
     public function handle(Request $request, TriPayService $triPay): JsonResponse
     {
@@ -52,7 +52,7 @@ final class PaymentCallbackController extends Controller
                 $payment->update(['paid_at' => now()]);
             }
 
-            if ($payment && $payment->type === 'final') {
+            if ($payment && ($payment->type === 'final' || $payment->payment_type === 'PELUNASAN' || $payment->is_final)) {
                 $booking->update([
                     'status' => 'active',
                     'confirmed_at' => now(),
@@ -64,10 +64,11 @@ final class PaymentCallbackController extends Controller
                 ]);
             }
         } elseif (in_array($data->status, ['EXPIRED', 'FAILED', 'REFUND'])) {
+            $paymentTypeLabel = ($payment && ($payment->payment_type === 'DP' || $payment->type === 'dp')) ? 'DP payment' : 'Payment';
             $booking->update([
                 'status' => 'cancelled',
                 'cancelled_at' => now(),
-                'cancel_reason' => 'Payment '.$data->status,
+                'cancel_reason' => $paymentTypeLabel.' '.$data->status,
             ]);
         }
 

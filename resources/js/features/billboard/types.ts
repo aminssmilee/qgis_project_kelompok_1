@@ -6,6 +6,7 @@ export interface Billboard {
     lat: number;
     lng: number;
     price: string;
+    pricePerMonth?: number | null;
     size: string;
     address: string;
     photo_url?: string | null;

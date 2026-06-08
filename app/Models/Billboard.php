@@ -84,4 +84,31 @@ final class Billboard extends Model
     {
         return $this->hasMany(Rental::class);
     }
+
+    /**
+     * @return HasMany<Booking, $this>
+     */
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    /**
+     * Cek apakah billboard sedang di-hold (DP pending/paid) oleh orang lain.
+     */
+    public function isCurrentlyHeld(string $startDate, string $endDate): bool
+    {
+        $start = \Illuminate\Support\Carbon::parse($startDate);
+        $end = \Illuminate\Support\Carbon::parse($endDate);
+
+        return $this->bookings()
+            ->whereNotIn('status', ['cancelled', 'rejected', 'completed'])
+            ->where(function ($query) use ($start, $end): void {
+                $query->where(function ($q) use ($start, $end): void {
+                    $q->where('start_date', '<=', $end)
+                        ->where('end_date', '>=', $start);
+                });
+            })
+            ->exists();
+    }
 }

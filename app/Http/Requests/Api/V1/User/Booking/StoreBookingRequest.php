@@ -18,6 +18,18 @@ final class StoreBookingRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    public function prepareForValidation(): void
+    {
+        if ($this->has('paymentMethod') && ! $this->has('payment_method')) {
+            $this->merge([
+                'payment_method' => $this->input('paymentMethod'),
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -29,6 +41,7 @@ final class StoreBookingRequest extends FormRequest
             'end_date' => ['required', 'date', 'after:start_date'],
             'duration_type' => ['required', 'string', 'in:daily,weekly,monthly,yearly'],
             'duration_value' => ['required', 'integer', 'min:1'],
+            'payment_method' => ['nullable', 'string', 'max:50'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }

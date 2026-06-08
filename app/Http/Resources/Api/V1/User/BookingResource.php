@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Api\V1\User;
 
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -61,9 +62,9 @@ final class BookingResource extends JsonResource
             'status' => $statusMap[$this->status] ?? $this->status,
             'raw_status' => $this->status,
             'total_price' => (float) $this->total_price,
-            'deadline_at' => $this->created_at->addDay()->toIso8601String(),
-            'start_date' => $this->start_date->toDateString(),
-            'end_date' => $this->end_date->toDateString(),
+            'deadline_at' => $this->created_at?->copy()->addDay()->toIso8601String(),
+            'start_date' => $this->start_date?->toDateString(),
+            'end_date' => $this->end_date?->toDateString(),
             'checkout_url' => $checkoutUrl,
             'final_checkout_url' => $finalCheckoutUrl,
             'payment_status' => $paymentStatus,

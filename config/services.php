@@ -42,6 +42,8 @@ return [
         'private_key' => env('TRIPAY_PRIVATE_KEY'),
         'merchant_code' => env('TRIPAY_MERCHANT_CODE'),
         'mode' => env('TRIPAY_MODE', 'sandbox'),
+        // 'default_method' => env('TRIPAY_DEFAULT_METHOD', 'QRIS'),
+        'expired_minutes' => env('TRIPAY_EXPIRED_MINUTES', 1),
     ],
 
     'google' => [

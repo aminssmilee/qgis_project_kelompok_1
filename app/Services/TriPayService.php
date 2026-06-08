@@ -99,6 +99,9 @@ final class TriPayService
         // Generate Signature
         $signature = hash_hmac('sha256', $this->merchantCode.$merchantRef.$amount, (string) $this->privateKey);
 
+        // Ambil batas waktu dari config, default ke 1440 menit (24 jam) jika tidak diset
+        $expiredMinutes = config('services.tripay.expired_minutes', 1);
+
         $payload = [
             'method' => $methodCode,
             'merchant_ref' => $merchantRef,
@@ -116,7 +119,8 @@ final class TriPayService
             ],
             'callback_url' => url('/api/v1/payment/callback'),
             'return_url' => url('/payment/return'),
-            'expired_time' => (time() + (24 * 60 * 60)), // 24 hours
+            // Konversi menit ke detik dengan time()
+            'expired_time' => time() + ($expiredMinutes * 60),
             'signature' => $signature,
         ];
 
