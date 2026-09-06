@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Date;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -98,8 +99,8 @@ final class Billboard extends Model
      */
     public function isCurrentlyHeld(string $startDate, string $endDate): bool
     {
-        $start = \Illuminate\Support\Carbon::parse($startDate);
-        $end = \Illuminate\Support\Carbon::parse($endDate);
+        $start = Date::parse($startDate);
+        $end = Date::parse($endDate);
 
         return $this->bookings()
             ->whereNotIn('status', ['cancelled', 'rejected', 'completed'])

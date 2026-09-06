@@ -57,7 +57,7 @@ final class BillboardResource extends JsonResource
      */
     private function resolveImageUrl(?string $path): ?string
     {
-        if (empty($path)) {
+        if (in_array($path, [null, '', '0'], true)) {
             return null;
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Models\BillboardReminder;
 use App\Models\Payment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,10 @@ final class SweepExpiredBookings extends Command
         foreach ($expiredPayments as $payment) {
             $booking = $payment->booking;
 
-            if (! $booking || $booking->status !== 'pending_payment') {
+            if (! $booking) {
+                continue;
+            }
+            if ($booking->status !== 'pending_payment') {
                 continue;
             }
 
@@ -62,7 +66,7 @@ final class SweepExpiredBookings extends Command
                     'admin_note' => 'Auto-cancelled by system failsafe.',
                 ]);
 
-                $reminders = \App\Models\BillboardReminder::query()
+                $reminders = BillboardReminder::query()
                     ->where('billboard_id', $booking->billboard_id)
                     ->where('requested_start_date', $booking->start_date)
                     ->where('requested_end_date', $booking->end_date)

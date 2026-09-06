@@ -10,7 +10,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('billboard_reminders', function (Blueprint $table) {
+        Schema::create('billboard_reminders', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('billboard_id')->constrained()->cascadeOnDelete();
