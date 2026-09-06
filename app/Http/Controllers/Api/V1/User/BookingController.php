@@ -361,7 +361,7 @@ final readonly class BookingController
         // Find the final payment
         $finalPayment = Payment::query()
             ->where('booking_id', $booking->id)
-            ->where(function ($query) {
+            ->where(function ($query): void {
                 $query->where('type', 'final')->orWhere('is_final', true)->orWhere('payment_type', 'PELUNASAN');
             })
             ->where('status', 'UNPAID')
@@ -374,7 +374,7 @@ final readonly class BookingController
         }
 
         $paymentMethod = $request->input('payment_method', config('services.tripay.default_method', 'QRIS'));
-        if (mb_strtolower($paymentMethod) === 'tripay') {
+        if (mb_strtolower((string) $paymentMethod) === 'tripay') {
             $paymentMethod = config('services.tripay.default_method', 'QRIS');
         }
 
